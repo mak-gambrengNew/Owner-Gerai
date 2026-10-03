@@ -1,0 +1,26 @@
+{
+  "id": "/gerai/",
+  "name": "Teh Solo Ma'Gambreng · Panel SPG",
+  "short_name": "Gerai SPG",
+  "start_url": "/gerai/",
+  "scope": "/gerai/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "id",
+  "background_color": "#08A34A",
+  "theme_color": "#008438",
+  "icons": [
+    {
+      "src": "/gerai/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/gerai/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
