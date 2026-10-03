@@ -1368,8 +1368,8 @@ async function loadServerState(){
 
   ownerCrud={
     gerai:gerai.map(g=>({id:g.id,nama:g.nama,alamat:g.alamat,telepon:g.telepon,status:statusLabel(g.status)})),
-    spg:state.spg.map(x=>({id:x.profile_id,nama:x.full_name||'',telepon:x.phone||'',gerai:'',status:statusLabel(x.profile_status)})),
-    checker:state.checker.map(x=>({id:x.profile_id,nama:x.full_name||'',telepon:x.phone||'',area:'Semua Gerai',status:statusLabel(x.profile_status)})),
+    spg:state.spg.map(x=>teamMemberRow('spg',x)),
+    checker:state.checker.map(x=>teamMemberRow('checker',x)),
     menu:menu.map(m=>({id:m.id,nama:m.nama,kategori:m.kategori,harga:m.harga,hpp:m.hpp,status:statusLabel(m.status),komposisi:m.komposisi||[]})),
     logistik:stok.map(x=>({id:x.id,nama:x.nama,satuan:x.satuan,stok:x.stok,minimum:x.minimum,supplier:x.supplier,logistics_type:x.logistics_type,status:statusLabel(x.status)})),
     esKristal:[]
@@ -1412,21 +1412,75 @@ function crudRows(k){
  return data.map(r=>{
    let title='',meta='',right='';
    if(k==='gerai'){title=r.nama;meta=`${r.alamat||'Alamat belum diisi'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
-   if(k==='spg'){title=r.nama;meta=`${r.gerai||'Belum ditempatkan'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
-   if(k==='checker'){title=r.nama;meta=`${r.area||'Semua area'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
+   if(k==='spg'||k==='checker'){title=r.nama;meta=`${r.login_code||'ID login belum ada'} · ${r.last_login_at?'Login terakhir '+teamDate(r.last_login_at):'Belum pernah login'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>${r.login_code?'':'<span class="crud-chip warn">Belum lengkap</span>'}`}
    if(k==='menu'){title=r.nama;meta=`${r.kategori||'Umum'}${r.hpp!==''&&r.hpp!=null?` · HPP ${rp(Number(r.hpp)||0)}`:''}`;right=`<b class="crud-price">${rp(Number(r.harga)||0)}</b>`}
    if(k==='logistik'){title=r.nama;meta=`${r.stok??0} ${r.satuan||'unit'} · minimum ${r.minimum??0} · ${r.logistics_type==='active'?'Aktif':'Pasif'}`;right=`<span class="crud-chip ${(Number(r.stok)||0)<(Number(r.minimum)||0)?'warn':'ok'}">${(Number(r.stok)||0)<(Number(r.minimum)||0)?'Stok rendah':'Aman'}</span>`}
    if(k==='esKristal'){title=r.nama;meta=`${r.perusahaan||'Supplier'}${r.catatan?' · '+r.catatan:''}`;right=r.telepon?`<a class="crud-wa" href="${waHref(r.telepon)}" target="_blank" rel="noopener">WhatsApp</a>`:'<span class="crud-chip muted">Nomor belum diisi</span>'}
    return `<div class="crud-row" data-crud-action="detail" data-k="${k}" data-id="${esc(r.id)}"><div class="crud-row-main"><span class="crud-row-icon">${crudIcon(k)}</span><div><b>${esc(title)}</b><small>${esc(meta)}</small></div></div><div class="crud-row-right">${right}<button class="crud-mini edit" data-crud-action="edit" data-k="${k}" data-id="${esc(r.id)}" aria-label="Edit">✎</button><button class="crud-mini danger" data-crud-action="delete" data-k="${k}" data-id="${esc(r.id)}" aria-label="Hapus">×</button></div></div>`
  }).join('')||`<div class="crud-empty"><span>＋</span><b>Belum ada data</b><small>Tekan tombol Tambah untuk menambahkan data pertama.</small></div>`;
 }
-function teamSheet(){
- window.__listCtx='team';
+function teamMemberRow(role,x){
+ return {id:x.profile_id,nama:x.full_name||'',telepon:x.phone||'',gerai:'',area:role==='checker'?'Semua Gerai':'',status:statusLabel(x.profile_status),login_code:x.login_code||'',identity_status:x.identity_status||'',last_login_at:x.last_login_at||''};
+}
+function teamDate(v){
+ if(!v)return '';
+ const d=new Date(v);if(isNaN(d))return '';
+ return d.toLocaleString('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' WIB';
+}
+function teamIdentity(r){
+ if(!r.login_code)return {missing:true,text:'Identitas login belum ada di server'};
+ if(r.identity_status==='active')return {missing:false,text:'Aktif - dapat dipakai login'};
+ return {missing:false,text:'Nonaktif - tidak dapat dipakai login'};
+}
+async function verifyMemberOnServer(role,id,expectIdentity,expectName){
+ // Bukti tersimpan: baca ulang dari server (profil + identitas/kode akses), bukan dari state lokal.
+ if(!id)throw new Error('Pendaftaran belum dapat dipastikan. Periksa My Team, lalu coba lagi bila data belum muncul.');
+ const rows=asArray(await rpc('owner_list_members',{p_role:role}));
+ const row=rows.find(x=>x.profile_id===id);
+ if(!row)throw new Error('Data belum muncul di server.');
+ if(!row.login_code)throw new Error('Identitas login belum lengkap di server.');
+ if(expectIdentity&&row.identity_status!==expectIdentity)throw new Error('Status kode akses di server belum sesuai.');
+ if(expectName&&String(row.full_name||'')!==expectName)throw new Error('Nama di server belum sesuai.');
+ return row;
+}
+async function teamReload(){
+ const [spg,checker]=await Promise.all([rpc('owner_list_members',{p_role:'spg'}),rpc('owner_list_members',{p_role:'checker'})]);
+ state.spg=asArray(spg);state.checker=asArray(checker);
+ ownerCrud.spg=state.spg.map(x=>teamMemberRow('spg',x));
+ ownerCrud.checker=state.checker.map(x=>teamMemberRow('checker',x));
+}
+function teamRender(){
  const sp=ownerCrud.spg||[],ck=ownerCrud.checker||[];
  const sec=(k,label)=>`<div class="crud-sheet-head" style="margin-top:14px"><div><b>${crudIcon(k)} ${label}</b><small>${(ownerCrud[k]||[]).length} terdaftar</small></div><button class="crud-add" data-crud-action="add" data-k="${k}">＋ Tambah</button></div>${crudRows(k)}`;
- sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3><small>${sp.length+ck.length} anggota tersimpan di server</small></div></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari anggota tim..." autocomplete="off"><span>${sp.length+ck.length} data</span></div><div class="crud-list" id="crud-list">${sec('spg','SPG')}${sec('checker','Checker')}</div>`);
+ sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3><small>${sp.length+ck.length} anggota terdaftar di server</small></div><button type="button" class="crud-add" id="team-refresh">↻ Muat ulang</button></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari anggota tim..." autocomplete="off"><span>${sp.length+ck.length} data</span></div><div class="crud-list" id="crud-list">${sec('spg','SPG')}${sec('checker','Checker')}</div>`);
  const search=$('#crud-search'); if(search){search.oninput=()=>{const q=search.value.toLowerCase();document.querySelectorAll('#crud-list .crud-row').forEach(row=>row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none')}}
+ const rf=$('#team-refresh'); if(rf)rf.onclick=()=>teamSheet();
  bindCrudActionEvents();
+}
+let __teamSeq=0;
+async function teamSheet(){
+ window.__listCtx='team';
+ const seq=++__teamSeq;
+ sheet(`<div class="crud-sheet-head" id="team-loading"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data tim</b><small>Hanya data yang ada di server yang ditampilkan.</small></div>`);
+ try{ await teamReload(); }
+ catch(e){
+  console.error('TEAM_LOAD',e);
+  if(seq!==__teamSeq||!$('#team-loading'))return;
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3></div></div><div class="crud-empty"><span>!</span><b>Data tim belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="team-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  const rf=$('#team-refresh'); if(rf)rf.onclick=()=>teamSheet();
+  return;
+ }
+ if(seq!==__teamSeq||!$('#team-loading'))return;
+ teamRender();
+}
+function showMemberIssued(k,row,draft){
+ const label=k==='spg'?'SPG':'Checker';
+ const code=String(draft.access_code||'');
+ const item=(a,b)=>`<div class="crud-detail-item"><span>${a}</span><b>${b}</b></div>`;
+ sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">TERSIMPAN DI SERVER</span><h3>${label} berhasil didaftarkan</h3><p><strong>${esc(row.full_name||draft.nama)}</strong> sudah terbukti ada di server beserta kode aksesnya.</p><div class="crud-detail-grid">${item('ID login',esc(row.login_code))}${item('Status kode akses',row.identity_status==='active'?'Aktif':'Nonaktif')}<div class="crud-detail-item full"><span>Kode akses ${label}</span><b id="issued-code">••••••••</b></div></div><button type="button" class="btn ghost" id="issued-toggle" style="width:100%;margin-top:10px">Tampilkan kode</button><p><small>Berikan kode ini kepada ${label}. Setelah halaman ini ditutup, kode tidak dapat ditampilkan lagi.</small></p><div class="crud-confirm-actions"><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Lihat daftar</button><button type="button" class="btn ghost" data-crud-action="add" data-k="${k}">Daftarkan lagi</button></div></div>`);
+ bindCrudActionEvents();
+ let shown=false;const out=$('#issued-code'),tg=$('#issued-toggle');
+ if(tg&&out)tg.onclick=()=>{shown=!shown;out.textContent=shown?code:'•'.repeat(Math.max(8,code.length));tg.textContent=shown?'Sembunyikan kode':'Tampilkan kode'};
 }
 function crudSheet(k){
  window.__listCtx=k;
@@ -1466,8 +1520,7 @@ function bindCrudActionEvents(){document.querySelectorAll('[data-crud-action]').
 function detailItems(k,r){
  const item=(a,b,full=false)=>`<div class="crud-detail-item${full?' full':''}"><span>${a}</span><b>${esc(b||'-')}</b></div>`;
  if(k==='gerai')return item('Nama gerai',r.nama)+item('Status',r.status)+item('Alamat',r.alamat,true);
- if(k==='spg')return item('Nama SPG',r.nama)+item('Status',r.status)+item('Gerai',r.gerai,true);
- if(k==='checker')return item('Nama checker',r.nama)+item('Status',r.status)+item('Cakupan',r.area,true);
+ if(k==='spg'||k==='checker'){const idn=teamIdentity(r);return item(k==='spg'?'Nama SPG':'Nama checker',r.nama)+item('Status',r.status)+item('ID login',r.login_code||'Belum ada')+item('Status kode akses',idn.text)+item('Login terakhir',r.last_login_at?teamDate(r.last_login_at):'Belum pernah login',true)+item('Kode akses','Tersimpan terenkripsi di server dan tidak dapat ditampilkan ulang.',true)}
  if(k==='menu')return item('Nama menu',r.nama)+item('Status',r.status)+item('Kategori',r.kategori)+item('Harga jual',rp(Number(r.harga)||0))+item('HPP',r.hpp!==''&&r.hpp!=null?rp(Number(r.hpp)||0):'-',true)+item('Komposisi',r.komposisi?.length?`${r.komposisi.length} item inventory terhubung`:'Belum ada komposisi',true);
  if(k==='logistik')return item('Nama item',r.nama)+item('Status',r.status)+item('Satuan',r.satuan)+item('Stok',`${r.stok??0} ${r.satuan||''}`)+item('Minimum stok',`${r.minimum??0} ${r.satuan||''}`)+item('Tipe logistik',r.logistics_type==='active'?'Aktif — berkurang saat penjualan':'Pasif — berkurang melalui restok/pengeluaran')+item('Supplier',r.supplier,true);
  return item('Nama kontak',r.nama)+item('Status',r.status)+item('Perusahaan',r.perusahaan)+item('WhatsApp',r.telepon)+item('Catatan',r.catatan,true);
@@ -1737,16 +1790,21 @@ async function crudSave(k,id){
        if(error){let m='';try{const b=await error.context?.json?.();m=b?.error||''}catch(_){}throw new Error(m||'Pendaftaran belum berhasil. Silakan coba lagi.')}
        if(data?.error) throw new Error(data.error);
        newId=data?.[k]?.id||null;
+       // Server selalu membuat anggota baru berstatus aktif; samakan dengan pilihan status di form.
+       if(newId&&draft.status!=='Aktif') await rpc('owner_set_member_status',{p_profile_id:newId,p_role:k,p_status:'inactive'});
      }
    }else if(k==='esKristal'){
      newId=await rpc('owner_upsert_whatsapp_contact',{p_contact_id:id||null,p_display_name:draft.nama,p_label:draft.perusahaan||'Supplier Es Kristal',p_phone_number:draft.telepon||'',p_notes:draft.catatan||'',p_status:draft.status==='Aktif'?'active':'inactive',p_is_primary:true});
    }
    written=true;
    id=newId;
-   await verifyOnServer(k,id);       // wajib terbukti ada di server
+   let memberRow=null;
+   if(k==='spg'||k==='checker') memberRow=await verifyMemberOnServer(k,id,draft.status==='Aktif'?'active':'inactive',draft.nama);
+   else await verifyOnServer(k,id);       // wajib terbukti ada di server
    window.__crudDraft=null;
    try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah tersimpan, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
    if(k==='gerai'&&wasNew){ showGeraiLinkPopup(id,{fresh:true,after:'list'}); return; }
+   if((k==='spg'||k==='checker')&&wasNew&&memberRow){ showMemberIssued(k,memberRow,draft); return; }
    const saved=(ownerCrud[k]||[]).find(x=>x.id===id)||draft;
    sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>${id?'Revisi berhasil disimpan':'Data berhasil didaftarkan'}</h3><p><strong>${esc(saved.nama||draft.nama)}</strong> sudah tersimpan.</p><div class="crud-confirm-actions"><button type="button" class="btn" data-crud-action="detail" data-k="${k}" data-id="${esc(saved.id||id||'')}">Buka detail</button><button type="button" class="btn ghost" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div></div>`);
    bindCrudActionEvents();
@@ -1975,7 +2033,7 @@ function home(){
  </header>
 <section class="highlight-host">${renderHighlight()}</section>
 <section class="lux-section"><div class="lux-section-head"><div><span class="eyebrow">COMMAND</span><h2>Aksi utama</h2></div><span class="lux-count">8 tindakan</span></div><div class="lux-actions">
-<button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>My Team</b><small>Tim operasional</small></button>
+<button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>My Team</b><small>${(state.spg.length+state.checker.length)} anggota</small></button>
 <button data-o="gerai"><span class="lux-action-icon">🏪</span><b>Gerai</b><small>Kelola gerai</small></button>
 <button data-o="nota"><span class="lux-action-icon">🧾</span><b>Nota</b><small>Transaksi</small></button>
 <button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>Jatuh tempo</small></button>
