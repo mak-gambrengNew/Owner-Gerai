@@ -21,3 +21,25 @@ Subscriptions refresh the dashboard when stores, menus, inventory, monitoring tr
 ## Owner access code
 
 The public login page intentionally does not ask for email. The `owner_get_login_identity` RPC resolves the active Owner from `businesses.owner_id` and returns the current Auth email needed for sign-in. The browser then calls `signInWithPassword()` with that email and the entered access code. All existing Owner RPCs continue to use `auth.uid()` and RLS.
+
+## Hapus permanen + Arsip Riwayat
+Hapus oleh Owner adalah **hapus permanen** (bukan nonaktif). Sebelum data dihapus, riwayatnya disalin ke `owner_history_archive`
+(tanpa foreign key ke data yang dihapus) dan dicatat di `owner_deletion_log`, sehingga riwayat/log tetap ada.
+
+| Data | RPC |
+| --- | --- |
+| Gerai | `owner_remove_store` |
+| Menu | `owner_remove_menu` |
+| Logistik | `owner_remove_inventory_item` |
+| SPG / Checker | `owner_remove_member` |
+| Kontak WhatsApp Es Kristal | `owner_remove_whatsapp_contact` |
+
+Semua berjalan dalam satu transaksi: jika ada sisa data yang tidak bisa dibersihkan, seluruh penghapusan dibatalkan.
+Owner melihat arsip di Pengaturan > Arsip Riwayat Terhapus. Migrasi: `supabase/migrations/owner_hard_delete_with_history_archive.sql`.
+
+## Revisi Owner CRUD (v11)
+Migrasi wajib diterapkan: `supabase/migrations/owner_audit_append_only_snapshot_atomic_crud.sql`.
+- `audit_logs` append-only (trigger + tanpa hak tulis dari browser), berisi snapshot `entity_name`, `actor_name`, `before_data`, `after_data`; tidak bergantung pada record operasional.
+- Hapus Owner hanya lewat `owner_remove_*` (atomik: arsip -> hapus -> audit). Jalur DELETE langsung dan fungsi hapus lama dinonaktifkan.
+- Edit SPG/Checker atomik lewat `owner_save_member`.
+- Jika tombol hapus tidak menambah baris di `owner_deletion_log`, aplikasi yang berjalan adalah build lama: deploy ulang.

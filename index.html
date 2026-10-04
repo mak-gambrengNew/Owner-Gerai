@@ -2013,9 +2013,9 @@ function fmtWaktu(v){
  if(!v) return '—';
  try{return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}catch(_){return '—'}
 }
-const AUD_ACTION={create:'ditambahkan',update:'diubah',set_status:'status diubah',status_change:'status diubah'};
+const AUD_ACTION={create:'ditambahkan',update:'diubah',set_status:'status diubah',status_change:'status diubah',logistics_type_change:'jenis logistik diubah',delete:'dihapus permanen'};
 const AUD_ENTITY={store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak es kristal'};
-function auditText(a){return (AUD_ENTITY[a.entity]||'Data')+' '+(AUD_ACTION[a.action]||'diperbarui')}
+function auditText(a){const nm=a.entity_name||(a.details&&(a.details.name||a.details.label||a.details.full_name))||'';return (AUD_ENTITY[a.entity]||'Data')+(nm?' “'+nm+'”':'')+' '+(AUD_ACTION[a.action]||'diperbarui')}
 const REP_LABEL={store_name:'Gerai',store:'Gerai',menu_name:'Menu',menu:'Menu',name:'Nama',quantity:'Jumlah',qty:'Jumlah',total:'Total',total_sales:'Total penjualan',total_amount:'Total',amount:'Nilai',price:'Harga',revenue:'Pendapatan',sales_date:'Tanggal',date:'Tanggal',status:'Status',transactions:'Transaksi',transaction_count:'Jumlah transaksi',sold_quantity:'Terjual',cash:'Tunai',qris:'QRIS',payment_method:'Metode bayar',hpp:'HPP',profit:'Laba',category:'Kategori',stock:'Stok',unit:'Satuan',occurred_at:'Waktu',created_at:'Dibuat'};
 function repLabel(k){if(REP_LABEL[k])return REP_LABEL[k];const t=String(k).replace(/_/g,' ').trim();return t.charAt(0).toUpperCase()+t.slice(1)}
 function repHidden(k){return k==='id'||/_id$/.test(k)}
@@ -2186,16 +2186,32 @@ async function verifyOnServer(k,id,expected){
      const rows=asArray(await rpc('owner_list_whatsapp_contacts'));
      const found=rows.find(x=>x.id===id);
      if(!found) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
+     if(expected){
+      if(String(found.display_name||'')!==String(expected.nama||'').trim()) throw new Error('Nama kontak belum sesuai dengan data di server.');
+      if(expected.status&&found.status!==(expected.status==='Aktif'?'active':'inactive')) throw new Error('Status kontak belum sesuai dengan data di server.');
+     }
      return found;
    }
-   const columns=k==='gerai'?'id,name,address,status,slug,pwa_url':'id';
+   const columns={gerai:'id,name,address,status,slug,pwa_url',menu:'id,name,price,hpp,status',logistik:'id,name,unit,minimum_stock,supplier,status'}[k]||'id';
    const {data,error}=await sbClient.from(CRUD_VERIFY[k]).select(columns).eq('id',id).maybeSingle();
   if(error) throw error;
   if(!data) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
+   const stat=v=>v==='Aktif'?'active':'inactive';
    if(k==='gerai'&&expected){
     if(String(data.name||'')!==String(expected.nama||'')) throw new Error('Nama gerai belum sesuai dengan data di server.');
     if(String(data.address||'')!==String(expected.alamat||'')) throw new Error('Alamat gerai belum sesuai dengan data di server.');
     if(expected.requireLink&&!resolveGeraiLink(data)) throw new Error('Link operasional belum tersedia dari server. Pastikan gerai memiliki slug yang valid.');
+   }
+   if(k==='menu'&&expected){
+    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama menu belum sesuai dengan data di server.');
+    if(Number(data.price)!==Number(expected.harga||0)) throw new Error('Harga menu belum sesuai dengan data di server.');
+    if(Number(data.hpp)!==Number(expected.hpp||0)) throw new Error('HPP menu belum sesuai dengan data di server.');
+    if(data.status!==stat(expected.status)) throw new Error('Status menu belum sesuai dengan data di server.');
+   }
+   if(k==='logistik'&&expected){
+    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama item belum sesuai dengan data di server.');
+    if(Number(data.minimum_stock)!==Number(expected.minimum||0)) throw new Error('Stok minimum belum sesuai dengan data di server.');
+    if(expected.status&&data.status!==stat(expected.status)) throw new Error('Status item belum sesuai dengan data di server.');
    }
    return data;
 }
@@ -2225,8 +2241,7 @@ async function crudSave(k,id){
      }
    }else if(k==='spg'||k==='checker'){
      if(id){
-       await rpc('owner_update_member',{p_role:k,p_profile_id:id,p_full_name:draft.nama,p_phone:draft.telepon||''});
-       await rpc('owner_set_member_status',{p_profile_id:id,p_role:k,p_status:draft.status==='Aktif'?'active':'inactive'});
+       await rpc('owner_save_member',{p_role:k,p_profile_id:id,p_full_name:draft.nama,p_phone:draft.telepon||'',p_status:draft.status==='Aktif'?'active':'inactive'});
      }else{
        if(!draft.access_code || draft.access_code.length<6) throw new Error('Kode akses minimal 6 karakter.');
        const fn=k==='spg'?'spg-register':'checker-register';
@@ -2246,7 +2261,7 @@ async function crudSave(k,id){
    id=newId;
    let memberRow=null;
    if(k==='spg'||k==='checker') memberRow=await verifyMemberOnServer(k,id,draft.status==='Aktif'?'active':'inactive',draft.nama);
-    else await verifyOnServer(k,id,k==='gerai'?{...draft,requireLink:wasNew}:null);       // wajib terbukti ada di server
+    else await verifyOnServer(k,id,{...draft,requireLink:wasNew});       // wajib terbukti ada di server
    window.__crudDraft=null;
    try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah tersimpan, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
    if(k==='gerai'&&wasNew){ showGeraiLinkPopup(id,{fresh:true,after:'list'}); return; }
@@ -2267,25 +2282,55 @@ async function crudSave(k,id){
 function crudConfirmDelete(k,id,step=1){
  const r=(ownerCrud[k]||[]).find(x=>x.id===id);if(!r)return;
  if(step===1){
-  const dep=k==='menu'?'Menu dapat dipakai oleh transaksi dan komposisi inventory. Histori transaksi tidak boleh ikut terhapus.':k==='logistik'?'Inventory dapat terhubung ke komposisi menu dan pergerakan stok. Jika masih digunakan, data akan dipertahankan dan dinonaktifkan.':k==='gerai'?'Gerai dapat memiliki sesi, penjualan, dan histori. Histori tidak ikut terhapus.':k==='spg'?'SPG dapat memiliki penugasan dan aktivitas. Histori tidak ikut terhapus.':k==='checker'?'Checker memiliki histori pemeriksaan. Histori tidak ikut terhapus.':'Kontak ini dapat dipakai pada proses operasional es kristal.';
+  const dep=k==='menu'?'Menu dihapus permanen beserta komposisinya. Riwayat harga dan penjualan menu ini dipindahkan ke Arsip Riwayat.':k==='logistik'?'Item dihapus permanen dari stok pusat, stok gerai, dan komposisi menu. Riwayat pergerakannya dipindahkan ke Arsip Riwayat.':k==='gerai'?'Gerai dihapus permanen beserta seluruh data operasionalnya (sesi, penjualan, kas, stok, tagihan). Seluruh riwayatnya dipindahkan ke Arsip Riwayat.':k==='spg'?'Akun SPG dan kode aksesnya dihapus permanen. Catatan gerai yang pernah dibuatnya tetap ada tanpa nama pembuat, dan jejaknya tersimpan di Arsip Riwayat.':k==='checker'?'Akun Checker dan kode aksesnya dihapus permanen. Catatan pemeriksaan yang pernah dibuatnya tetap ada tanpa nama pembuat, dan jejaknya tersimpan di Arsip Riwayat.':'Kontak dihapus permanen. Salinannya tersimpan di Arsip Riwayat.';
   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">⚠️</div><span class="eyebrow">PENGHAPUSAN</span><h3>Periksa sebelum menghapus</h3><p>Anda memilih <strong>${esc(r.nama)}</strong>.</p><div class="crud-form-section"><b>Ketergantungan data</b><small>${esc(dep)}</small></div><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-next" data-k="${k}" data-id="${esc(id)}">Lanjutkan</button></div></div>`);
  }else{
-  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">!</div><span class="eyebrow">KONFIRMASI TERAKHIR</span><h3>Hapus ${crudLabel(k)}?</h3><p><strong>${esc(r.nama)}</strong> akan dihapus dari daftar. Jika data masih digunakan oleh bagian lain, data akan dipertahankan dan dinonaktifkan agar riwayat tetap aman.</p><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-confirm" data-k="${k}" data-id="${esc(id)}">Hapus permanen</button></div></div>`);
+  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">!</div><span class="eyebrow">KONFIRMASI TERAKHIR</span><h3>Hapus ${crudLabel(k)}?</h3><p><strong>${esc(r.nama)}</strong> akan dihapus permanen dan tidak dapat dikembalikan. Riwayat dan lognya tetap tersimpan di Arsip Riwayat.</p><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-confirm" data-k="${k}" data-id="${esc(id)}">Hapus permanen</button></div></div>`);
  }
  bindCrudActionEvents();
 }
+async function verifyRemovedOnServer(k,id){
+ // Bukti terhapus: baca ulang dari server, data tidak boleh ada lagi.
+ let still=false;
+ if(k==='esKristal') still=asArray(await rpc('owner_list_whatsapp_contacts')).some(x=>x.id===id);
+ else if(k==='spg'||k==='checker') still=asArray(await rpc('owner_list_members',{p_role:k})).some(x=>x.profile_id===id);
+ else{
+  const {data,error}=await sbClient.from(CRUD_VERIFY[k]).select('id').eq('id',id).maybeSingle();
+  if(error) throw error;
+  still=!!data;
+ }
+ if(still) throw new Error('Data masih ada di server setelah penghapusan.');
+}
+let __crudDeleting=false;
 async function crudDelete(k,id){
  const r=(ownerCrud[k]||[]).find(x=>x.id===id);if(!r)return;
+ if(__crudDeleting)return;
+ __crudDeleting=true;
+ const btns=[...document.querySelectorAll('[data-crud-action="delete-confirm"],[data-crud-action="delete-cancel"]')];
+ btns.forEach(b=>b.disabled=true);
+ let removed=false;
  try{
-   if(k==='gerai') await rpc('owner_upsert_store',{p_store_id:id,p_name:r.nama,p_address:r.alamat||'',p_phone:r.telepon||'',p_status:'inactive'});
-   else if(k==='menu') await rpc('owner_set_menu_status',{p_menu_id:id,p_status:'inactive'});
-   else if(k==='logistik') await rpc('owner_update_inventory_item',{p_inventory_id:id,p_name:r.nama,p_unit:r.satuan||'',p_minimum_stock:Number(r.minimum||0),p_supplier:r.supplier||'',p_logistics_type:r.logistics_type||'passive',p_status:'inactive'});
-   else if(k==='spg'||k==='checker') await rpc('owner_set_member_status',{p_profile_id:id,p_role:k,p_status:'inactive'});
-   else if(k==='esKristal') await rpc('owner_upsert_whatsapp_contact',{p_contact_id:id,p_display_name:r.nama,p_label:r.perusahaan||'',p_phone_number:r.telepon||'',p_notes:r.catatan||'',p_status:'inactive',p_is_primary:false});
-   await loadServerState();
-   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>Data dinonaktifkan</h3><p><strong>${esc(r.nama)}</strong> sekarang berstatus Nonaktif. Histori operasional tetap dipertahankan.</p><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div>`);
+   if(navigator.onLine===false) throw new Error('Tidak ada koneksi internet. Data belum dihapus.');
+   let res;
+   if(k==='gerai') res=await rpc('owner_remove_store',{p_store_id:id});
+   else if(k==='menu') res=await rpc('owner_remove_menu',{p_menu_id:id});
+   else if(k==='logistik') res=await rpc('owner_remove_inventory_item',{p_inventory_id:id});
+   else if(k==='spg'||k==='checker') res=await rpc('owner_remove_member',{p_role:k,p_profile_id:id});
+   else if(k==='esKristal') res=await rpc('owner_remove_whatsapp_contact',{p_contact_id:id});
+   if(!res||res.ok!==true) throw new Error('Penghapusan belum terkonfirmasi server.');
+   removed=true;
+   await verifyRemovedOnServer(k,id);
+   try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah terhapus, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
+   const arsip=Object.values(res.archived||{}).reduce((a,n)=>a+Number(n||0),0);
+   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>Data dihapus permanen</h3><p><strong>${esc(r.nama)}</strong> sudah dihapus dari server sampai bersih.${arsip?` ${arsip} catatan riwayat dipindahkan ke Arsip Riwayat.`:' Riwayat dan lognya tetap tersimpan di Arsip Riwayat.'}</p><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div>`);
    bindCrudActionEvents();
- }catch(e){console.error(e);toast(friendlyError(e,'Perubahan belum dapat disimpan. Coba lagi.'))}
+ }catch(e){
+   console.error(e);
+   toast(removed?'Penghapusan belum dapat dipastikan. Periksa daftar sebelum mencoba lagi.':friendlyError(e,'Data belum dapat dihapus. Coba lagi.'));
+   btns.forEach(b=>b.disabled=false);
+ }finally{
+   __crudDeleting=false;
+ }
 }
 
 let tab='home';
@@ -2547,7 +2592,7 @@ function downloadReportFlow(){
 function owner(){ return ownerCrudPage(); }
 
 function adm(){
- return head('Pengaturan','Keamanan, akun & data')+`<div class="sec" style="margin-top:16px"><h2>Keamanan</h2><div class="card"><button class="set" data-o="kode">Ubah kode akses Owner <span>›</span></button><button class="set" data-o="audit">Riwayat Aktivitas <span>›</span></button><button class="set" data-o="edit">Pusat Edit Data <span>🔒</span></button></div></div>
+ return head('Pengaturan','Keamanan, akun & data')+`<div class="sec" style="margin-top:16px"><h2>Keamanan</h2><div class="card"><button class="set" data-o="kode">Ubah kode akses Owner <span>›</span></button><button class="set" data-o="audit">Riwayat Aktivitas <span>›</span></button><button class="set" data-o="arsip">Arsip Riwayat Terhapus <span>›</span></button><button class="set" data-o="edit">Pusat Edit Data <span>🔒</span></button></div></div>
  <div class="sec"><h2>Data usaha</h2><div class="card"><button class="set" data-o="menu">Kelola Menu <span>›</span></button><button class="set" data-o="hpp">Periode perhitungan HPP <span>›</span></button></div></div>
  <div class="sec"><button class="btn" style="background:var(--bad)" data-o="out">Keluar</button><div class="hint">Mak-Gambreng Owner</div></div>`;
 }
@@ -2609,6 +2654,16 @@ async function act(o){
   }
   if(o==='pengumuman'){
     sheet('<h3>Buat Pengumuman</h3><input class="fld" id="announcement-title" placeholder="Judul pengumuman"><textarea class="fld" id="announcement-body" rows="5" placeholder="Tulis isi pengumuman"></textarea><button class="btn" data-x="announcement">Kirim pengumuman</button><div class="hint">Pengumuman akan dikirim sebagai pesan kepada seluruh SPG dan Checker.</div>');
+    return;
+  }
+  if(o==='arsip'){
+    const TIPE={store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak WhatsApp'};
+    let rows=[];
+    try{rows=asArray(await selectRows('owner_deletion_log',q=>q.order('deleted_at',{ascending:false}).limit(200)))}catch(e){console.error(e);toast('Arsip riwayat belum dapat dimuat. Coba lagi.');return}
+    sheet(`<h3>Arsip Riwayat Terhapus</h3><div class="card">${rows.length?rows.map(x=>{
+      const n=Object.values(x.summary||{}).reduce((a,v)=>a+Number(v||0),0);
+      return li('🗄️',esc(x.entity_name||'Tanpa nama'),esc((TIPE[x.entity_type]||'Data')+' · dihapus '+fmtWaktu(x.deleted_at)),`<span class="chip">${n} catatan</span>`);
+    }).join(''):'<div class="empty">Belum ada data yang dihapus.</div>'}</div>`);
     return;
   }
   if(o==='log-aktifitas'||o==='audit'){
