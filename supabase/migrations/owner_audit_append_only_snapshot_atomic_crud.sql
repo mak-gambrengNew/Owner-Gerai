@@ -78,7 +78,8 @@ begin
     if pg_trigger_depth()>1 then return old; end if;   -- hanya cascade referensial (hapus bisnis), bukan DELETE langsung
     raise exception 'audit_append_only';
   end if;
-  if tg_table_name='audit_logs' and new.actor_id is null and (to_jsonb(new)-'actor_id') = (to_jsonb(old)-'actor_id') then
+  if tg_table_name='audit_logs' and (to_jsonb(new)->>'actor_id') is null
+     and (to_jsonb(new)-'actor_id') = (to_jsonb(old)-'actor_id') then
     return new;                                         -- FK ON DELETE SET NULL saat akun anggota dihapus; nama pelaku tetap di actor_name
   elsif tg_table_name='owner_deletion_log' and (to_jsonb(new)-'summary') = (to_jsonb(old)-'summary') then
     return new;
