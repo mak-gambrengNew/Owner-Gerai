@@ -1728,8 +1728,19 @@ async function loadServerState(){
 async function refreshAndDraw(){
   try{await loadServerState();draw()}catch(e){console.error(e);toast(friendlyError(e,'Data belum dapat dimuat. Coba lagi sebentar.'))}
 }
+// Debounce event realtime agar rentetan perubahan hanya memicu satu fetch ulang.
+let _rtTimer=null,_rtDown=false;
+function refreshAndDrawDebounced(){clearTimeout(_rtTimer);_rtTimer=setTimeout(refreshAndDraw,400)}
+if(!window.__ownerSyncBound){
+  window.__ownerSyncBound=true;
+  // Fallback polling ±60 dtk, resync saat aplikasi aktif kembali / internet pulih.
+  setInterval(()=>{if(!document.hidden&&navigator.onLine&&realtimeChannel)refreshAndDraw()},60000);
+  window.addEventListener('online',()=>{if(realtimeChannel)refreshAndDraw()});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&realtimeChannel)refreshAndDraw()});
+}
 function startRealtime(){
   if(realtimeChannel) sbClient.removeChannel(realtimeChannel);
+  const refreshAndDraw=refreshAndDrawDebounced;
   realtimeChannel=sbClient.channel('owner-live')
     .on('postgres_changes',{event:'*',schema:'public',table:'stores'},refreshAndDraw)
     .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},refreshAndDraw)
@@ -1740,7 +1751,10 @@ function startRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'user_notifications'},refreshAndDraw)
     .on('postgres_changes',{event:'*',schema:'public',table:'audit_logs'},refreshAndDraw)
     .on('postgres_changes',{event:'*',schema:'public',table:'owner_bills'},refreshAndDraw)
-    .subscribe();
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){if(_rtDown){_rtDown=false;refreshAndDrawDebounced()}}
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){_rtDown=true}
+    });
 }
 /* ===== KELOLA DATA UTAMA ===== */
 function crudLabel(k){return {gerai:'Gerai',spg:'SPG',checker:'Checker',menu:'Menu',logistik:'Logistik',esKristal:'Kontak WhatsApp Es Kristal'}[k]||k}
@@ -1982,6 +1996,9 @@ const ERR_TEXT={
  invalid_consumption_quantity:'Jumlah pemakaian bahan harus lebih dari 0.',
  inventory_item_not_found:'Ada bahan pada komposisi yang tidak ditemukan atau sudah nonaktif.',
  inventory_name_required:'Nama item wajib diisi.',
+ inventory_name_duplicate:'Item logistik dengan nama tersebut sudah terdaftar.',
+ inventory_name_duplicate_inactive:'Item logistik dengan nama tersebut sudah pernah terdaftar dan sedang nonaktif. Periksa daftar logistik lalu aktifkan kembali item tersebut.',
+ menu_name_duplicate:'Menu dengan nama dan kategori tersebut sudah terdaftar.',
  invalid_minimum_stock:'Minimum stok tidak boleh negatif.',
  invalid_logistics_type:'Tipe logistik tidak valid.',
  invalid_inventory_status:'Status item tidak valid.',
