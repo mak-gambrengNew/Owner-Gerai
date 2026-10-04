@@ -1575,6 +1575,63 @@ async function selectRows(table, queryFn){
   return data||[];
 }
 const safeLoad=(p,fb=[])=>Promise.resolve(p).catch(e=>{console.error('Data pendukung gagal dimuat:',e);return fb});
+function mapGerai(stores,sessions){
+  const bySession=new Map(asArray(sessions).map(x=>[x.store_id,x]));
+  return asArray(stores).map(s=>({
+    id:s.id,nama:s.name,alamat:s.address||'',telepon:s.phone||'',
+    status:s.status,slug:s.slug||'',pwa_url:s.pwa_url||'',
+    ice_qr_image_url:s.ice_qr_image_url||'',
+    spg:'',session:bySession.get(s.id)||null
+  }));
+}
+function syncGeraiCrud(){
+  ownerCrud.gerai=gerai.map(g=>({id:g.id,nama:g.nama,alamat:g.alamat,telepon:g.telepon,status:statusLabel(g.status),slug:g.slug,pwa_url:g.pwa_url,ice_qr_image_url:g.ice_qr_image_url,buka:!!g.session}));
+}
+async function geraiReload(){
+  // Sama seperti teamReload: baca langsung dari server saat kartu dibuka.
+  const [stores,sessions]=await Promise.all([
+    selectRows('stores',q=>q.order('created_at',{ascending:true})),
+    safeLoad(selectRows('store_operation_sessions',q=>q.eq('status','open')))
+  ]);
+  state.sessions=sessions;
+  gerai=mapGerai(stores,sessions);
+  syncGeraiCrud();
+  const t=document.querySelector('[data-o="gerai"] small');
+  if(t)t.textContent=`${gerai.length} gerai`;
+}
+function mapMenuStok(menus,consumptions,inventory){
+  const compositionByMenu=new Map();
+  for(const c of asArray(consumptions)){
+    const list=compositionByMenu.get(c.menu_id)||[];
+    list.push({inventory_item_id:c.inventory_item_id,quantity_per_sale:Number(c.quantity_per_sale||0)});
+    compositionByMenu.set(c.menu_id,list);
+  }
+  menu=asArray(menus).map(m=>({
+    id:m.id,nama:m.name,kategori:m.category||'',harga:Number(m.price||0),hpp:Number(m.hpp||0),
+    status:m.status,komposisi:compositionByMenu.get(m.id)||[]
+  }));
+  stok=asArray(inventory).map(x=>({
+    id:x.id,nama:x.name,satuan:x.unit||'',stok:Number(x.stock||0),
+    minimum:Number(x.minimum_stock||0),supplier:x.supplier||'',
+    logistics_type:x.logistics_type||'passive',status:x.status
+  }));
+}
+function syncMenuCrud(){
+  ownerCrud.menu=menu.map(m=>({id:m.id,nama:m.nama,kategori:m.kategori,harga:m.harga,hpp:m.hpp,status:statusLabel(m.status),komposisi:m.komposisi||[]}));
+  ownerCrud.logistik=stok.map(x=>({id:x.id,nama:x.nama,satuan:x.satuan,stok:x.stok,minimum:x.minimum,supplier:x.supplier,logistics_type:x.logistics_type,status:statusLabel(x.status)}));
+}
+async function menuReload(){
+  // Sama seperti teamReload/geraiReload: baca langsung dari server saat kartu dibuka.
+  const [menus,consumptions,inventory]=await Promise.all([
+    selectRows('menus',q=>q.order('name',{ascending:true})),
+    selectRows('menu_inventory_consumptions',q=>q.order('created_at',{ascending:true})),
+    selectRows('inventory_items',q=>q.order('name',{ascending:true}))
+  ]);
+  mapMenuStok(menus,consumptions,inventory);
+  syncMenuCrud();
+  const t=document.querySelector('[data-o="set-menu"] small');
+  if(t)t.textContent=`${menu.length} menu`;
+}
 async function loadServerState(){
   const [header,stores,menus,inventory,consumptions,spg,checker,notifs,bills,transactions,iceOrders,restocks,auditRows,money] = await Promise.all([
     rpc('owner_get_header_context'),
@@ -1607,28 +1664,8 @@ async function loadServerState(){
   const openSessions=await safeLoad(selectRows('store_operation_sessions',q=>q.eq('status','open')));
   state.sessions=openSessions;
 
-  const storeMap=new Map(state.sessions.map(x=>[x.store_id,x]));
-  gerai=asArray(stores).map(s=>({
-    id:s.id,nama:s.name,alamat:s.address||'',telepon:s.phone||'',
-    status:s.status,slug:s.slug||'',pwa_url:s.pwa_url||'',
-    ice_qr_image_url:s.ice_qr_image_url||'',
-    spg:'',session:storeMap.get(s.id)||null
-  }));
-  const compositionByMenu=new Map();
-  for(const c of asArray(consumptions)){
-    const list=compositionByMenu.get(c.menu_id)||[];
-    list.push({inventory_item_id:c.inventory_item_id,quantity_per_sale:Number(c.quantity_per_sale||0)});
-    compositionByMenu.set(c.menu_id,list);
-  }
-  menu=asArray(menus).map(m=>({
-    id:m.id,nama:m.name,kategori:m.category||'',harga:Number(m.price||0),hpp:Number(m.hpp||0),
-    status:m.status,komposisi:compositionByMenu.get(m.id)||[]
-  }));
-  stok=asArray(inventory).map(x=>({
-    id:x.id,nama:x.name,satuan:x.unit||'',stok:Number(x.stock||0),
-    minimum:Number(x.minimum_stock||0),supplier:x.supplier||'',
-    logistics_type:x.logistics_type||'passive',status:x.status
-  }));
+  gerai=mapGerai(stores,state.sessions);
+  mapMenuStok(menus,consumptions,inventory);
 
   const todaySales=asArray(stores).map(s=>{
     const r=state.sessions.find(x=>x.store_id===s.id);
@@ -1652,13 +1689,15 @@ async function loadServerState(){
   bersih=total;
 
   ownerCrud={
-    gerai:gerai.map(g=>({id:g.id,nama:g.nama,alamat:g.alamat,telepon:g.telepon,status:statusLabel(g.status),slug:g.slug,pwa_url:g.pwa_url,ice_qr_image_url:g.ice_qr_image_url})),
+    gerai:[],
     spg:state.spg.map(x=>teamMemberRow('spg',x)),
     checker:state.checker.map(x=>teamMemberRow('checker',x)),
-    menu:menu.map(m=>({id:m.id,nama:m.nama,kategori:m.kategori,harga:m.harga,hpp:m.hpp,status:statusLabel(m.status),komposisi:m.komposisi||[]})),
-    logistik:stok.map(x=>({id:x.id,nama:x.nama,satuan:x.satuan,stok:x.stok,minimum:x.minimum,supplier:x.supplier,logistics_type:x.logistics_type,status:statusLabel(x.status)})),
+    menu:[],
+    logistik:[],
     esKristal:[]
   };
+  syncGeraiCrud();
+  syncMenuCrud();
   try{
     const contacts=await rpc('owner_list_whatsapp_contacts');
     ownerCrud.esKristal=asArray(contacts).map(x=>({id:x.id,nama:x.display_name||x.label||'Kontak Es Kristal',perusahaan:x.label||'',telepon:x.phone_number||'',catatan:x.notes||'',status:statusLabel(x.status)}));
@@ -1696,7 +1735,7 @@ function crudRows(k){
  const data=ownerCrud[k]||[];
  return data.map(r=>{
    let title='',meta='',right='';
-   if(k==='gerai'){title=r.nama;meta=`${r.alamat||'Alamat belum diisi'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
+   if(k==='gerai'){title=r.nama;meta=`${r.alamat||'Alamat belum diisi'}`;right=`${r.buka?'<span class="crud-chip ok">Sedang buka</span>':''}<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
    if(k==='spg'||k==='checker'){title=r.nama;meta=`${r.login_code||'ID login belum ada'} · ${r.last_login_at?'Login terakhir '+teamDate(r.last_login_at):'Belum pernah login'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>${r.login_code?'':'<span class="crud-chip warn">Belum lengkap</span>'}`}
    if(k==='menu'){title=r.nama;meta=`${r.kategori||'Umum'}${r.hpp!==''&&r.hpp!=null?` · HPP ${rp(Number(r.hpp)||0)}`:''}`;right=`<b class="crud-price">${rp(Number(r.harga)||0)}</b>`}
    if(k==='logistik'){title=r.nama;meta=`${r.stok??0} ${r.satuan||'unit'} · minimum ${r.minimum??0} · ${r.logistics_type==='active'?'Aktif':'Pasif'}`;right=`<span class="crud-chip ${(Number(r.stok)||0)<(Number(r.minimum)||0)?'warn':'ok'}">${(Number(r.stok)||0)<(Number(r.minimum)||0)?'Stok rendah':'Aman'}</span>`}
@@ -1758,6 +1797,46 @@ async function teamSheet(){
  if(seq!==__teamSeq||!$('#team-loading'))return;
  teamRender();
 }
+function geraiRender(){
+ const list=ownerCrud.gerai||[];
+ const aktif=list.filter(x=>x.status==='Aktif').length, buka=list.filter(x=>x.buka).length;
+ sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>${list.length} gerai terdaftar di server · ${aktif} aktif · ${buka} sedang buka</small></div><div style="display:flex;gap:8px"><button type="button" class="crud-add" id="gerai-refresh">↻ Muat ulang</button><button type="button" class="crud-add" data-crud-action="add" data-k="gerai">＋ Tambah</button></div></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari gerai..." autocomplete="off"><span>${list.length} data</span></div><div class="crud-list" id="crud-list">${crudRows('gerai')}</div>`);
+ const search=$('#crud-search'); if(search){search.oninput=()=>{const q=search.value.toLowerCase();document.querySelectorAll('#crud-list .crud-row').forEach(row=>row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none')}}
+ const rf=$('#gerai-refresh'); if(rf)rf.onclick=()=>geraiSheet();
+ bindCrudActionEvents();
+}
+let __geraiSeq=0;
+async function geraiSheet(){
+ window.__listCtx='gerai';
+ const seq=++__geraiSeq;
+ sheet(`<div class="crud-sheet-head" id="gerai-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data gerai</b><small>Hanya gerai yang terdaftar di server yang ditampilkan.</small></div>`);
+ try{ await geraiReload(); }
+ catch(e){
+  console.error('GERAI_LOAD',e);
+  if(seq!==__geraiSeq||!$('#gerai-loading'))return;
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3></div></div><div class="crud-empty"><span>!</span><b>Data gerai belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="gerai-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  const rf=$('#gerai-refresh'); if(rf)rf.onclick=()=>geraiSheet();
+  return;
+ }
+ if(seq!==__geraiSeq||!$('#gerai-loading'))return;
+ geraiRender();
+}
+let __menuSeq=0;
+async function menuSheet(){
+ window.__listCtx='menu';
+ const seq=++__menuSeq;
+ sheet(`<div class="crud-sheet-head" id="menu-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data menu</b><small>Hanya menu yang terdaftar di server yang ditampilkan.</small></div>`);
+ try{ await menuReload(); }
+ catch(e){
+  console.error('MENU_LOAD',e);
+  if(seq!==__menuSeq||!$('#menu-loading'))return;
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3></div></div><div class="crud-empty"><span>!</span><b>Data menu belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="menu-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  const rf=$('#menu-refresh'); if(rf)rf.onclick=()=>menuSheet();
+  return;
+ }
+ if(seq!==__menuSeq||!$('#menu-loading'))return;
+ crudRender('menu');
+}
 function showMemberIssued(k,row,draft){
  const label=k==='spg'?'SPG':'Checker';
  const code=String(draft.access_code||'');
@@ -1768,6 +1847,11 @@ function showMemberIssued(k,row,draft){
  if(tg&&out)tg.onclick=()=>{shown=!shown;out.textContent=shown?code:'•'.repeat(Math.max(8,code.length));tg.textContent=shown?'Sembunyikan kode':'Tampilkan kode'};
 }
 function crudSheet(k){
+ if(k==='gerai')return geraiSheet();
+ if(k==='menu')return menuSheet();
+ return crudRender(k);
+}
+function crudRender(k){
  window.__listCtx=k;
  const title=crudLabel(k),data=ownerCrud[k]||[];
  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>${crudIcon(k)} ${title}</h3><small>${data.length} data tersimpan</small></div><button class="crud-add" data-crud-action="add" data-k="${k}">＋ Tambah</button></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari ${title.toLowerCase()}..." autocomplete="off"><span>${data.length} data</span></div><div class="crud-list" id="crud-list">${crudRows(k)}</div>`);
@@ -2075,6 +2159,12 @@ const CRUD_VERIFY={gerai:'stores',menu:'menus',logistik:'inventory_items',esKris
 async function verifyOnServer(k,id,expected){
   // Bukti tersimpan: baca ulang baris dari server (bukan dari state lokal).
   if(!id) throw new Error('Pendaftaran belum dapat dipastikan. Periksa daftar, lalu coba lagi bila data belum muncul.');
+   if(k==='esKristal'){
+     const rows=asArray(await rpc('owner_list_whatsapp_contacts'));
+     const found=rows.find(x=>x.id===id);
+     if(!found) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
+     return found;
+   }
    const columns=k==='gerai'?'id,name,address,status,slug,pwa_url':'id';
    const {data,error}=await sbClient.from(CRUD_VERIFY[k]).select(columns).eq('id',id).maybeSingle();
   if(error) throw error;
@@ -2367,13 +2457,13 @@ function home(){
 <section class="highlight-host">${renderHighlight()}</section>
 <section class="lux-section"><div class="lux-section-head"><div><span class="eyebrow">COMMAND</span><h2>Aksi utama</h2></div><span class="lux-count">8 tindakan</span></div><div class="lux-actions">
 <button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>My Team</b><small>${(state.spg.length+state.checker.length)} anggota</small></button>
-<button data-o="gerai"><span class="lux-action-icon">🏪</span><b>Gerai</b><small>Kelola gerai</small></button>
+<button data-o="gerai"><span class="lux-action-icon">🏪</span><b>Gerai</b><small>${gerai.length} gerai</small></button>
 <button data-o="nota"><span class="lux-action-icon">🧾</span><b>Nota</b><small>Transaksi</small></button>
 <button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>Jatuh tempo</small></button>
 <button data-o="history-beli-bayar"><span class="lux-action-icon">🛒</span><b>History Beli&amp;Bayar</b><small>Riwayat</small></button>
 <button data-o="pengumuman"><span class="lux-action-icon">📣</span><b>Buat Pengumuman</b><small>Tim gerai</small></button>
 <button data-o="log-aktifitas"><span class="lux-action-icon">🧾</span><b>Riwayat Aktivitas</b><small>Catatan perubahan data</small></button>
-<button data-o="set-menu"><span class="lux-action-icon">🍹</span><b>Set Menu</b><small>Kelola menu</small></button>
+<button data-o="set-menu"><span class="lux-action-icon">🍹</span><b>Set Menu</b><small>${menu.length} menu</small></button>
 </div></section>
   <section class="sec"><h2>Status Gerai</h2><div class="card">${gerai.length?gerai.map(g=>{
    const details=[g.alamat||'Alamat belum diisi',`Status gerai: ${statusLabel(g.status)}`,g.session?`Sesi aktif · ${g.session.opened_at||''}`:'Tidak ada sesi aktif'].join(' · ');
@@ -2449,7 +2539,7 @@ async function act(o){
     realtimeChannel=null; login(); return;
   }
   if(o==='team'){teamSheet();return;}
-  if(o==='gerai'){crudSheet('gerai');return;}
+  if(o==='gerai'){geraiSheet();return;}
   if(o==='nota'||o==='hist'){
     const rows=state.transactions||[];
     sheet(`<h3>History Penjualan</h3><div class="card">${rows.length?rows.map(x=>li('🧾',esc(x.transaction_id||'Transaksi'),`${esc(x.occurred_at||'')} · ${esc(x.payment_method||'')}`,`<span class="amt">${rp(x.total_amount)}</span>`)).join(''):'<div class="empty">Belum ada transaksi yang tercatat.</div>'}</div>`);
@@ -2471,10 +2561,7 @@ async function act(o){
     sheet(`<h3>Riwayat Aktivitas</h3><div class="card">${audit.length?audit.map(a=>li('🧾',esc(auditText(a)),esc(fmtWaktu(a.created_at)),'')).join(''):'<div class="empty">Belum ada riwayat aktivitas.</div>'}</div>`);
     return;
   }
-  if(o==='set-menu'||o==='menu'){
-    sheet(`<h3>Menu</h3><div class="card">${menu.length?menu.map(m=>li('🍹',esc(m.nama),`${esc(m.kategori||'Umum')} · ${statusLabel(m.status)}`,`<span class="amt">${rp(m.harga)}</span>`)).join(''):'<div class="empty">Belum ada menu yang terdaftar.</div>'}</div>`);
-    return;
-  }
+  if(o==='set-menu'||o==='menu'){menuSheet();return;}
   if(o==='spg'||o==='checker'){
     const rows=o==='spg'?state.spg:state.checker;
     sheet(`<h3>${o==='spg'?'SPG':'Checker'}</h3><div class="card">${rows.length?rows.map(x=>li(o==='spg'?'🧑':'🧑‍💼',esc(x.full_name||'Tanpa nama'),`${esc(x.phone||'Nomor belum diisi')}`,`<span class="chip ${String(x.profile_status).toLowerCase()==='active'?'ok':'warn'}">${esc(statusLabel(x.profile_status))}</span>`)).join(''):'<div class="empty">Belum ada data yang tersedia.</div>'}</div>`);
