@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/gerai",
+      "destination": "/gerai/index.html"
+    },
+    {
       "source": "/gerai/:path*",
       "destination": "/gerai/index.html"
     }
