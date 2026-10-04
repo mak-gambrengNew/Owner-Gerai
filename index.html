@@ -1165,6 +1165,12 @@ h1,h2,h3,.owner-identity strong,.lux-section-head h2{font-family:var(--font-disp
 @keyframes gl-pop{0%{transform:scale(.85)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
 .gl-hint{display:block;margin-top:9px;font-size:11.5px;line-height:1.45;color:rgba(247,243,230,.6)}
 .gl-hint.ok{color:#7EE6BC;font-weight:700}
+.gl-qr-actions{display:flex;gap:8px;margin-top:12px}
+.gl-qr-copy,.gl-qr-open{flex:1;min-height:42px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border-radius:13px;font-family:inherit;font-size:12.5px;font-weight:800;text-decoration:none;cursor:pointer}
+.gl-qr-copy{border:0;color:#06392D;background:linear-gradient(145deg,#F4E2AC,#C9A24A);box-shadow:0 6px 16px rgba(201,162,74,.24);transition:transform .15s ease,background .25s ease}
+.gl-qr-copy:active{transform:scale(.97)}
+.gl-qr-copy.done{color:#04271E;background:linear-gradient(145deg,#7FE8C0,#1FA971)}
+.gl-qr-open{border:1px solid rgba(230,205,140,.4);color:#F2EBD0;background:rgba(255,255,255,.07)}
 .gl-qrsec{text-align:center}
 .gl-qrsec .gl-lab{justify-content:center}
 .gl-qrbox{position:relative;width:224px;height:224px;margin:2px auto 0;padding:14px;border-radius:20px;background:#FFFDF5;box-shadow:0 14px 34px rgba(0,0,0,.35),0 0 0 1px rgba(212,182,101,.55)}
@@ -1989,7 +1995,27 @@ async function showGeraiLinkPopup(storeId,opts={}){
    if(hint){hint.classList.toggle('ok',ok);hint.textContent=ok?'Link gerai tersalin.':'Gagal menyalin. Tekan lama pada link untuk menyalin manual.'}
    if(ok&&navigator.vibrate) navigator.vibrate(25);
    clearTimeout(copyTimer);
-   copyTimer=setTimeout(()=>{b.classList.remove('done');b.innerHTML=GL_ICO.copy;if(hint){hint.classList.remove('ok');hint.textContent='Ketuk ikon salin untuk menyalin link.'}},2400);
+   copyTimer=setTimeout(()=>{b.classList.remove('done');b.innerHTML=GL_ICO.copy;if(hint){hint.classList.remove('ok');hint.textContent='Ketuk tombol salin untuk menyalin link.'}},2400);
+  }
+  if(a==='copy-qr'){
+   const img=body.querySelector('.gl-qrbox img'),hint=body.querySelector('#gl-qr-hint');
+   if(!img?.src||!window.ClipboardItem||!navigator.clipboard?.write) {
+    if(hint) hint.textContent='Penyalinan QR tidak didukung browser ini. Tekan lama QR untuk menyimpan atau menyalinnya.';
+    return;
+   }
+   try{
+    const res=await fetch(img.src,{mode:'cors',cache:'no-store'});
+    if(!res.ok) throw new Error('QR tidak dapat dibaca');
+    const blob=await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({[blob.type||'image/png']:blob})]);
+    b.classList.add('done'); b.textContent='QR Tersalin';
+    if(hint){hint.classList.add('ok');hint.textContent='QR Drop Es berhasil disalin.'}
+    if(navigator.vibrate) navigator.vibrate(25);
+    setTimeout(()=>{b.classList.remove('done');b.textContent='Salin QR';if(hint){hint.classList.remove('ok');hint.textContent='Salin QR untuk membagikannya, atau buka untuk menyimpan gambarnya.'}},2400);
+   }catch(err){
+    console.error(err);
+    if(hint) hint.textContent='QR tidak dapat disalin langsung. Gunakan Buka QR lalu tekan lama gambarnya untuk menyimpan.';
+   }
   }
  });
 
@@ -2008,12 +2034,13 @@ async function showGeraiLinkPopup(storeId,opts={}){
   const t=ov.querySelector('#gl-title'); if(t&&row.name) t.textContent=row.name;
   body.innerHTML=`<section class="gl-sec"><span class="gl-lab">${GL_ICO.link} Link Gerai</span>
    <div class="gl-link"><span class="gl-url">${esc(link)}</span><button class="gl-copy" type="button" data-gl="copy" aria-label="Salin link gerai">${GL_ICO.copy}</button></div>
-   <small class="gl-hint" id="gl-hint" aria-live="polite">Ketuk ikon salin untuk menyalin link.</small></section>
+   <small class="gl-hint" id="gl-hint" aria-live="polite">Ketuk tombol salin untuk menyalin link.</small></section>
    <section class="gl-sec gl-qrsec"><span class="gl-lab">${GL_ICO.snow} QR Drop Es Kristal</span>
    <div class="gl-qrbox"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><div class="gl-qrload"></div>
     <img alt="QR Drop Es Kristal ${esc(row.name||'')}" data-src="${esc(row.ice_qr_image_url)}" decoding="async">
     <div class="gl-qrerr"><span>QR belum dapat dimuat.</span><button class="gl-retry" type="button" data-gl="qr-retry">Muat ulang QR</button></div></div>
-   <small class="gl-hint">Pindai untuk mencatat pengiriman es kristal ke gerai ini.</small></section>`;
+   <div class="gl-qr-actions"><button class="gl-qr-copy" type="button" data-gl="copy-qr">Salin QR</button><a class="gl-qr-open" href="${esc(row.ice_qr_image_url)}" target="_blank" rel="noopener">Buka QR</a></div>
+   <small class="gl-hint" id="gl-qr-hint">Salin QR untuk membagikannya, atau buka untuk menyimpan gambarnya.</small></section>`;
   const box=body.querySelector('.gl-qrbox'),img=box.querySelector('img');
   img.onload=()=>box.classList.add('ok');
   img.onerror=()=>box.classList.add('err');
