@@ -12,12 +12,12 @@
 <link rel="manifest" id="appManifest" href="/gerai/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/gerai/icon-192.png">
 <script>
-/* Manifest per-gerai: aplikasi yang dipasang dari /gerai/<slug>/ langsung terbuka di gerai itu. */
+/* Manifest per-gerai: aplikasi yang dipasang dari /gerai/<slug> langsung terbuka di gerai itu. */
 (function(){try{
   var p=location.pathname.split('/').filter(Boolean);
   var s=(p[0]==='gerai'&&p.length>=2)?p[1].toLowerCase():'';
   if(!s||/\.html?$/i.test(s)||s==='login')return;
-  var o=location.origin,u=o+'/gerai/'+encodeURIComponent(s)+'/';
+  var o=location.origin,u=o+'/gerai/'+encodeURIComponent(s);
   var nm=s.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1)}).join(' ');
   var m={id:u,name:"Teh Solo Ma'Gambreng \u00b7 SPG "+nm,short_name:'SPG '+nm,start_url:u,scope:o+'/gerai/',display:'standalone',orientation:'portrait',lang:'id',background_color:'#08A34A',theme_color:'#008438',
     icons:[{src:o+'/gerai/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},{src:o+'/gerai/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any'}]};
@@ -1006,7 +1006,7 @@ function escapeHtml(v){return String(v||'').replace(/[&<>\"']/g,function(c){retu
 function isStandalonePwa(){return !!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true}
 function rememberGeraiSlug(slug){try{if(slug)localStorage.setItem('gerai:last-slug',slug)}catch(e){}}
 if(SLUG)rememberGeraiSlug(SLUG);
-else if(isStandalonePwa()){try{var lastSlug=localStorage.getItem('gerai:last-slug');if(lastSlug)location.replace('/gerai/'+encodeURIComponent(lastSlug)+'/')}catch(e){}}
+else if(isStandalonePwa()){try{var lastSlug=localStorage.getItem('gerai:last-slug');if(lastSlug)location.replace('/gerai/'+encodeURIComponent(lastSlug))}catch(e){}}
 var CATS=[];var TINT={};var GLYPH={};var MENU=[];var STOCK0=[];var PER_CUP=[];var MASTER_LOGISTICS=[];
 var db={day:'',seq:0,count:0,mode:'grid',tx:[],stock:[]};
 var backend={context:null,history:null,contacts:[],conversation:null,online:navigator.onLine};

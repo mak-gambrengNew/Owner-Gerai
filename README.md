@@ -77,7 +77,7 @@ Satu proyek Vercel, dua PWA terpisah:
 | Route | Aplikasi | Service worker | Manifest |
 | --- | --- | --- | --- |
 | `/` | Owner | `/sw.js` (scope `/`, tidak menyentuh `/gerai/`) | dibuat di `index.html` |
-| `/gerai/<slug>/` | Gerai (SPG) | `/gerai/sw.js` (scope `/gerai/`) | dibuat per-gerai di `gerai/index.html` |
+| `/gerai/<slug>` | Gerai (SPG) | `/gerai/sw.js` (scope `/gerai/`) | dibuat per-gerai di `gerai/index.html` |
 
 - `vercel.json` mengarahkan semua `/gerai/*` yang bukan file ke `/gerai/index.html`.
 - Splash, cache, dan sesi login kedua aplikasi terpisah (Gerai memakai `storageKey: sb-gerai-spg-auth`).

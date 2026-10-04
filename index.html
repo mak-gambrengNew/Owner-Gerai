@@ -1968,11 +1968,11 @@ function resolveGeraiLink(row){
    const url=new URL(stored,location.origin);
    const match=url.pathname.match(/^\/gerai\/([^/]+)\/?$/);
    const linkedSlug=match?decodeURIComponent(match[1]):'';
-   if((url.protocol==='https:'||url.protocol==='http:')&&linkedSlug&&(!slug||linkedSlug===slug))return url.href;
+   if((url.protocol==='https:'||url.protocol==='http:')&&linkedSlug&&(!slug||linkedSlug===slug))return new URL(`/gerai/${encodeURIComponent(linkedSlug)}`,location.origin).href;
   }catch(_){}
  }
  if(!slug)return '';
- return new URL(`/gerai/${encodeURIComponent(slug)}/`,location.origin).href;
+ return new URL(`/gerai/${encodeURIComponent(slug)}`,location.origin).href;
 }
 async function showGeraiLinkPopup(storeId,opts={}){
  const after=opts.after||'list';
