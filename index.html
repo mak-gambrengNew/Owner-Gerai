@@ -1347,6 +1347,125 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 .scr{isolation:isolate;overscroll-behavior-y:none}
 .scr>.owner-command-header{position:sticky;top:0;z-index:20;margin:0}
 </style>
+<style id="popup-elite">
+/* =====================================================================
+   POP UP — PREMIUM (bottom sheet, konfirmasi, hapus, form, toast)
+   Hanya tampilan. Logika buka/tutup tetap sama.
+   ===================================================================== */
+#app .dim{background:rgba(3,26,20,.58);-webkit-backdrop-filter:blur(7px) saturate(120%);backdrop-filter:blur(7px) saturate(120%);transition:opacity .25s ease}
+
+#app .sheet{
+  max-height:90%;padding:0 18px calc(var(--sab) + 24px);border:0;border-radius:30px 30px 0 0;
+  background:linear-gradient(180deg,#FFFFFF 0%,#F7FBF9 100%)!important;
+  box-shadow:0 -28px 70px rgba(2,32,25,.38),0 1px 0 rgba(255,255,255,.9) inset;
+  transition:transform .38s cubic-bezier(.2,.9,.25,1.02);overscroll-behavior:contain;
+}
+#app .sheet::before{content:"";position:sticky;display:block;top:0;z-index:4;height:3px;margin:0 -18px -3px;background:linear-gradient(90deg,transparent 12%,#E6CD8C 50%,transparent 88%)}
+
+/* bilah atas: grip + tombol tutup, menempel saat konten digulir */
+.sheet-bar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:center;height:46px;margin:0 -18px 6px;background:linear-gradient(180deg,#FFFFFF 70%,rgba(255,255,255,0))}
+.sheet-bar .grab{width:42px;height:5px;margin:0;border-radius:9px;background:#C3D6CE}
+.sheet-x{position:absolute;right:14px;top:6px;width:36px;height:36px;display:grid;place-items:center;padding:0;border-radius:50%;
+  color:#0A5D49;border:1px solid #D3E6DE;background:linear-gradient(180deg,#FFFFFF,#EAF5F0);box-shadow:0 3px 8px rgba(8,60,47,.12),0 1px 0 #fff inset}
+.sheet-x svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
+.sheet-x:active{transform:scale(.92)}
+
+/* judul sheet polos (History, Tagihan, Menu, dll.) */
+#app .sheet>h3,.sheet>.sheet-bar+h3{margin:2px 44px 14px 0;font:800 22px/1.2 var(--font-display,'Manrope',system-ui,sans-serif);letter-spacing:-.025em;color:#0F3A31}
+#app .sheet>.card{padding:6px 16px;border:1px solid #E1EDE8;border-radius:20px;background:#fff;box-shadow:0 8px 22px rgba(14,70,56,.07)}
+#app .sheet .hint{padding:12px 14px;border-radius:16px;background:#F0F8F4;border:1px solid #DCEBE4;color:#4F6B63;font-size:13px;line-height:1.55;text-align:left}
+#app .sheet .empty{padding:34px 12px;font-size:14px;color:#6E857D}
+#app .sheet .li{padding:13px 0}
+#app .sheet .li .b b{font-size:15px;color:#173F36}
+#app .sheet .li .b span{font-size:12.5px}
+#app .sheet .amt{font-weight:800;color:#0A7058;font-size:14px}
+
+/* kepala sheet & judul form */
+#app .crud-sheet-head{align-items:flex-start;margin:2px 0 14px;padding-right:44px}
+#app .crud-sheet-head h3,#app .crud-form-head h3{margin:5px 0 3px;font:800 22px/1.18 var(--font-display,'Manrope',system-ui,sans-serif);letter-spacing:-.025em;color:#0F3A31}
+#app .crud-sheet-head small{font-size:12.5px;color:#6E857D}
+#app .sheet .eyebrow{display:block;font-size:10.5px;letter-spacing:.14em;color:#9B7A2E}
+#app .crud-form-head{margin:2px 44px 14px 0}
+#app .crud-add{padding:11px 14px;border-radius:14px;font-size:12.5px;white-space:nowrap}
+
+/* pencarian & daftar */
+#app .crud-toolbar{margin-bottom:12px}
+#app .crud-toolbar>span{font-size:12px}
+#app .sheet .fld,#app .sheet select{font-size:16px;height:52px;border:1.5px solid #D8E8E1;border-radius:15px;background:#fff;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 1px 2px rgba(8,60,47,.05)}
+#app .sheet textarea.fld{height:auto;padding:13px 14px;line-height:1.5}
+#app .sheet .fld:focus,#app .sheet select:focus{border-color:#0E8F6E;box-shadow:0 0 0 4px rgba(14,143,110,.14)}
+#app .crud-row{padding:12px;gap:10px;border-radius:18px;border:1px solid #E1EDE8;background:#fff;box-shadow:0 6px 16px rgba(14,70,56,.06)}
+#app .crud-row-icon{width:42px;height:42px;border-radius:14px;font-size:18px}
+#app .crud-row-main b{font-size:14.5px;color:#173F36;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}
+#app .crud-row-main small{font-size:12px;margin-top:3px}
+#app .crud-chip{min-height:24px;padding:4px 9px;border-radius:99px;font-size:11px}
+#app .crud-mini{width:34px;height:34px;font-size:15px;border-radius:11px;background:#F1F7F4}
+#app .crud-empty{padding:36px 14px}
+#app .crud-empty span{font-size:34px}
+#app .crud-empty b{font-size:15px;margin-top:8px}
+#app .crud-empty small{font-size:12.5px;line-height:1.5;margin-top:5px}
+
+#app .crud-list{grid-template-columns:minmax(0,1fr)}
+#app .crud-row{min-width:0;max-width:100%}
+#app .crud-row-right{gap:6px}
+#app .crud-mini{width:32px;height:32px;flex:none}
+#app .crud-chip{text-transform:capitalize}
+/* form */
+#app .crud-form{max-height:58vh;padding:2px 2px 8px;margin:0 -2px}
+#app .crud-field{gap:7px}
+#app .crud-field>span{font-size:12px;letter-spacing:.02em;text-transform:none;font-weight:700;color:#3F6157}
+#app .crud-helper{font-size:12px;line-height:1.45}
+#app .crud-form-section{padding:13px 14px;border-radius:16px;background:#F3F9F6;border:1px solid #DCEBE4}
+#app .crud-form-section b{font-size:12px;letter-spacing:.04em;color:#2F5B4E}
+#app .crud-form-section small{font-size:12.5px;line-height:1.5;color:#65807A;margin-top:4px}
+#app .crud-status-toggle span{padding:13px 8px;font-size:13px;border-radius:14px}
+#app .crud-status-toggle input:checked+span{background:linear-gradient(180deg,#E8F8F1,#D7F0E6);border-color:#8FD0B9;color:#066A52}
+#app .crud-add-comp{padding:13px;font-size:13px;border-radius:14px}
+#app .crud-comp-remove{height:52px;width:40px;border-radius:13px}
+#app .crud-save{margin-top:6px}
+
+/* detail */
+#app .crud-detail-hero{padding:16px;border-radius:20px;background:linear-gradient(150deg,#0C7A61,#06483A);border:0;box-shadow:0 14px 30px rgba(6,72,58,.28),0 1px 0 rgba(255,255,255,.25) inset;gap:13px}
+#app .crud-detail-icon{width:52px;height:52px;border-radius:16px;font-size:23px;background:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,.1));box-shadow:0 1px 0 rgba(255,255,255,.3) inset}
+#app .crud-detail-hero b{font-size:17px;color:#fff}
+#app .crud-detail-hero small{font-size:12.5px;color:rgba(236,248,242,.74)}
+#app .crud-detail-item{padding:12px 13px;border-radius:15px;border:1px solid #E1EDE8}
+#app .crud-detail-item span{font-size:10.5px;letter-spacing:.08em;color:#7C928B}
+#app .crud-detail-item b{font-size:14px;margin-top:5px;color:#1B4A3F}
+
+/* tombol di dalam sheet (!important karena aturan .btn lama memakainya) */
+#app .sheet .btn{height:56px;border-radius:17px!important;font-size:16px;font-weight:800;color:#fff;border:0;
+  background:linear-gradient(180deg,#14A07F 0%,#0A7058 100%)!important;box-shadow:0 12px 24px rgba(8,100,78,.28),0 1px 0 rgba(255,255,255,.35) inset,0 -2px 0 rgba(0,50,38,.25) inset!important}
+#app .sheet .btn.ghost{color:#0A6B54!important;background:linear-gradient(180deg,#FFFFFF,#EEF6F2)!important;border:1px solid #D3E6DE!important;box-shadow:0 5px 12px rgba(8,60,47,.08)!important}
+#app .sheet .btn.danger-btn{color:#A23A42!important;background:linear-gradient(180deg,#FFFFFF,#FFF3F2)!important;border:1px solid #F0CFCF!important;box-shadow:0 5px 12px rgba(160,60,60,.08)!important}
+#app .sheet .btn.crud-danger-primary{color:#fff!important;border:0!important;background:linear-gradient(180deg,#D4616A,#A5373F)!important;box-shadow:0 12px 24px rgba(165,55,63,.3),0 1px 0 rgba(255,255,255,.3) inset!important}
+#app .sheet .btn:disabled{opacity:.6}
+#app .sheet .btn:active{transform:scale(.985)}
+#app .crud-detail-actions,#app .crud-confirm-actions{gap:10px;margin-top:6px}
+#app .crud-confirm-actions button{min-height:54px}
+#app .download-flow{gap:12px}
+
+/* konfirmasi / berhasil / hapus */
+#app .crud-confirm{padding:6px 2px 2px;text-align:center}
+#app .crud-confirm-icon{position:relative;width:68px;height:68px;margin:2px auto 14px;border-radius:50%;font-size:28px;font-weight:800;color:#06392D;
+  background:linear-gradient(150deg,#F6E5B2,#C9A24A);border:0;box-shadow:0 12px 26px rgba(201,162,74,.38),0 0 0 7px rgba(230,205,140,.16),0 1px 0 rgba(255,255,255,.6) inset}
+#app .crud-confirm:has(.crud-danger-primary) .crud-confirm-icon{color:#fff;background:linear-gradient(150deg,#E27A80,#B03E46);box-shadow:0 12px 26px rgba(176,62,70,.34),0 0 0 7px rgba(214,100,108,.14),0 1px 0 rgba(255,255,255,.4) inset}
+#app .crud-confirm .eyebrow{margin-top:2px}
+#app .crud-confirm h3{margin:8px 0 0;font:800 21px/1.2 var(--font-display,'Manrope',system-ui,sans-serif);letter-spacing:-.025em;color:#0F3A31}
+#app .crud-confirm p{margin:9px 6px 16px;font-size:14px;line-height:1.55;color:#5E7871}
+#app .crud-confirm .crud-detail-grid,#app .crud-confirm .crud-form-section{text-align:left;margin-bottom:12px}
+#app .crud-confirm>.btn{width:100%}
+
+/* toast */
+#app .toast{display:flex;align-items:center;gap:9px;width:max-content;max-width:min(92%,420px);padding:12px 20px;border-radius:99px;font-size:13.5px;font-weight:700;line-height:1.35;text-align:left;color:#F5FBF8;
+  background:linear-gradient(180deg,#0D7A60,#064A3B)!important;border:1px solid rgba(230,205,140,.5)!important;
+  box-shadow:0 16px 34px rgba(2,40,31,.4),0 1px 0 rgba(255,255,255,.28) inset;opacity:0;transition:transform .38s cubic-bezier(.2,.9,.25,1.1),opacity .25s ease}
+#app .toast::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:#E6CD8C;box-shadow:0 0 0 4px rgba(230,205,140,.22)}
+#app .toast.on{opacity:1}
+
+@media(max-width:380px){#app .sheet{padding-left:14px;padding-right:14px}.sheet-bar,#app .sheet::before{margin-left:-14px;margin-right:-14px}}
+@media(prefers-reduced-motion:reduce){#app .sheet,#app .toast,#app .dim{transition:none!important}}
+</style>
 </head>
 <body class="splash-active">
 <div id="app"></div>
@@ -2013,7 +2132,7 @@ const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectU
 
 /* ===== UI helpers ===== */
 function toast(t){const e=$('.toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200)}
-function sheet(html){$('.sheet').innerHTML='<div class="grab"></div>'+html;svgify($('.sheet'));$('.sheet').classList.add('on');$('.dim').classList.add('on')}
+function sheet(html){$('.sheet').innerHTML='<div class="sheet-bar"><div class="grab"></div><button type="button" class="sheet-x" aria-label="Tutup" onclick="closeSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+html;$('.sheet').scrollTop=0;svgify($('.sheet'));$('.sheet').classList.add('on');$('.dim').classList.add('on')}
 function closeSheet(){$('.sheet').classList.remove('on');$('.dim').classList.remove('on')}
 const li=(ic,t,s,r)=>`<div class="li"><div class="ic">${ic}</div><div class="b"><b>${t}</b><span>${s}</span></div>${r||''}</div>`;
 
