@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/gerai/:slug/qr-drop",
+      "destination": "/gerai/qr-drop/index.html"
+    },
+    {
       "source": "/gerai",
       "destination": "/gerai/index.html"
     },
@@ -25,6 +29,23 @@
         {
           "key": "Cache-Control",
           "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/gerai/qr-drop/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
         }
       ]
     }

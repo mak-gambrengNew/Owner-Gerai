@@ -1471,6 +1471,28 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 
 @media(max-width:380px){#app .sheet{padding-left:14px;padding-right:14px}.sheet-bar,#app .sheet::before{margin-left:-14px;margin-right:-14px}}
 @media(prefers-reduced-motion:reduce){#app .sheet,#app .toast,#app .dim{transition:none!important}}
+
+/* ===== Kartu Tagihan Owner: pengelompokan per opsi bayar ===== */
+.tg-sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.tg-tile{border-radius:18px;padding:12px 14px 13px;border:1px solid var(--line);background:var(--card)}
+.tg-tile small{display:block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}
+.tg-tile b{display:block;font-size:30px;line-height:1.1;margin-top:4px;letter-spacing:-.03em;color:var(--tx)}
+.tg-tile em{font-style:normal;font-size:12px;font-weight:600;color:var(--mu)}
+.tg-tile.warn{border-top:4px solid var(--warn)}.tg-tile.ok{border-top:4px solid var(--ok)}
+.tg-sec{border:1px solid var(--line);border-radius:20px;background:var(--card);margin:0 0 14px;overflow:hidden}
+.tg-sec-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.tg-sec.warn .tg-sec-h{background:#B4771314}.tg-sec.ok .tg-sec-h{background:#16845F12}
+.tg-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:var(--card);border:1px solid var(--line);flex:none}
+.tg-sec-h .t{flex:1;min-width:0}.tg-sec-h .t b{display:block;font-size:16px;color:var(--tx)}.tg-sec-h .t small{font-size:12px;color:var(--mu)}
+.tg-store{padding:2px 16px 4px}
+.tg-store+.tg-store{border-top:8px solid var(--bg)}
+.tg-store-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:12px 0 6px}
+.tg-store-h b{font-size:13.5px;color:var(--tx)}.tg-store-h span{font-size:12px;color:var(--mu);white-space:nowrap}
+.tg-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.tg-main{min-width:0;flex:1}.tg-main b{display:block;font-size:14.5px;color:var(--tx);overflow-wrap:anywhere}.tg-main span{display:block;font-size:12.5px;color:var(--mu);margin-top:1px}
+.tg-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.tg-nom{font-size:11.5px;font-weight:600;color:var(--mu)}
+.tg-empty{padding:18px 16px;text-align:center;font-size:13.5px;color:var(--mu)}
 </style>
 </head>
 <body class="splash-active">
@@ -1642,7 +1664,7 @@ async function loadServerState(){
     rpc('owner_list_members',{p_role:'spg'}),
     rpc('owner_list_members',{p_role:'checker'}),
     safeLoad(selectRows('user_notifications',q=>q.is('read_at',null).order('created_at',{ascending:false}).limit(30))),
-    safeLoad(selectRows('owner_bills',q=>q.order('created_at',{ascending:false}).limit(30))),
+    safeLoad(selectRows('owner_bills',q=>q.order('created_at',{ascending:false}).limit(500))),
     safeLoad(selectRows('monitoring_daily_transactions',q=>q.eq('sales_date',todayJakarta()).order('occurred_at',{ascending:false}).limit(100))),
     safeLoad(selectRows('ice_orders',q=>q.order('created_at',{ascending:false}).limit(50))),
     safeLoad(selectRows('store_restock_requests',q=>q.order('created_at',{ascending:false}).limit(50))),
@@ -1717,6 +1739,7 @@ function startRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'store_operation_sessions'},refreshAndDraw)
     .on('postgres_changes',{event:'*',schema:'public',table:'user_notifications'},refreshAndDraw)
     .on('postgres_changes',{event:'*',schema:'public',table:'audit_logs'},refreshAndDraw)
+    .on('postgres_changes',{event:'*',schema:'public',table:'owner_bills'},refreshAndDraw)
     .subscribe();
 }
 /* ===== KELOLA DATA UTAMA ===== */
@@ -2459,7 +2482,7 @@ function home(){
 <button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>My Team</b><small>${(state.spg.length+state.checker.length)} anggota</small></button>
 <button data-o="gerai"><span class="lux-action-icon">🏪</span><b>Gerai</b><small>${gerai.length} gerai</small></button>
 <button data-o="nota"><span class="lux-action-icon">🧾</span><b>Nota</b><small>Transaksi</small></button>
-<button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>Jatuh tempo</small></button>
+<button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>${(state.bills||[]).filter(b=>b.status==='open').length} belum dibayar</small></button>
 <button data-o="history-beli-bayar"><span class="lux-action-icon">🛒</span><b>History Beli&amp;Bayar</b><small>Riwayat</small></button>
 <button data-o="pengumuman"><span class="lux-action-icon">📣</span><b>Buat Pengumuman</b><small>Tim gerai</small></button>
 <button data-o="log-aktifitas"><span class="lux-action-icon">🧾</span><b>Riwayat Aktivitas</b><small>Catatan perubahan data</small></button>
@@ -2530,6 +2553,36 @@ function adm(){
 }
 
 /* ===== Aksi ===== */
+/* ===== Kartu Tagihan: dikelompokkan per opsi bayar, lalu per gerai ===== */
+function tagihanSheet(){
+  const bills=(state.bills||[]).filter(b=>b.status!=='cancelled');
+  const storeName=id=>{const g=(gerai||[]).find(x=>x.id===id);return g?g.nama:'Gerai tidak dikenal'};
+  const sumQty=a=>a.reduce((n,b)=>n+(Number(b.quantity)||0),0);
+  const qtyTxt=n=>(Number(n)||0).toLocaleString('id-ID')+' BAL';
+  const groups=[
+    {key:'bill',cls:'warn',icon:'🧾',title:'Masuk Tagihan',sub:'Menunggu pembayaran',rows:bills.filter(b=>b.payment_option==='bill')},
+    {key:'pay_now',cls:'ok',icon:'💵',title:'Bayar Langsung',sub:'Dibayar saat drop',rows:bills.filter(b=>b.payment_option==='pay_now')},
+    {key:'other',cls:'',icon:'💰',title:'Tagihan Lain',sub:'Di luar form Drop Es',rows:bills.filter(b=>!b.payment_option)}
+  ].filter(g=>g.key!=='other'||g.rows.length);
+  const row=b=>{
+    const title=esc(b.depo_name||b.description||'Tagihan');
+    const meta=[b.quantity?qtyTxt(b.quantity):'',fmtWaktu(b.created_at)].filter(Boolean).join(' · ');
+    const st=b.status==='paid'?'<span class="chip ok">Lunas</span>':'<span class="chip warn">Belum dibayar</span>';
+    const nom=Number(b.amount)>0?`<span class="amt">${rp(b.amount)}</span>`:'<span class="tg-nom">Nominal belum diisi</span>';
+    return `<div class="tg-row"><div class="tg-main"><b>${title}</b><span>${esc(meta)}</span></div><div class="tg-side">${nom}${st}</div></div>`;
+  };
+  const byStore=rows=>{
+    const m=new Map();
+    rows.forEach(b=>{const k=b.store_id||'-';if(!m.has(k))m.set(k,[]);m.get(k).push(b)});
+    return [...m.entries()].map(([id,list])=>{
+      const qty=sumQty(list);
+      return `<div class="tg-store"><div class="tg-store-h"><b>🏪 ${esc(storeName(id))}</b><span>${list.length} drop${qty?' · '+qtyTxt(qty):''}</span></div>${list.map(row).join('')}</div>`;
+    }).join('');
+  };
+  const tiles=groups.filter(g=>g.key!=='other').map(g=>`<div class="tg-tile ${g.cls}"><small>${g.title}</small><b>${g.rows.length}</b><em>${qtyTxt(sumQty(g.rows))}</em></div>`).join('');
+  const secs=groups.map(g=>`<section class="tg-sec ${g.cls}"><div class="tg-sec-h"><span class="tg-ic">${g.icon}</span><div class="t"><b>${g.title}</b><small>${g.sub}</small></div><span class="chip ${g.cls}">${g.rows.length} drop</span></div>${g.rows.length?byStore(g.rows):'<div class="tg-empty">Belum ada drop dengan opsi ini.</div>'}</section>`).join('');
+  sheet(`<h3>Tagihan</h3><div class="tg-sum">${tiles}</div>${secs}`);
+}
 function bind(){document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>act(b.dataset.o))}
 async function act(o){
  try{
@@ -2546,7 +2599,8 @@ async function act(o){
     return;
   }
   if(o==='tagihan'){
-    sheet(`<h3>Tagihan</h3><div class="card">${state.bills.length?state.bills.map(x=>li('💰',esc(x.description),`${esc(x.status)} · ${esc(x.due_at||'')}`,`<span class="amt">${rp(x.amount)}</span>`)).join(''):'<div class="empty">Belum ada tagihan tercatat.</div>'}</div>`);
+    try{state.bills=asArray(await selectRows('owner_bills',q=>q.order('created_at',{ascending:false}).limit(500)))}catch(e){console.error(e)}
+    tagihanSheet();
     return;
   }
   if(o==='history-beli-bayar'||o==='finance'){
