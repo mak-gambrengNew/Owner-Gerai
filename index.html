@@ -1189,6 +1189,164 @@ h1,h2,h3,.owner-identity strong,.lux-section-head h2{font-family:var(--font-disp
 @media (max-height:700px){.gl-qrbox{width:188px;height:188px}.gl-card{padding-top:24px}.gl-seal{width:58px;height:58px;margin-bottom:12px}}
 @media (prefers-reduced-motion:reduce){.gl-ov,.gl-card{transition:none}.gl-seal i,.gl-qrload,.gl-wait{animation:none}}
 </style>
+<style id="lg-elite">
+/* =====================================================================
+   LOGIN — GREEN GLOSSY ELITE
+   Hanya menimpa tampilan. Markup & logika login tidak diubah.
+   ===================================================================== */
+main.lg{
+  --g-ink:#F3FBF7;--g-soft:rgba(236,248,242,.72);--g-gold:#E6CD8C;--g-gold2:#C9A24A;
+  position:absolute;inset:0;left:0;right:0;transform:none;max-width:none;width:100%;
+  display:flex;flex-direction:column;justify-content:flex-start;
+  padding:calc(env(safe-area-inset-top,0px) + 28px) 20px calc(env(safe-area-inset-bottom,0px) + 26px);
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;isolation:isolate;color:var(--g-ink);box-shadow:none;
+  background:
+    repeating-linear-gradient(135deg,rgba(255,255,255,.028) 0 1px,transparent 1px 14px),
+    radial-gradient(120% 58% at 50% -8%,rgba(111,232,195,.46),transparent 60%),
+    radial-gradient(80% 55% at 0% 72%,rgba(11,139,110,.55),transparent 66%),
+    radial-gradient(90% 50% at 100% 100%,rgba(230,205,140,.15),transparent 62%),
+    linear-gradient(165deg,#0B8266 0%,#06483A 44%,#032B22 100%)!important;
+}
+/* pantulan kaca di bagian atas */
+main.lg::before{
+  content:"";position:absolute;z-index:-1;left:-12%;right:-12%;top:0;bottom:auto;width:auto;height:44%;
+  border:0;box-shadow:none;border-radius:0 0 50% 50%/0 0 34% 34%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.06) 56%,rgba(255,255,255,0) 100%);
+}
+/* kilau yang menyapu sekali saat halaman dibuka */
+main.lg::after{
+  content:"";position:absolute;z-index:-1;left:0;right:0;top:0;bottom:0;width:auto;height:auto;
+  border:0;border-radius:0;box-shadow:none;pointer-events:none;opacity:0;transform:translateX(-100%);
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.14) 48%,rgba(255,255,255,.04) 55%,transparent 62%);
+  animation:lgSheen 1.9s .35s cubic-bezier(.4,0,.2,1) 1 forwards;
+}
+@keyframes lgSheen{0%{opacity:1;transform:translateX(-100%)}100%{opacity:1;transform:translateX(100%)}}
+
+main.lg .lg-hero{flex:0 0 auto;min-height:0;width:min(100%,430px);margin:auto auto 22px;padding:0;text-align:center}
+main.lg .lg-brand{width:100%}
+
+/* medali logo */
+main.lg .lg-brand .logo{
+  position:relative;width:116px!important;height:116px!important;margin:0 auto 18px;padding:4px!important;border:0;border-radius:50%;overflow:hidden;
+  background:conic-gradient(from 210deg,#F6E5B2,#C9A24A 26%,#F6E5B2 50%,#B88A33 76%,#F6E5B2)!important;
+  box-shadow:0 18px 40px rgba(0,25,19,.5),0 0 0 8px rgba(230,205,140,.10),0 0 64px rgba(111,232,195,.30)!important;
+}
+main.lg .lg-brand .logo img{width:100%;height:100%;display:block;object-fit:contain;border-radius:50%;background:#fff}
+main.lg .lg-brand .logo::after{content:"";position:absolute;inset:4px;border-radius:50%;pointer-events:none;background:linear-gradient(158deg,rgba(255,255,255,.4),rgba(255,255,255,0) 40%)}
+
+main.lg .lg-kicker{
+  display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;padding:7px 14px 7px 12px;border-radius:99px;
+  font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:none;color:#F0E3B8!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.17),rgba(255,255,255,.05))!important;
+  border:1px solid rgba(230,205,140,.4)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 6px 16px rgba(0,30,23,.25);
+}
+main.lg .lg-kicker i{width:7px;height:7px;border-radius:50%;background:var(--g-gold);box-shadow:0 0 0 4px rgba(230,205,140,.2)}
+main.lg .lg-hero h1{
+  margin:0;font-family:var(--font-display,'Manrope',system-ui,sans-serif);font-size:clamp(30px,9vw,38px);line-height:1.05;font-weight:800;
+  letter-spacing:-.03em!important;color:#fff;text-shadow:0 2px 0 rgba(0,40,31,.35),0 12px 30px rgba(0,30,23,.35);
+}
+main.lg .lg-hero p{margin:10px auto 0;max-width:320px;font-size:14px;line-height:1.5;color:var(--g-soft)}
+main.lg .lg-hero p strong{color:#F1DFA6;font-weight:800}
+
+/* kartu kaca */
+main.lg .lg-card{
+  position:relative;flex:0 0 auto;width:min(100%,430px);margin:0 auto auto;padding:26px 20px 20px;border-radius:30px;color:var(--g-ink);
+  background:linear-gradient(160deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.07) 38%,rgba(2,34,26,.44) 100%);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 30px 70px rgba(0,22,17,.55),0 1px 0 rgba(255,255,255,.45) inset,0 -1px 0 rgba(0,0,0,.22) inset;
+  -webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
+}
+main.lg .lg-card::before{
+  content:"";display:block;position:absolute;left:36px;right:36px;top:0;width:auto;height:2px;margin:0;border-radius:0 0 4px 4px;
+  background:linear-gradient(90deg,transparent,var(--g-gold),transparent);
+}
+main.lg .lg-heading{margin:0}
+main.lg .lg-heading strong{display:block;font-family:var(--font-display,'Manrope',system-ui,sans-serif);font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.02em;color:#fff}
+main.lg .lg-heading span{display:block;margin-top:7px;font-size:13.5px;line-height:1.45;color:var(--g-soft)}
+
+/* kolom kode akses */
+main.lg .lg-f{
+  position:relative;display:block;height:70px;min-height:0;margin-top:20px;border-radius:18px;
+  border:1px solid rgba(255,255,255,.2);
+  background:linear-gradient(180deg,rgba(2,30,23,.58),rgba(2,30,23,.34));
+  box-shadow:0 2px 6px rgba(0,0,0,.28) inset,0 1px 0 rgba(255,255,255,.12);transition:border-color .18s,box-shadow .18s,background .18s;
+}
+main.lg .lg-f:focus-within{border-color:var(--g-gold);background:rgba(2,30,23,.66);box-shadow:0 0 0 4px rgba(230,205,140,.18),0 2px 6px rgba(0,0,0,.28) inset}
+main.lg .lg-f.bad{border-color:#FF9AA2;box-shadow:0 0 0 4px rgba(255,154,162,.16),0 2px 6px rgba(0,0,0,.28) inset}
+main.lg .lg-f .lead{position:absolute;left:16px;top:0;bottom:0;width:26px;flex:none;display:grid;place-items:center;color:var(--g-gold);pointer-events:none}
+main.lg .lg-f .lead svg.i,main.lg .lg-f .i{width:22px;height:22px;stroke-width:1.9}
+main.lg .lg-f label{position:absolute;left:52px;top:13px;margin:0;order:0;font-size:11.5px;font-weight:700;letter-spacing:.02em;line-height:1;text-transform:none;color:var(--g-gold);pointer-events:none}
+main.lg .lg-f input{
+  display:block;width:100%;height:100%;min-width:0;border:0!important;outline:0!important;border-radius:18px!important;background:transparent!important;box-shadow:none!important;
+  padding:28px 62px 6px 52px!important;font-size:20px;font-weight:700;letter-spacing:3px;color:#fff;-webkit-text-fill-color:#fff;caret-color:var(--g-gold);
+}
+main.lg .lg-f input::placeholder{color:rgba(236,248,242,.4);-webkit-text-fill-color:rgba(236,248,242,.4);letter-spacing:0;font-weight:500;font-size:16px}
+main.lg .lg-f input:focus::placeholder{color:transparent;-webkit-text-fill-color:transparent}
+main.lg .lg-f input:-webkit-autofill{-webkit-text-fill-color:#fff;caret-color:#fff;box-shadow:0 0 0 100px #06382D inset!important;transition:background-color 9999s}
+main.lg .lg-f .eye{position:absolute;right:6px;top:8px;width:54px;height:54px;flex:none;display:grid;place-items:center;border-radius:14px;color:rgba(236,248,242,.72);z-index:3}
+main.lg .lg-f .eye:active{background:rgba(255,255,255,.1)}
+main.lg .lg-f .eye svg.i{width:24px;height:24px;stroke-width:1.8}
+main.lg .lg-err{margin:10px 3px 0;font-size:13px;font-weight:700;line-height:1.4;color:#FFB3B9}
+
+/* tombol emas berkilau */
+main.lg .lg-btn{
+  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;height:60px;margin-top:16px;
+  border:0;border-radius:18px!important;font-size:17px;font-weight:800;letter-spacing:.01em;color:#06342A;
+  background:linear-gradient(180deg,#F8E9B9 0%,#E2C26E 48%,#C9A24A 100%)!important;
+  box-shadow:0 14px 28px rgba(0,22,17,.45),0 1px 0 rgba(255,255,255,.7) inset,0 -3px 0 rgba(120,85,15,.25) inset;
+}
+main.lg .lg-btn::after{content:"";position:absolute;left:0;right:0;top:0;height:50%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.04))}
+main.lg .lg-btn:not(:disabled):active{transform:scale(.985)}
+main.lg .lg-btn:disabled{opacity:1;color:rgba(236,248,242,.5);background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.07))!important;box-shadow:0 1px 0 rgba(255,255,255,.18) inset;border:1px solid rgba(255,255,255,.14)}
+main.lg .lg-btn:disabled::after{display:none}
+main.lg .lg-btn.load:disabled{color:#06342A;border:0;cursor:wait;background:linear-gradient(180deg,#F8E9B9 0%,#E2C26E 48%,#C9A24A 100%)!important;box-shadow:0 14px 28px rgba(0,22,17,.45),0 1px 0 rgba(255,255,255,.7) inset}
+main.lg .lg-btn.load:disabled::after{display:block}
+main.lg .lg-btn.ok{color:#04271E;background:linear-gradient(180deg,#A8F3D6,#4FD3A0 52%,#1FA971)!important}
+main.lg .lg-btn .sp{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(6,52,42,.28);border-top-color:#06342A}
+main.lg .lg-btn svg.i{width:23px;height:23px;stroke-width:2.7}
+
+main.lg .lg-security{display:flex;align-items:flex-start;justify-content:center;gap:8px;margin:18px 10px 0;font-size:12px;line-height:1.45;text-align:center;color:rgba(236,248,242,.62)}
+main.lg .lg-security svg.i{width:16px;height:16px;flex:0 0 16px;color:var(--g-gold)}
+main.lg .lg-note{margin:6px 0 0;text-align:center;font-size:11px;color:rgba(236,248,242,.44)}
+
+@keyframes lgShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px)}40%,60%{transform:translateX(6px)}}
+main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
+
+@media(max-width:380px){
+  main.lg{padding-left:14px;padding-right:14px}
+  main.lg .lg-brand .logo{width:100px!important;height:100px!important}
+  main.lg .lg-card{padding:24px 16px 18px}
+}
+@media(max-height:700px){
+  main.lg{padding-top:calc(env(safe-area-inset-top,0px) + 16px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
+  main.lg .lg-hero{margin-bottom:14px}
+  main.lg .lg-brand .logo{width:92px!important;height:92px!important;margin-bottom:12px}
+  main.lg .lg-hero h1{font-size:28px}
+  main.lg .lg-hero p{margin-top:6px;font-size:12.5px}
+  main.lg .lg-card{padding:22px 16px 16px}
+  main.lg .lg-heading strong{font-size:20px}
+  main.lg .lg-f{height:64px;margin-top:14px}
+  main.lg .lg-f label{top:11px}
+  main.lg .lg-f input{padding-top:26px!important}
+  main.lg .lg-f .eye{top:5px}
+  main.lg .lg-btn{height:56px;margin-top:12px}
+  main.lg .lg-security{margin-top:12px}
+}
+@media(max-height:580px){
+  main.lg .lg-kicker,main.lg .lg-hero p{display:none}
+  main.lg .lg-brand .logo{width:72px!important;height:72px!important;margin-bottom:8px}
+  main.lg .lg-hero h1{font-size:24px}
+  main.lg .lg-heading span{display:none}
+}
+@media(prefers-reduced-motion:reduce){main.lg::after{animation:none;opacity:0}main.lg .lg-card.shake{animation:none}}
+
+/* =====================================================================
+   HEADER DASHBOARD OWNER — STATIS (tidak ikut ter-scroll)
+   Header tetap menempel di atas; hanya konten di bawahnya yang bergulir.
+   ===================================================================== */
+.scr{isolation:isolate;overscroll-behavior-y:none}
+.scr>.owner-command-header{position:sticky;top:0;z-index:20;margin:0}
+</style>
 </head>
 <body class="splash-active">
 <div id="app"></div>
