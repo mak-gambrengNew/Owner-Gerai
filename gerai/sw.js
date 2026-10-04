@@ -1,4 +1,4 @@
-const CACHE='gerai-spg-prod-v6';
+const CACHE='gerai-spg-prod-v7';
 const BASE='/gerai/';
 const SHELL=[BASE+'index.html',BASE+'manifest.webmanifest',BASE+'icon-192.png',BASE+'icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));

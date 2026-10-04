@@ -1210,9 +1210,10 @@ function showStoreGate(){
 }
 function renderOpeningLogistics(){
   var box=el('openingLogistics'),items=MASTER_LOGISTICS||[];
-  if(!items.length){box.innerHTML='<div class="emptyh">Data stok awal belum tersedia dari backend.</div>';return}
+  var keep={};box.querySelectorAll('[data-logistic-id]').forEach(function(cb){var q=box.querySelector('[data-logistic-qty="'+cb.dataset.logisticId+'"]');keep[cb.dataset.logisticId]={on:cb.checked,v:q?q.value:'0'}});
+  if(!items.length){box.innerHTML='<div class="emptyh">Belum ada item logistik aktif dari Owner.</div>';return}
   box.innerHTML=items.map(function(x){var id=x.inventory_item_id||x.id;return '<label class="logistic-row"><input type="checkbox" data-logistic-id="'+id+'" checked><span class="logistic-name"><b>'+escMsg(x.name||'Item')+'</b><small>'+escMsg(x.unit||'')+' · '+(String(x.logistics_type||'').toUpperCase()==='ACTIVE'?'Aktif · berkurang saat penjualan':'Pasif · diperiksa Checker')+'</small></span><input class="logistic-qty" data-logistic-qty="'+id+'" type="number" min="0" step="0.01" inputmode="decimal" value="0" aria-label="Jumlah '+escMsg(x.name||'Item')+'"></label>'}).join('');
-  box.querySelectorAll('[data-logistic-id]').forEach(function(cb){cb.addEventListener('change',function(){var q=box.querySelector('[data-logistic-qty="'+cb.dataset.logisticId+'"]');q.disabled=!cb.checked})});
+  box.querySelectorAll('[data-logistic-id]').forEach(function(cb){var k=keep[cb.dataset.logisticId];if(k){cb.checked=k.on;var q0=box.querySelector('[data-logistic-qty="'+cb.dataset.logisticId+'"]');if(q0){q0.value=k.v;q0.disabled=!k.on}}cb.addEventListener('change',function(){var q=box.querySelector('[data-logistic-qty="'+cb.dataset.logisticId+'"]');q.disabled=!cb.checked})});
 }
 function openStoreForm(){
   if(!backend.context||!backend.context.store){el('openingError').textContent='Data Gerai belum tersedia dari server.';return}
@@ -1895,7 +1896,7 @@ function renderOtherHistory(h){
 function setHistoryView(name){$$('.history-tab').forEach(function(b){var on=b.dataset.history===name;b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false')});$$('[data-history-panel]').forEach(function(p){p.classList.toggle('hidden',p.dataset.historyPanel!==name)});if(name==='sales')renderHistList();else loadHistoryFromServer()}
 $$('.history-tab').forEach(function(b){b.addEventListener('click',function(){setHistoryView(b.dataset.history)})});
 function stockLow(){return db.stock.filter(function(s){return s.qty<=s.min})}
-function renderSync(){var p=pendingSales.length,pill=el('syncPill');pill.className='pill'+(syncing?' busy':(p?' wait':''));el('syncTxt').textContent=syncing?'Mengirim…':(p?(p+' menunggu kirim'):(backend.online?'Online':'Tidak ada koneksi'));renderStrips();if(histOpen&&el('hlist'))renderHistList()}
+function renderSync(){var p=pendingSales.length,pill=el('syncPill');pill.className='pill'+(syncing?' busy':(p?' wait':''));el('syncTxt').textContent=syncing?'Mengirim…':(p?(p+' menunggu kirim'):(backend.online?(typeof masterSync!=='undefined'&&masterSync.stale?'Data belum terverifikasi':'Online'):'Tidak ada koneksi'));renderStrips();if(histOpen&&el('hlist'))renderHistList()}
 function renderStrips(){var h='',pend=pendingSales;if(editing){var t=txById(editing.id);h+='<div class="strip edit"><i></i><span>Mengedit #'+(t?t.no:'')+'</span><button class="u" id="stCancel" style="color:#fff;font-weight:600">Batal</button></div>'}if(pend.length){var oldest=Math.min.apply(null,pend.map(function(t){return t.created_at||Date.now()}));if(Date.now()-oldest>WARN_UNSYNCED_MS)h+='<button class="strip yellow" id="stSync"><i></i><span>'+pend.length+' transaksi belum tersinkron</span><u>Kirim ulang</u></button>'}el('strips').innerHTML=h;var b=el('stCancel');if(b)b.onclick=cancelEdit;b=el('stSync');if(b)b.onclick=function(){attempt=0;kick();toast('Mencoba kirim ulang')}}
 function renderTop(){el('todayCount').textContent=db.count+' transaksi hari ini'}
 function renderStock(){var low=0;if(!db.stock.length){el('stokList').innerHTML='<div class="emptyh">Stok belum dimuat dari backend.</div>';el('stokInfo').textContent='Menunggu data stok dari backend.';return}el('stokList').innerHTML=db.stock.map(function(s){var cls='',st='Aman';if(s.qty===0){cls='out';st='Habis. Segera hubungi admin.';low++}else if(s.qty<=s.min){cls='low';st='Menipis. Minimal '+fmtMin(s)+' '+s.unit+'.';low++}var pct=Math.min(100,Math.round(s.qty/Math.max(s.max,1)*100));return '<div class="stock '+cls+'"><div class="ring" style="--p:'+pct+'"><span class="num">'+pct+'%</span></div><div class="info"><div class="top"><b>'+escMsg(s.name)+'</b><span class="q num">'+fmtQty(s)+' <small>'+escMsg(s.unit)+'</small></span></div><div class="sti">'+st+'</div></div></div>'}).join('');el('stokInfo').textContent=(low?(low+' item perlu diisi ulang. '):'Semua stok aman. ')+'Angka final dihitung server.'}
@@ -1921,6 +1922,59 @@ function openIceReceive(){
 }
 /* ================= Notifikasi Web Push ================= */
 async function loadPushState(){var b=document.querySelector('.header-actions');if(!b||!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return;if(document.getElementById('pushCtl'))return;var btn=document.createElement('button');btn.id='pushCtl';btn.className='ghost push-button';btn.type='button';btn.textContent='🔔 Aktifkan notifikasi';b.insertBefore(btn,b.firstChild);try{var reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){btn.textContent='🔔 Aktif';return}}catch(e){}btn.onclick=async function(){try{if(Notification.permission==='denied')throw new Error('Notifikasi diblokir browser. Izinkan dari pengaturan situs.');var permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();if(permission!=='granted')throw new Error('Izin notifikasi belum diberikan.');var reg=await navigator.serviceWorker.ready,key=VAPID_PUBLIC_KEY;var raw=atob((key+'='.repeat((4-key.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'));var arr=Uint8Array.from([...raw].map(function(c){return c.charCodeAt(0)}));var sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:arr});var j=sub.toJSON(),r=await apiInvoke('chat-register-push',{endpoint:j.endpoint,p256dh:j.keys&&j.keys.p256dh,auth_key:j.keys&&j.keys.auth,device_label:'PWA Gerai'});if(!r.ok&&r.success!==true)throw new Error(r.error||'Registrasi push gagal');btn.textContent='🔔 Aktif';toast('Notifikasi Gerai berhasil diaktifkan.','success')}catch(e){toast(e.message||'Notifikasi belum dapat diaktifkan.')}}}
+/* ================= Sinkronisasi master Owner (realtime + fallback) ================= */
+// Owner = otoritas master. Gerai hanya mengambil ulang data dari server saat ada sinyal perubahan.
+var masterSync={channel:null,busy:false,pending:false,stale:false,timer:null,wasDown:false,bid:null,lastOk:0};
+function masterSnapshot(){var o={};MENU.forEach(function(m){o[m.id]={name:m.name,price:m.price}});return o}
+function masterSig(){return JSON.stringify([MENU.map(function(m){return [m.id,m.name,m.price,m.category]}),(MASTER_LOGISTICS||[]).map(function(x){return [x.id,x.name,x.unit,x.logistics_type]})])}
+async function syncMaster(){
+  if(!SLUG||!backend.context||!getSession())return;
+  if(masterSync.busy){masterSync.pending=true;return}
+  masterSync.busy=true;
+  var beforeSig=masterSig(),beforeMenu=masterSnapshot(),priceChanged=[],removed=[];
+  try{
+    await refreshContext();
+    masterSync.stale=false;masterSync.lastOk=Date.now();
+    if(masterSig()!==beforeSig){
+      Object.keys(order).forEach(function(id){
+        var now=byId(id),was=beforeMenu[id];
+        if(!now){removed.push(was?was.name:'Menu');delete order[id]}
+        else if(was&&was.price!==now.price)priceChanged.push(now.name)
+      });
+      if(CATS.indexOf(cat)<0)cat='Semua';
+      renderAll();
+      if(el('openStore')&&el('openStore').classList.contains('on'))renderOpeningLogistics();
+      if(removed.length)toast('Menu tidak lagi tersedia: '+removed.join(', ')+'. Pesanan disesuaikan.');
+      else if(priceChanged.length)toast('Harga diperbarui oleh Owner: '+priceChanged.join(', ')+'. Periksa pesanan.');
+      if((removed.length||priceChanged.length)&&el('backdrop').classList.contains('open')){closeSheet();try{refresh()}catch(_){}}
+    }
+  }catch(e){masterSync.stale=true}
+  finally{masterSync.busy=false;renderSync();if(masterSync.pending){masterSync.pending=false;setTimeout(syncMaster,0)}}
+}
+function debouncedMasterSync(){clearTimeout(masterSync.timer);masterSync.timer=setTimeout(syncMaster,400)}
+function stopMasterRealtime(){if(masterSync.channel&&supa){try{supa.removeChannel(masterSync.channel)}catch(_){}}masterSync.channel=null;masterSync.bid=null}
+function startMasterRealtime(){
+  var bid=backend.context&&backend.context.business&&backend.context.business.id;
+  if(!supa||!bid)return;
+  stopMasterRealtime();masterSync.bid=bid;
+  masterSync.channel=supa.channel('gerai-master-'+bid)
+    .on('postgres_changes',{event:'*',schema:'public',table:'master_data_revision',filter:'business_id=eq.'+bid},debouncedMasterSync)
+    .subscribe(function(status){
+      if(status==='SUBSCRIBED'){if(masterSync.wasDown){masterSync.wasDown=false;syncMaster()}}
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){masterSync.wasDown=true}
+    });
+}
+// penjaga: pasang/lepas channel sesuai sesi, polling cadangan ±60 dtk saat aplikasi aktif
+setInterval(function(){
+  var ok=!!(getSession()&&backend.context);
+  var bid=ok&&backend.context.business&&backend.context.business.id;
+  if(ok&&bid&&masterSync.bid!==bid)startMasterRealtime();
+  if(!ok&&masterSync.channel)stopMasterRealtime();
+},3000);
+setInterval(function(){if(!document.hidden&&navigator.onLine)syncMaster()},60000);
+window.addEventListener('online',function(){syncMaster()});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)syncMaster()});
+
 /* ================= Tick berkala ================= */
 setInterval(function(){
   if(!el('app').classList.contains('on'))return;
