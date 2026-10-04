@@ -79,7 +79,7 @@ Satu proyek Vercel, dua PWA terpisah:
 | `/` | Owner | `/sw.js` (scope `/`, tidak menyentuh `/gerai/`) | dibuat di `index.html` |
 | `/gerai/<slug>/` | Gerai (SPG) | `/gerai/sw.js` (scope `/gerai/`) | dibuat per-gerai di `gerai/index.html` |
 
-- `vercel.json` mengarahkan semua `/gerai/*` yang bukan file ke `/gerai/index.html`.
+- `vercel.json` mengarahkan semua `/gerai` dan `/gerai/*` (dengan atau tanpa garis miring di akhir) yang bukan file ke `/gerai/index.html`. Pola `:path*` tidak cocok dengan garis miring di akhir, sehingga `/gerai/<slug>/` sempat 404; gunakan pola `(.*)`.
 - Splash, cache, dan sesi login kedua aplikasi terpisah (Gerai memakai `storageKey: sb-gerai-spg-auth`).
 - Jangan menaruh `index.html`/`sw.js` Gerai di akar repo; folder `gerai/` harus tetap ada.
 - Domain dasar link gerai disimpan di trigger database `set_store_pwa_url`.

@@ -5,7 +5,7 @@
       "destination": "/gerai/index.html"
     },
     {
-      "source": "/gerai/:path*",
+      "source": "/gerai/(.*)",
       "destination": "/gerai/index.html"
     }
   ],
