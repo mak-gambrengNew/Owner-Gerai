@@ -2,6 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://bhdnkvjktznkdwoqrvlb.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Teh Solo Ma'Gambreng · SPG</title>
 <meta name="theme-color" content="#008438">
@@ -456,6 +458,13 @@ button:focus-visible,input:focus-visible,.drum-track:focus-visible{outline:3px s
 .toast{position:absolute;left:14px;right:14px;top:calc(var(--sat) + 12px);background:#FFF8D8;color:var(--ink);padding:15px 17px;border-radius:18px;font-weight:600;display:flex;gap:10px;align-items:center;transform:translateY(-140%);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.9,.3,1),opacity .18s;z-index:30;box-shadow:0 14px 28px -12px rgba(11,59,34,.32),0 0 0 1px #E8C83A}
 .toast.show{transform:none;opacity:1}
 .toast i{width:11px;height:11px;border-radius:50%;background:#F0B900;flex:none;box-shadow:0 0 0 4px #F0B90025}
+.toast.t-success{background:#E6F6EA;box-shadow:0 14px 28px -12px rgba(11,59,34,.32),0 0 0 1px #7CC48F}.toast.t-success i{background:#1E9E4A;box-shadow:0 0 0 4px #1E9E4A25}
+.toast.t-info{background:#E8F1FB;box-shadow:0 14px 28px -12px rgba(11,40,80,.28),0 0 0 1px #8DB6E6}.toast.t-info i{background:#2F78D0;box-shadow:0 0 0 4px #2F78D025}
+.toast.t-warn{background:#FFF8D8}
+.toast.t-error{background:#FDECEA;box-shadow:0 14px 28px -12px rgba(120,20,10,.3),0 0 0 1px #E8928A}.toast.t-error i{background:#D63A2F;box-shadow:0 0 0 4px #D63A2F25}
+.toast.t-loading{background:#EEF3F0;box-shadow:0 14px 28px -12px rgba(11,59,34,.25),0 0 0 1px #B8CFC2}.toast.t-loading i{width:15px;height:15px;background:transparent;box-shadow:none;border:2.5px solid #9DB8A8;border-top-color:#008438;animation:toastspin .7s linear infinite}
+@keyframes toastspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.toast.t-loading i{animation-duration:2s}}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.drum-item{transform:none!important}}
 
@@ -1055,7 +1064,19 @@ async function apiSale(method,payload){
 function normalizeContext(c){
   backend.context=c||{};
   var menus=(c&&c.menus)||[];
-  MENU=menus.map(function(m){return {id:m.id,name:m.name||m.title||'Menu',price:Number(m.price||0),category:m.category||m.category_name||'Menu',active:m.active!==false}}).filter(function(m){return m.active});
+  if(!Array.isArray(menus))menus=[];
+  var masterLog=(c&&Array.isArray(c.logistics))?c.logistics:[];
+  var logById={};masterLog.forEach(function(x){if(x&&x.id)logById[x.id]=x});
+  MENU=menus.filter(function(m){return m&&m.id}).map(function(m){
+    var c2=String(m.category||m.category_name||'').trim()||'Menu';
+    var raw=Array.isArray(m.logistics)?m.logistics:(Array.isArray(m.consumptions)?m.consumptions:(Array.isArray(m.composition)?m.composition:[]));
+    var logs=raw.filter(Boolean).map(function(l){
+      var lid=l.inventory_item_id||l.inventory_id||l.id,ref=logById[lid]||{};
+      return {id:lid,name:l.name||ref.name||'Item',unit:l.unit||ref.unit||'',per:Number(l.quantity_per_sale!=null?l.quantity_per_sale:(l.quantity!=null?l.quantity:l.per))||0,type:l.logistics_type||ref.logistics_type||'active'};
+    }).filter(function(l){return l.id&&l.per>0&&l.type==='active'});
+    var price=Number(m.price);
+    return {id:m.id,name:String(m.name||m.title||'Menu'),price:isFinite(price)?price:0,category:c2,cat:c2,active:m.active!==false&&(m.status==null||m.status==='active'),logistics:logs};
+  }).filter(function(m){return m.active});
   CATS=['Semua'].concat(MENU.map(function(m){return m.category}).filter(function(v,i,a){return v&&a.indexOf(v)===i}));
   var cats=CATS.slice(1);cats.forEach(function(cat,i){TINT[cat]={fg:i%2?'#7A5340':'#8A5300',bg:i%2?'#F0E2D8':'#FCEBB6'};GLYPH[cat]='<svg viewBox="0 0 40 40"><path d="M12 10h16l-1.6 23a2 2 0 0 1-2 1.8h-8.8a2 2 0 0 1-2-1.8z"/><path d="M13 18h14"/></svg>'});
   var inv=(c&&c.inventory)||[], logistics=(c&&c.logistics)||[];
@@ -1088,6 +1109,13 @@ function setHistoryData(h){hydrateHistory(h);renderHistList();renderOtherHistory
 function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
 function rp(n){return 'Rp '+Math.round(n).toLocaleString('id-ID')}
 function el(id){return document.getElementById(id)}
+function menuStock(id){var s=db.stock.filter(function(x){return x.id===id})[0];if(s)return s.qty;var l=(MASTER_LOGISTICS||[]).filter(function(x){return x.id===id})[0];return l?l.store_quantity:0}
+function fmtNum(n){return (Math.round(Number(n)*10000)/10000).toLocaleString('id-ID')}
+function menuLogisticsHtml(m,n){
+  var L=m.logistics||[];
+  if(!L.length)return '<div class="step-note"><span>•</span><div><b>Tanpa logistik aktif</b><small>Menu ini tidak mengurangi stok saat terjual.</small></div></div>';
+  return '<div class="step-note" style="display:block"><b>Logistik aktif menu ini</b>'+L.map(function(l){var use=l.per*(n||1),have=menuStock(l.id),low=use>have;return '<small style="display:flex;justify-content:space-between;gap:8px;margin-top:4px'+(low?';color:#B3261E':'')+'"><span>'+escMsg(l.name)+' · '+fmtNum(l.per)+' '+escMsg(l.unit)+'/item'+(n?' → '+fmtNum(use)+' '+escMsg(l.unit):'')+'</span><span>stok '+fmtNum(have)+' '+escMsg(l.unit)+(low?' (kurang)':'')+'</span></small>'}).join('')+'</div>';
+}
 function byId(id){return MENU.filter(function(m){return m.id===id})[0]}
 function pad(n){return String(n).padStart(3,'0')}
 function show(id){$$('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)})}
@@ -1096,7 +1124,39 @@ function hhmm(ms){return new Date(ms).toLocaleTimeString('id-ID',{hour:'2-digit'
 function fmtQty(s){var v=s.qty/s.k;return s.k===1?v.toLocaleString('id-ID'):(Math.round(v*10)/10).toLocaleString('id-ID')}
 function fmtMin(s){var v=s.min/s.k;return (s.k===1?v:Math.round(v*10)/10).toLocaleString('id-ID')}
 var toastT;
-function toast(msg){el('toastMsg').textContent=msg;var t=el('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},1000)}
+var TOAST_ERR_MAP=[
+  [/failed to fetch|load failed|networkerror|network request failed|fetch failed/i,'Koneksi bermasalah. Periksa internet Anda lalu coba lagi.'],
+  [/\babort|timeout|timed out/i,'Server terlalu lama merespons. Coba lagi sebentar lagi.'],
+  [/store_closed/i,'Gerai sedang tutup. Buka gerai terlebih dahulu.'],
+  [/store_stock_insufficient/i,'Stok logistik gerai tidak cukup untuk pesanan ini.'],
+  [/total_mismatch/i,'Harga sudah berubah. Menu diperbarui, periksa pesanan lalu coba lagi.'],
+  [/invalid_menu_item/i,'Ada menu yang sudah tidak tersedia. Periksa pesanan Anda.'],
+  [/edit_window_expired/i,'Batas waktu 5 menit untuk mengubah pesanan sudah lewat.'],
+  [/transaction_not_found/i,'Transaksi tidak ditemukan di server.'],
+  [/invalid_session|unauthorized|jwt expired/i,'Sesi login berakhir. Silakan masuk kembali.'],
+  [/duplicate key|already exists/i,'Data ini sudah tercatat sebelumnya.']
+];
+function humanizeMsg(m){m=String(m==null?'':m);for(var i=0;i<TOAST_ERR_MAP.length;i++){if(TOAST_ERR_MAP[i][0].test(m))return TOAST_ERR_MAP[i][1]}return m}
+function toastKind(m){
+  if(/gagal|belum (berhasil|dapat|bisa|tersimpan|tersedia)|ditolak|tidak (dapat|bisa|valid|cukup|ditemukan|tersedia)|bermasalah|berakhir|kurang|terlewat|lewat|habis|diblokir/i.test(m))return 'error';
+  if(/^(isi|pilih|masukkan|tulis|periksa|tunggu|jumlah harus|uang diterima|buka percakapan)/i.test(m))return 'warn';
+  if(/berhasil|tersimpan|dikirim|diperbarui|dihapus|ditambahkan|dicatat|aktif|disalin|selamat datang|dibuka|diverifikasi/i.test(m))return 'success';
+  return 'info';
+}
+function toast(msg,type,ms){
+  msg=humanizeMsg(msg);
+  if(type!=='success'&&type!=='info'&&type!=='warn'&&type!=='error'&&type!=='loading')type=toastKind(msg);
+  var t=el('toast');
+  el('toastMsg').textContent=msg;
+  t.className='toast show t-'+type;
+  t.setAttribute('role',type==='error'?'alert':'status');
+  clearTimeout(toastT);
+  if(type==='loading')return;   // tetap tampil sampai diganti toast lain atau toastHide()
+  var dur=ms||Math.min(6500,Math.max(2400,1600+msg.length*45))+(type==='error'?800:0);
+  toastT=setTimeout(function(){t.classList.remove('show')},dur);
+}
+function toastLoading(msg){toast(msg,'loading')}
+function toastHide(){clearTimeout(toastT);var t=el('toast');if(t)t.classList.remove('show')}
 function glyph(cat,cls){var t=TINT[cat];return '<span class="'+cls+'" style="color:'+t.fg+';background:'+t.bg+'">'+GLYPH[cat]+'</span>'}
 
 $$('img[data-logo]').forEach(function(i){i.src=LOGO});
@@ -1114,10 +1174,43 @@ function newSession(s){backend.session=s;sessionReady=!!s;return s}
 function endSession(){backend.session=null;sessionReady=false;if(supa)supa.auth.signOut().catch(function(){})}
 load();
 function showError(msg){el('loginMsg').textContent=msg||'Terjadi kesalahan.'}
-async function refreshContext(){
+var __ctxP=null;
+function refreshContext(){if(__ctxP)return __ctxP;__ctxP=_refreshContext().then(function(r){__ctxP=null;return r},function(e){__ctxP=null;throw e});return __ctxP}
+var __softT=0,__softHist=false;
+// Gabungkan banyak permintaan penyegaran (mis. beberapa penjualan beruntun) menjadi satu.
+function softRefresh(withHistory){
+  __softHist=__softHist||!!withHistory;clearTimeout(__softT);
+  __softT=setTimeout(async function(){
+    var h=__softHist;__softHist=false;
+    try{
+      await refreshContext();if(typeof masterSync!=='undefined')masterSync.lastOk=Date.now();
+      if(h&&histOpen)await loadHistoryFromServer();
+      var bd=el('backdrop');if(!(bd&&bd.classList.contains('open')))renderLight();
+    }catch(e){}
+  },3000);
+}
+function applyLocalStockDeduction(items){
+  (items||[]).forEach(function(it){
+    var m=byId(it.id);if(!m)return;
+    (m.logistics||[]).forEach(function(l){
+      var use=l.per*it.qty;
+      db.stock.forEach(function(x){if(x.id===l.id)x.qty=Math.max(0,x.qty-use)});
+      (MASTER_LOGISTICS||[]).forEach(function(x){if(x.id===l.id)x.store_quantity=Math.max(0,x.store_quantity-use)});
+    });
+  });
+}
+async function _refreshContext(){
   if(!SLUG)throw new Error('Link Gerai tidak memiliki slug. Buka URL Gerai yang diberikan Owner.');
-  var data=await apiContext();
-  normalizeContext(data.context||data);
+  var data,lastErr;
+  // Coba ulang bila gangguan sementara (jaringan/5xx); error otorisasi langsung dilempar.
+  for(var t=0;t<3;t++){
+    try{data=await apiContext();lastErr=null;break}
+    catch(e){lastErr=e;if(e&&e.status&&e.status>=400&&e.status<500)throw e;if(t<2)await new Promise(function(r){setTimeout(r,600*(t+1))})}
+  }
+  if(lastErr)throw lastErr;
+  var ctx=data&&(data.context||data);
+  if(!ctx||typeof ctx!=='object'||!ctx.store)throw new Error('Data gerai dari server tidak lengkap. Coba lagi.');
+  normalizeContext(ctx);   // hanya dipanggil jika data valid: menu terakhir yang benar tidak tertimpa data rusak
   return backend.context;
 }
 async function bootBackend(){
@@ -1172,7 +1265,7 @@ async function tryLogin(){
   if(!SLUG){showError('Link Gerai tidak valid. Buka link Gerai dari Owner.');return}
   if(!v){showError('Isi kode akses dulu.');return}
   if(v.length<6){showError('Kode akses minimal 6 karakter.');return}
-  var f=el('lgForm');el('btnLogin').disabled=true;showError('Memverifikasi…');
+  var f=el('lgForm');el('btnLogin').disabled=true;showError('Memverifikasi…');toastLoading('Memeriksa kode akses…');
   try{
     var result=await apiLogin(v);
     if(!result.session)throw new Error('Sesi SPG tidak diterima server.');
@@ -1180,14 +1273,14 @@ async function tryLogin(){
     var sr=await supa.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
     if(sr.error)throw sr.error;
     newSession(sr.data.session||result.session);el('code').value='';el('code').type='password';
-    await refreshContext();showStoreGate();toast('Akses SPG berhasil diverifikasi');
+    toastLoading('Memuat data gerai…');await refreshContext();showStoreGate();var nm=backend.context&&backend.context.user&&backend.context.user.full_name;toast('Selamat datang'+(nm?', '+nm:'')+'! Data gerai sudah dimuat.','success');
   }catch(e){
     f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');
     var msg=e&&e.message?e.message:'Kode akses tidak dapat diverifikasi.';
     if(e&&e.status===401)msg='Kode akses salah atau akun SPG tidak aktif.';
     else if(e&&e.status===404)msg='Gerai pada link ini tidak ditemukan atau tidak aktif.';
     else if(e&&e.status>=500)msg='Server sedang bermasalah. Coba lagi beberapa saat.';
-    showError(msg);buzz(120)
+    showError(msg);buzz(120);toast(msg,'error')
   }
   finally{el('btnLogin').disabled=false}
 }
@@ -1230,18 +1323,18 @@ async function submitOpening(){
   var rows=[],valid=true,box=el('openingLogistics');
   $$('#openingLogistics [data-logistic-id]').forEach(function(cb){if(cb.checked){var input=box.querySelector('[data-logistic-qty="'+cb.dataset.logisticId+'"]');var q=Number(input&&input.value);if(!Number.isFinite(q)||q<0)valid=false;rows.push({inventory_item_id:cb.dataset.logisticId,quantity:q})}});
   var cash=Number(el('openingCash').value);
-  if(!valid){el('openingError').textContent='Periksa jumlah stok awal yang dipilih.';return}
-  if(!Number.isFinite(cash)||cash<0){el('openingError').textContent='Isi kas awal dengan benar.';return}
-  if(!navigator.onLine){el('openingError').textContent='Pembukaan Gerai harus online.';return}
-  el('btnSubmitOpening').disabled=true;el('openingError').textContent='Menyimpan pembukaan ke server…';
+  if(!valid){el('openingError').textContent='Periksa jumlah stok awal yang dipilih.';toast('Periksa jumlah stok awal yang dipilih.','warn');return}
+  if(!Number.isFinite(cash)||cash<0){el('openingError').textContent='Isi kas awal dengan benar.';toast('Isi kas awal dengan benar.','warn');return}
+  if(!navigator.onLine){el('openingError').textContent='Pembukaan Gerai harus online.';toast('Pembukaan gerai membutuhkan internet. Sambungkan dulu lalu coba lagi.','warn');return}
+  el('btnSubmitOpening').disabled=true;el('openingError').textContent='Menyimpan pembukaan ke server…';toastLoading('Membuka gerai, mohon tunggu…');
   try{
     if(!backend.context||!backend.context.store)throw new Error('Data Gerai belum tersedia dari server.');
     if(backend.context.capabilities&&!backend.context.capabilities.open)throw new Error('Gerai tidak dapat dibuka pada kondisi saat ini.');
     await apiOperation('open',{store_id:backend.context.store.id,opening_cash:cash,items:rows});
     await refreshContext();
     if(!(backend.context.context?backend.context.context.session:backend.context.session)){throw new Error('Server belum mengonfirmasi sesi pembukaan Gerai.');}
-    toast('Gerai berhasil dibuka.','success');enter()
-  }catch(e){el('openingError').textContent=e.message||'Pembukaan Gerai gagal.'}finally{el('btnSubmitOpening').disabled=false}
+    toast('Gerai berhasil dibuka. Selamat berjualan!','success');enter()
+  }catch(e){el('openingError').textContent=humanizeMsg(e.message)||'Pembukaan Gerai gagal.';toast(humanizeMsg(e.message)||'Pembukaan gerai gagal. Coba lagi.','error')}finally{el('btnSubmitOpening').disabled=false}
 }
 function enter(){
   if(!backend.context)return;
@@ -1251,7 +1344,7 @@ function enter(){
   loadPushState();loadHistoryFromServer();
 }
 async function logout(msg){
-  closeSheet();order={};editing=null;backend.context=null;backend.history=null;messages=[];endSession();show('login');el('loginMsg').textContent=msg||'';
+  closeSheet();order={};editing=null;backend.context=null;backend.history=null;messages=[];endSession();show('login');el('loginMsg').textContent=msg||'';toast(msg||'Anda sudah keluar. Sampai jumpa!',msg?'warn':'info');
 }
 el('btnLogout').addEventListener('click',function(){logout()});
 
@@ -1432,7 +1525,7 @@ el('wheelOk').addEventListener('click',function(){
   if(!m)return;
   order[m.id]=(order[m.id]||0)+q;
   refresh();buzz(14);
-  toast(q+'× '+m.name+' ditambahkan');
+  toast(q+'× '+m.name+' ditambahkan ke pesanan','success',1800);
   manualQty=null;
   fillQtyDrum();
   qtyDrum.set(0,true);
@@ -1465,6 +1558,7 @@ function setMode(m,announce){
 el('seg').addEventListener('click',function(e){var b=e.target.closest('[data-m]');if(!b||b.dataset.m===db.mode)return;setMode(b.dataset.m,true)});
 
 function renderMenu(){
+  if(CATS.indexOf(cat)<0)cat='Semua';
   var visible=MENU.filter(function(m){return cat==='Semua'||m.cat===cat});
   el('menu').innerHTML=visible.length?visible.map(function(m){
     var q=order[m.id];
@@ -1497,6 +1591,7 @@ function S(sel){return el('sheet').querySelector(sel)}
 function openMenuStep(id){
   var m=byId(id);
   if(!m)return;
+  if(navigator.onLine)syncMaster(30000);   // harga/logistik terbaru dari Owner, maksimal sekali per 30 detik
   var tint=TINT[m.cat];
   openSheet(
    '<div class="sheet-head"><div><span class="step-label">LANGKAH 1 DARI 2</span><h2>Pilih menu</h2><p class="sub">Pastikan menu yang dipilih sudah benar.</p></div><button class="link" id="x">Tutup</button></div>'+
@@ -1504,6 +1599,7 @@ function openMenuStep(id){
      glyph(m.cat,'mc-icon')+
      '<div class="mc-copy"><span class="mc-cat" style="color:'+tint.fg+'">'+m.cat+'</span><h3>'+m.name+'</h3><p class="num">'+rp(m.price)+' <span>/ item</span></p></div>'+
    '</div>'+
+   menuLogisticsHtml(m,0)+
    '<div class="step-note"><span>✓</span><div><b>Menu siap dipilih</b><small>Tekan OK untuk lanjut ke jumlah.</small></div></div>'+
    '<div class="row2"><button class="btn line" id="cancel">Batal</button><button class="btn primary" id="next">OK · Lanjut</button></div>'
   );
@@ -1519,6 +1615,7 @@ function openQty(id){
    '<div class="sheet-head"><div><span class="step-label">LANGKAH 2 DARI 2</span><h2>Atur jumlah</h2><p class="sub">'+m.name+' · <span class="num">'+rp(m.price)+' / item</span></p></div><button class="link" id="x">Kembali</button></div>'+
    '<div class="stepper"><button class="step" id="minus" aria-label="Kurangi">−</button><div class="qty num" id="q">'+n+'</div><button class="step" id="plus" aria-label="Tambah">+</button></div>'+
    '<div class="quick">'+[1,2,3,4,5].map(function(v){return '<button data-v="'+v+'">'+v+'</button>'}).join('')+'</div>'+
+   '<div id="qLog"></div>'+
    '<div class="row2">'+(had?'<button class="btn line" id="del">Hapus</button>':'<button class="btn line" id="cancel">Batal</button>')+
    '<button class="btn primary" id="ok">OK · <span class="num" id="sub"></span></button></div>'
   );
@@ -1526,6 +1623,7 @@ function openQty(id){
     S('#q').textContent=n;S('#sub').textContent=rp(n*m.price);
     $$('.quick button',el('sheet')).forEach(function(b){b.classList.toggle('on',+b.dataset.v===n)});
     S('#minus').disabled=n<=1;
+    S('#qLog').innerHTML=menuLogisticsHtml(m,n);
   }
   upd();
   S('#minus').onclick=function(){if(n>1){n--;upd()}};
@@ -1695,6 +1793,7 @@ async function record(){
       var payload=makeSalePayload(updated);
 
       try{
+        toastLoading('Menyimpan perubahan pesanan…');
         await apiSale('PATCH',payload);
         updated.sync='ok';
         db.tx=db.tx.map(function(x){return x.id===old.id?updated:x});
@@ -1702,7 +1801,7 @@ async function record(){
         order={};pay={method:'',received:0};
         closeSheet();renderLight();
         toast('Pesanan #'+updated.no+' diperbarui','success');
-        refreshContext().then(function(){loadHistoryFromServer()}).catch(function(){});
+        softRefresh(true);
       }catch(e){
         if(e.status===401){
           toast(e.message||'Sesi login sudah berakhir. Silakan masuk kembali.');
@@ -1735,6 +1834,17 @@ async function record(){
     renderLight();
 
     var payload2=makeSalePayload(t);
+    // Simpan dulu ke perangkat (aman bila koneksi putus), tutup layar seketika, kirim di latar belakang.
+    var queuedNow=false;
+    try{await idbPut(Object.assign({},payload2,{_queue_method:'POST'}));queuedNow=true}catch(_q){}
+    if(queuedNow){
+      applyLocalStockDeduction(items);
+      order={};pay={method:'',received:0};
+      closeSheet();renderLight();renderSync();
+      toast('Pesanan #'+no+' dicatat'+(navigator.onLine?' dan sedang dikirim.':'. Akan dikirim saat online.'),'success');
+      kick();
+      return;
+    }
     try{
       if(!navigator.onLine)throw Object.assign(new Error('offline'),{status:0,offline:true});
       await apiSale('POST',payload2);
@@ -1742,7 +1852,7 @@ async function record(){
       order={};pay={method:'',received:0};
       closeSheet();renderLight();
       toast('Pesanan #'+no+' tersimpan.','success');
-      refreshContext().then(renderAll).catch(function(){});
+      softRefresh(false);
     }catch(e){
       if(e.status===401){
         db.tx=db.tx.filter(function(x){return x.id!==t.id});
@@ -1786,11 +1896,12 @@ function deleteTx(t){
   if(!confirm('Hapus transaksi #'+t.no+'?'))return;
 
   var payload={transaction_id:t.id,store_id:backend.context.store.id};
+  toastLoading('Menghapus transaksi #'+t.no+'…');
   apiSale('DELETE',payload).then(function(){
     db.tx=db.tx.filter(function(x){return x.id!==t.id});
     db.count=Math.max(0,db.count-1);
     renderLight();
-    toast('Transaksi #'+t.no+' dihapus');
+    toast('Transaksi #'+t.no+' berhasil dihapus','success');
   }).catch(function(e){
     if(e.status===401){toast(e.message||'Sesi login sudah berakhir. Silakan masuk kembali.');return}
     if(!isTransientSaleError(e)){toast(e.message||'Penghapusan belum berhasil.');return}
@@ -1809,21 +1920,45 @@ async function flushChatQueue(){if(!navigator.onLine||!backend.conversation)retu
 
 function kick(){clearTimeout(syncT);syncT=setTimeout(run,0)}
 function schedule(){clearTimeout(syncT);syncT=setTimeout(run,attempt<BACKOFF.length?BACKOFF[attempt]:LONG_RETRY)}
+function markTxSynced(id){db.tx.forEach(function(x){if(x.id===id)x.sync='ok'})}
 async function run(){
   if(syncing||!navigator.onLine||!backend.context)return;
   var list=await pendingList();if(!list.length){attempt=0;renderSync();return}
+  var wasRetry=attempt>0,sent=0;
   syncing=true;renderSync();
+  if(wasRetry&&list.length>1)toast('Mengirim '+list.length+' pesanan tertunda…','loading');
   for(var i=0;i<list.length;i++){
-    try{var queued=list[i],method=queued._queue_method||'POST',payload=Object.assign({},queued);delete payload._queue_method;await apiSale(method,payload);await idbRemove(queued.transaction_id);toast(method==='PATCH'?'Perubahan pesanan berhasil dikirim.':(method==='DELETE'?'Penghapusan pesanan berhasil dikirim.':'Pesanan berhasil dikirim.'))}catch(e){syncing=false;attempt++;renderSync();if(e.status===409){toast(e.message||'Pesanan perlu diperiksa.');schedule();return}if(e.status===401){logout('Sesi login berakhir. Silakan masuk kembali.');return}toast('Belum berhasil mengirim data. Akan dicoba lagi saat koneksi tersedia.');schedule();return}
+    var queued=list[i],method=queued._queue_method||'POST',payload=Object.assign({},queued);delete payload._queue_method;
+    try{
+      await apiSale(method,payload);await idbRemove(queued.transaction_id);sent++;markTxSynced(queued.transaction_id);
+      if(method==='PATCH')toast('Perubahan pesanan berhasil dikirim.');else if(method==='DELETE')toast('Penghapusan pesanan berhasil dikirim.');
+    }catch(e){
+      if(e.status===401){syncing=false;attempt++;renderSync();logout('Sesi login berakhir. Silakan masuk kembali.');return}
+      var stockRej=e.status===409&&/Stok logistik/i.test(String(e.message||''));
+      if(e.status===409&&!stockRej){syncing=false;attempt++;renderSync();toast(e.message||'Pesanan perlu diperiksa.');schedule();return}
+      if(e.status&&e.status>=400&&e.status<500&&e.status!==408&&e.status!==429){
+        // Ditolak permanen oleh server: jangan diulang terus-menerus.
+        await idbRemove(queued.transaction_id).catch(function(){});
+        var tx0=db.tx.filter(function(x){return x.id===queued.transaction_id})[0];
+        if(method==='POST'){db.tx=db.tx.filter(function(x){return x.id!==queued.transaction_id});db.count=Math.max(0,db.count-1)}
+        toast('Pesanan'+(tx0?' #'+tx0.no:'')+' ditolak server: '+(e.message||'data tidak valid')+'. Silakan catat ulang.');
+        continue;
+      }
+      syncing=false;attempt++;renderSync();toast('Belum berhasil mengirim data. Akan dicoba lagi saat koneksi tersedia.');schedule();return;
+    }
   }
-  syncing=false;attempt=0;renderSync();refreshContext().then(function(){loadHistoryFromServer()}).catch(function(){});
+  syncing=false;attempt=0;renderSync();renderLight();
+  if(sent)toast(sent>1?sent+' pesanan berhasil terkirim ke server.':'Pesanan terkirim ke server ✓','success',2000);
+  else if(el('toast').classList.contains('t-loading'))toastHide();
+  softRefresh(true);
 }
-window.addEventListener('online',function(){backend.online=true;kick();flushChatQueue();refreshContext().then(function(){renderAll()}).catch(function(){})});
+window.addEventListener('offline',function(){backend.online=false;renderSync();toast('Anda sedang offline. Pesanan tetap bisa dicatat dan dikirim otomatis nanti.','info')});
+window.addEventListener('online',function(){backend.online=true;toast('Koneksi kembali. Menyinkronkan data…','info');kick();flushChatQueue();refreshContext().then(function(){renderAll()}).catch(function(){})});
 window.addEventListener('offline',function(){backend.online=false;renderSync()});
 document.addEventListener('visibilitychange',function(){if(!document.hidden){kick();flushChatQueue()}});
 el('pesanBack').addEventListener('click',function(){stopChatRealtime();backend.conversation=null;messages=[];el('app').classList.remove('chat-mode');el('app').style.top='';el('app').style.height='';el('app').style.width='';setTab('jual')});
 function escMsg(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-async function loadChatContacts(){try{var r=await apiContacts();backend.contacts=r.contacts||r.data||[];return backend.contacts}catch(e){toast(e.message);return []}}
+async function loadChatContacts(){try{var r=await apiContacts();backend.contacts=r.contacts||r.data||[];return backend.contacts}catch(e){toast('Kontak chat belum bisa dimuat. Periksa koneksi lalu coba lagi.','warn');return []}}
 var chatRealtimeChannel=null;
 function stopChatRealtime(){
   if(chatRealtimeChannel){
@@ -1886,7 +2021,7 @@ function histRow(t){var left=EDIT_MS-(Date.now()-t.at),its=(t.items||[]).map(fun
 function renderHistList(){var box=el('hlist');if(!box)return;var r=recent();box.innerHTML=r.length?r.map(histRow).join(''):'<div class="emptyh">Belum ada transaksi hari ini.</div>';var hc=el('historySalesCount');if(hc)hc.textContent=r.length+' transaksi';tickHist()}
 function tickHist(){$$('#hlist .act').forEach(function(a){var left=+a.dataset.exp-Date.now();if(left<=0){a.outerHTML='<div class="late">Lewat 5 menit, tidak bisa diubah.</div>';return}var s=Math.ceil(left/1000),m=Math.floor(s/60),r=s%60;var x=a.querySelector('.left');if(x)x.textContent='Sisa '+m+':'+(r<10?'0':'')+r+' untuk edit/hapus'})}
 function openHistory(){setTab('riwayat');histOpen=true;loadHistoryFromServer();clearInterval(histT);histT=setInterval(tickHist,1000);el('hlist').onclick=function(e){var eb=e.target.closest('[data-e]'),db_=e.target.closest('[data-d]'),t;if(eb){t=txById(eb.dataset.e);if(t&&Date.now()-t.at<=EDIT_MS)startEdit(t);return}if(db_){t=txById(db_.dataset.d);if(t)deleteTx(t)}}}
-async function loadHistoryFromServer(){if(!backend.context)return;try{var h=await apiHistory();setHistoryData(h)}catch(e){if(e.status!==401)toast(e.message)}}
+async function loadHistoryFromServer(){if(!backend.context)return;try{var h=await apiHistory();setHistoryData(h)}catch(e){if(e.status!==401&&navigator.onLine)toast('Riwayat belum bisa dimuat. Buka tab Riwayat lagi untuk mencoba ulang.','warn')}}
 function renderOtherHistory(h){
   var ice=(h&& (h.ice_orders||h.ice||h.ice_history))||[],log=(h&& (h.restock||h.restock_history||h.logistics))||[],chk=(h&& (h.checker||h.inspections||h.checker_inspections))||[];
   var defs=[['ice',ice,'Belum ada riwayat es kristal','Permintaan dan penerimaan es kristal'],['logistic',log,'Belum ada riwayat restok','Aktivitas restok logistik'],['checker',chk,'Belum ada riwayat pengecekkan','Catatan pemeriksaan checker']];
@@ -1904,7 +2039,7 @@ function renderLight(){renderMenu();renderBar();renderTop();renderStock();render
 function renderAll(){renderChips();fillMenuDrum();renderLight();setMode(db.mode,false)}
 
 /* ================= Quick actions → backend ================= */
-$$('[data-qa]').forEach(function(btn){btn.addEventListener('click',function(){var type=btn.dataset.qa;if(type==='qr-ice'){openIceReceive();return}var title=type==='ice'?'Pesan Es Kristal':type==='logistic'?'Minta Restok Logistik':'Pesan Darurat';var note=type==='ice'?'Catat kebutuhan es kristal yang ingin dipesan.':type==='logistic'?'Pilih stok logistik yang perlu direstok.':'Gunakan untuk kebutuhan operasional yang harus segera ditangani.';openSheet('<div class="sheet-head"><div><span class="step-label">QUICK ACTION</span><h3>'+title+'</h3><p>'+note+'</p></div><button class="x" data-close>×</button></div>'+(type==='ice'?'<label class="field"><span>Jumlah</span><input id="qaIceQty" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Masukkan jumlah"></label><label class="field"><span>Satuan</span><input id="qaIceUnit" maxlength="30" placeholder="Contoh: kg / balok"></label>':'')+'<label class="field"><span>Catatan</span><input id="qaNote" placeholder="Tulis kebutuhan…"></label><button class="btn primary block" id="qaSend">Kirim permintaan</button>');el('qaSend').onclick=async function(){var n=el('qaNote').value.trim();if(!n&&type!=='logistic'){toast('Isi catatan terlebih dahulu');return}try{if(type==='ice'){var q=Number(el('qaIceQty')&&el('qaIceQty').value),u=String(el('qaIceUnit')&&el('qaIceUnit').value||'').trim();if(!Number.isFinite(q)||q<=0){toast('Masukkan jumlah es kristal.');return}if(!u){toast('Masukkan satuan es kristal.');return}await apiOperation('ice_order',{store_id:backend.context.store.id,quantity:q,unit:u,note:n})}else if(type==='logistic'){var low=stockLow().map(function(x){return {inventory_item_id:x.id,quantity:Math.max(1,x.min-x.qty)}});if(!low.length){toast('Tidak ada stok di bawah minimum.');return}await apiOperation('restock_request',{store_id:backend.context.store.id,note:n||'Permintaan restok logistik',items:low})}else{await apiOperation('emergency',{store_id:backend.context.store.id,note:n,priority:'urgent'})}closeSheet();toast(title+' berhasil dikirim.','success');loadHistoryFromServer()}catch(e){toast(e.message||'Permintaan gagal')}}})});
+$$('[data-qa]').forEach(function(btn){btn.addEventListener('click',function(){var type=btn.dataset.qa;if(type==='qr-ice'){openIceReceive();return}var title=type==='ice'?'Pesan Es Kristal':type==='logistic'?'Minta Restok Logistik':'Pesan Darurat';var note=type==='ice'?'Catat kebutuhan es kristal yang ingin dipesan.':type==='logistic'?'Pilih stok logistik yang perlu direstok.':'Gunakan untuk kebutuhan operasional yang harus segera ditangani.';openSheet('<div class="sheet-head"><div><span class="step-label">QUICK ACTION</span><h3>'+title+'</h3><p>'+note+'</p></div><button class="x" data-close>×</button></div>'+(type==='ice'?'<label class="field"><span>Jumlah</span><input id="qaIceQty" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Masukkan jumlah"></label><label class="field"><span>Satuan</span><input id="qaIceUnit" maxlength="30" placeholder="Contoh: kg / balok"></label>':'')+'<label class="field"><span>Catatan</span><input id="qaNote" placeholder="Tulis kebutuhan…"></label><button class="btn primary block" id="qaSend">Kirim permintaan</button>');el('qaSend').onclick=async function(){var n=el('qaNote').value.trim();if(!n&&type!=='logistic'){toast('Isi catatan terlebih dahulu');return}if(!navigator.onLine){toast('Permintaan ini butuh internet. Sambungkan dulu lalu kirim lagi.','warn');return}var qaBtn=el('qaSend');try{if(type==='ice'){var q=Number(el('qaIceQty')&&el('qaIceQty').value),u=String(el('qaIceUnit')&&el('qaIceUnit').value||'').trim();if(!Number.isFinite(q)||q<=0){toast('Masukkan jumlah es kristal.');return}if(!u){toast('Masukkan satuan es kristal.');return}qaBtn.disabled=true;toastLoading('Mengirim '+title.toLowerCase()+'…');await apiOperation('ice_order',{store_id:backend.context.store.id,quantity:q,unit:u,note:n})}else if(type==='logistic'){var low=stockLow().map(function(x){return {inventory_item_id:x.id,quantity:Math.max(1,x.min-x.qty)}});if(!low.length){toast('Tidak ada stok di bawah minimum.');return}qaBtn.disabled=true;toastLoading('Mengirim permintaan restok…');await apiOperation('restock_request',{store_id:backend.context.store.id,note:n||'Permintaan restok logistik',items:low})}else{qaBtn.disabled=true;toastLoading('Mengirim pesan darurat…');await apiOperation('emergency',{store_id:backend.context.store.id,note:n,priority:'urgent'})}closeSheet();toast(title+' berhasil dikirim ke Owner/Checker.','success');loadHistoryFromServer()}catch(e){if(qaBtn)qaBtn.disabled=false;toast(e.message||'Permintaan gagal dikirim. Coba lagi.','error')}}})});
 function openIceReceive(){
   var qr=backend.context&&backend.context.ice_reception_qr;
   if(!qr||!qr.image_url){
@@ -1926,8 +2061,9 @@ async function loadPushState(){var b=document.querySelector('.header-actions');i
 // Owner = otoritas master. Gerai hanya mengambil ulang data dari server saat ada sinyal perubahan.
 var masterSync={channel:null,busy:false,pending:false,stale:false,timer:null,wasDown:false,bid:null,lastOk:0};
 function masterSnapshot(){var o={};MENU.forEach(function(m){o[m.id]={name:m.name,price:m.price}});return o}
-function masterSig(){return JSON.stringify([MENU.map(function(m){return [m.id,m.name,m.price,m.category]}),(MASTER_LOGISTICS||[]).map(function(x){return [x.id,x.name,x.unit,x.logistics_type]})])}
-async function syncMaster(){
+function masterSig(){return JSON.stringify([MENU.map(function(m){return [m.id,m.name,m.price,m.category,(m.logistics||[]).map(function(l){return [l.id,l.name,l.unit,l.per]})]}),(MASTER_LOGISTICS||[]).map(function(x){return [x.id,x.name,x.unit,x.logistics_type]})])}
+async function syncMaster(minAge){
+  if(typeof minAge==='number'&&Date.now()-masterSync.lastOk<minAge)return;
   if(!SLUG||!backend.context||!getSession())return;
   if(masterSync.busy){masterSync.pending=true;return}
   masterSync.busy=true;
@@ -1944,8 +2080,9 @@ async function syncMaster(){
       if(CATS.indexOf(cat)<0)cat='Semua';
       renderAll();
       if(el('openStore')&&el('openStore').classList.contains('on'))renderOpeningLogistics();
-      if(removed.length)toast('Menu tidak lagi tersedia: '+removed.join(', ')+'. Pesanan disesuaikan.');
-      else if(priceChanged.length)toast('Harga diperbarui oleh Owner: '+priceChanged.join(', ')+'. Periksa pesanan.');
+      if(removed.length)toast('Menu tidak lagi tersedia: '+removed.join(', ')+'. Pesanan disesuaikan.','warn');
+      else if(priceChanged.length)toast('Harga diperbarui oleh Owner: '+priceChanged.join(', ')+'. Periksa pesanan.','warn');
+      else toast('Menu & logistik diperbarui oleh Owner.','info');
       if((removed.length||priceChanged.length)&&el('backdrop').classList.contains('open')){closeSheet();try{refresh()}catch(_){}}
     }
   }catch(e){masterSync.stale=true}
@@ -1971,9 +2108,9 @@ setInterval(function(){
   if(ok&&bid&&masterSync.bid!==bid)startMasterRealtime();
   if(!ok&&masterSync.channel)stopMasterRealtime();
 },3000);
-setInterval(function(){if(!document.hidden&&navigator.onLine)syncMaster()},60000);
+setInterval(function(){if(!document.hidden&&navigator.onLine)syncMaster(90000)},120000);
 window.addEventListener('online',function(){syncMaster()});
-document.addEventListener('visibilitychange',function(){if(!document.hidden)syncMaster()});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)syncMaster(30000)});
 
 /* ================= Tick berkala ================= */
 setInterval(function(){
