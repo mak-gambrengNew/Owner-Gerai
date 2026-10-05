@@ -1914,11 +1914,23 @@ function crudActionHandler(e){
  if(a==='add-comp')return addCompositionRow();
  if(a==='remove-comp'){b.closest('.crud-comp-row')?.remove();return;}
 }
+// Hanya logistik AKTIF (berkurang saat penjualan) yang bisa disematkan ke menu.
+// Item yang sudah tersemat tetap tampil agar data lama tidak hilang saat diedit.
+function compOptions(selectedId){
+ return (ownerCrud.logistik||[]).filter(x=>(x.logistics_type==='active'&&x.status==='Aktif')||x.id===selectedId)
+  .map(x=>`<option value="${esc(x.id)}" ${x.id===selectedId?'selected':''}>${esc(x.nama)}${x.satuan?' ('+esc(x.satuan)+')':''}</option>`).join('');
+}
 function addCompositionRow(){
  const box=$('#crud-composition');if(!box)return;
+ const opts=compOptions('');
+ if(!opts)return toast('Belum ada logistik aktif. Daftarkan logistik dengan tipe Aktif terlebih dahulu.');
+ const used=new Set([...box.querySelectorAll('.comp-item')].map(x=>x.value));
  const rows=box.querySelectorAll('.crud-comp-row');const i=rows.length;
- const opts=(ownerCrud.logistik||[]).map(x=>`<option value="${esc(x.id)}">${esc(x.nama)}</option>`).join('');
- box.insertAdjacentHTML('beforeend',`<div class="crud-comp-row"><select class="fld comp-item" data-i="${i}">${opts}</select><input class="fld comp-qty" data-i="${i}" type="number" min="0.0001" step="0.0001" value="1"><button type="button" class="crud-comp-remove" data-crud-action="remove-comp">×</button></div>`);
+ const btn=box.querySelector('.crud-add-comp');
+ const html=`<div class="crud-comp-row"><select class="fld comp-item" data-i="${i}">${opts}</select><input class="fld comp-qty" data-i="${i}" type="number" min="0.0001" step="0.0001" value="1"><button type="button" class="crud-comp-remove" data-crud-action="remove-comp">×</button></div>`;
+ if(btn)btn.insertAdjacentHTML('beforebegin',html);else box.insertAdjacentHTML('beforeend',html);
+ const sel=box.querySelectorAll('.crud-comp-row')[i]?.querySelector('.comp-item');
+ if(sel){const free=[...sel.options].find(o=>!used.has(o.value));if(free)sel.value=free.value}
  bindCrudActionEvents();
 }
 function bindCrudActionEvents(){document.querySelectorAll('[data-crud-action]').forEach(b=>b.onclick=crudActionHandler)}
@@ -1927,7 +1939,7 @@ function detailItems(k,r){
  const item=(a,b,full=false)=>`<div class="crud-detail-item${full?' full':''}"><span>${a}</span><b>${esc(b||'-')}</b></div>`;
  if(k==='gerai')return item('Nama gerai',r.nama)+item('Status',r.status)+item('Alamat',r.alamat,true);
  if(k==='spg'||k==='checker'){const idn=teamIdentity(r);return item(k==='spg'?'Nama SPG':'Nama checker',r.nama)+item('Status',r.status)+item('ID login',r.login_code||'Belum ada')+item('Status kode akses',idn.text)+item('Login terakhir',r.last_login_at?teamDate(r.last_login_at):'Belum pernah login',true)+item('Kode akses','Tersimpan terenkripsi di server dan tidak dapat ditampilkan ulang.',true)}
- if(k==='menu')return item('Nama menu',r.nama)+item('Status',r.status)+item('Kategori',r.kategori)+item('Harga jual',rp(Number(r.harga)||0))+item('HPP',r.hpp!==''&&r.hpp!=null?rp(Number(r.hpp)||0):'-',true)+item('Komposisi',r.komposisi?.length?`${r.komposisi.length} item inventory terhubung`:'Belum ada komposisi',true);
+ if(k==='menu')return item('Nama menu',r.nama)+item('Status',r.status)+item('Kategori',r.kategori)+item('Harga jual',rp(Number(r.harga)||0))+item('HPP',r.hpp!==''&&r.hpp!=null?rp(Number(r.hpp)||0):'-',true)+item('Logistik aktif',r.komposisi?.length?r.komposisi.map(c=>{const l=(ownerCrud.logistik||[]).find(x=>x.id===c.inventory_item_id);return `${l?.nama||'Item'} ×${c.quantity_per_sale}${l?.satuan?' '+l.satuan:''}`}).join(', '):'Belum ada logistik aktif',true);
  if(k==='logistik')return item('Nama item',r.nama)+item('Status',r.status)+item('Satuan',r.satuan)+item('Stok',`${r.stok??0} ${r.satuan||''}`)+item('Minimum stok',`${r.minimum??0} ${r.satuan||''}`)+item('Tipe logistik',r.logistics_type==='active'?'Aktif — berkurang saat penjualan':'Pasif — berkurang melalui restok/pengeluaran')+item('Supplier',r.supplier,true);
  return item('Nama kontak',r.nama)+item('Status',r.status)+item('Perusahaan',r.perusahaan)+item('WhatsApp',r.telepon)+item('Catatan',r.catatan,true);
 }
@@ -1947,9 +1959,9 @@ function crudForm(k,id){
  if(k==='menu'){
    body+=crudField('Nama menu','nama','text','Nama produk',r?.nama)+crudField('Kategori','kategori','text','Minuman / makanan',r?.kategori)+crudField('Harga jual','harga','number','0',r?.harga)+crudField('HPP','hpp','number','Opsional',r?.hpp)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
    const comps=r?.komposisi||[];
-   body+=`<div class="crud-form-section"><b>Komposisi inventory</b><small>Hubungkan menu dengan inventory aktif dan jumlah pemakaian per penjualan.</small></div><div class="crud-composition" id="crud-composition">${comps.map((c,i)=>`<div class="crud-comp-row"><select class="fld comp-item" data-i="${i}">${(ownerCrud.logistik||[]).map(x=>`<option value="${esc(x.id)}" ${x.id===c.inventory_item_id?'selected':''}>${esc(x.nama)}</option>`).join('')}</select><input class="fld comp-qty" data-i="${i}" type="number" min="0.0001" step="0.0001" value="${esc(c.quantity_per_sale??1)}"><button class="crud-comp-remove" data-crud-action="remove-comp" data-i="${i}">×</button></div>`).join('')}<button class="crud-add-comp" data-crud-action="add-comp">＋ Tambah inventory ke komposisi</button></div>`;
+   body+=`<div class="crud-form-section"><b>Logistik aktif menu</b><small>Sematkan logistik aktif dan jumlah pemakaian per 1 menu terjual. Stok logistik di gerai akan berkurang otomatis sesuai jumlah menu yang terjual.</small></div><div class="crud-composition" id="crud-composition">${comps.map((c,i)=>`<div class="crud-comp-row"><select class="fld comp-item" data-i="${i}">${compOptions(c.inventory_item_id)}</select><input class="fld comp-qty" data-i="${i}" type="number" min="0.0001" step="0.0001" value="${esc(c.quantity_per_sale??1)}"><button class="crud-comp-remove" type="button" data-crud-action="remove-comp" data-i="${i}">×</button></div>`).join('')}<button type="button" class="crud-add-comp" data-crud-action="add-comp">＋ Tambahkan logistik aktif</button></div>`;
  }
- if(k==='logistik') body+=crudField('Nama item','nama','text','Contoh: Cup',r?.nama)+crudField('Satuan','satuan','text','pcs / box / kg',r?.satuan)+(id?`<div class="crud-helper">Stok saat ini: <b>${esc(String(r?.stok??0))} ${esc(r?.satuan||'')}</b>. Stok hanya berubah lewat restok/penjualan.</div>`:`<div class="crud-helper">Stok awal 0. Stok bertambah lewat restok.</div>`)+crudField('Minimum stok','minimum','number','0',r?.minimum)+crudField('Supplier','supplier','text','Nama supplier',r?.supplier)+`<label class="crud-field"><span>Tipe logistik</span><select class="fld" id="cf-logistics_type"><option value="passive" ${(r?.logistics_type||'passive')==='passive'?'selected':''}>Pasif</option><option value="active" ${r?.logistics_type==='active'?'selected':''}>Aktif — berkurang saat penjualan</option></select></label><label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
+ if(k==='logistik') body+=crudField('Nama item','nama','text','Contoh: Cup',r?.nama)+crudField('Satuan','satuan','text','pcs / box / kg',r?.satuan)+(id?`<div class="crud-helper">Stok saat ini: <b>${esc(String(r?.stok??0))} ${esc(r?.satuan||'')}</b>. Stok hanya berubah lewat restok/penjualan.</div>`:crudField('Jumlah awal','stok','number','0','','stok','number','0',''))+crudField('Minimum stok','minimum','number','0',r?.minimum)+crudField('Supplier','supplier','text','Nama supplier',r?.supplier)+`<label class="crud-field"><span>Tipe logistik</span><select class="fld" id="cf-logistics_type"><option value="passive" ${(r?.logistics_type||'passive')==='passive'?'selected':''}>Pasif</option><option value="active" ${r?.logistics_type==='active'?'selected':''}>Aktif — berkurang saat penjualan</option></select></label><label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
  if(k==='esKristal') body+=crudField('Nama kontak','nama','text','Kontak utama',r?.nama)+crudField('Nama perusahaan','perusahaan','text','Supplier es kristal',r?.perusahaan)+crudField('Nomor WhatsApp','telepon','tel','628xxxxxxxxxx',r?.telepon)+crudField('Catatan','catatan','text','Jadwal / keterangan',r?.catatan)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
  sheet(`<div class="crud-form-head"><span class="eyebrow">${id?'EDIT DATA':'DATA BARU'}</span><h3>${id?'Edit':'Tambah'} ${title}</h3></div><div class="crud-form">${body}</div><button class="btn crud-save" data-crud-action="save" data-k="${k}" data-id="${id||''}">${id?'Simpan perubahan':'Tambah data'}</button>`);
  bindCrudActionEvents();
@@ -1976,7 +1988,7 @@ function crudReview(k,id){
  const r=collectCrudDraft(k,id);
  if(!r.nama)return toast('Nama wajib diisi');
  if(k==='menu' && r.harga<0)return toast('Harga tidak boleh negatif');
- if(k==='logistik' && (r.stok<0||r.minimum<0))return toast('Stok dan minimum stok tidak boleh negatif');
+ if(k==='logistik' && (!Number.isFinite(r.stok)||r.stok<0||r.minimum<0))return toast('Jumlah dan minimum stok tidak boleh negatif');
  window.__crudDraft={k,id:id||'',r};
  const action=id?'Revisi':'Pendaftaran';
  const impact=k==='logistik'?(r.logistics_type==='active'?'Logistik Aktif akan menjadi bagian dari konsumsi otomatis saat penjualan.':'Logistik Pasif tidak dikonsumsi otomatis dari penjualan.'):
@@ -2001,6 +2013,7 @@ const ERR_TEXT={
  menu_name_duplicate:'Menu dengan nama dan kategori tersebut sudah terdaftar.',
  invalid_minimum_stock:'Minimum stok tidak boleh negatif.',
  invalid_logistics_type:'Tipe logistik tidak valid.',
+ invalid_initial_quantity:'Jumlah awal logistik tidak boleh negatif.',
  invalid_inventory_status:'Status item tidak valid.',
  member_name_required:'Nama wajib diisi.',
  invalid_member_status:'Status tidak valid.',
@@ -2209,7 +2222,7 @@ async function verifyOnServer(k,id,expected){
      }
      return found;
    }
-   const columns={gerai:'id,name,address,status,slug,pwa_url',menu:'id,name,price,hpp,status',logistik:'id,name,unit,minimum_stock,supplier,status'}[k]||'id';
+   const columns={gerai:'id,name,address,status,slug,pwa_url',menu:'id,name,price,hpp,status',logistik:'id,name,unit,stock,minimum_stock,supplier,status'}[k]||'id';
    const {data,error}=await sbClient.from(CRUD_VERIFY[k]).select(columns).eq('id',id).maybeSingle();
   if(error) throw error;
   if(!data) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
@@ -2228,6 +2241,7 @@ async function verifyOnServer(k,id,expected){
    if(k==='logistik'&&expected){
     if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama item belum sesuai dengan data di server.');
     if(Number(data.minimum_stock)!==Number(expected.minimum||0)) throw new Error('Stok minimum belum sesuai dengan data di server.');
+    if(!expected.__edit&&Number(data.stock)!==Number(expected.stok||0)) throw new Error('Jumlah logistik belum sesuai dengan data di server.');
     if(expected.status&&data.status!==stat(expected.status)) throw new Error('Status item belum sesuai dengan data di server.');
    }
    return data;
@@ -2254,7 +2268,7 @@ async function crudSave(k,id){
      if(id){
        await rpc('owner_update_inventory_item',{p_inventory_id:id,p_name:draft.nama,p_unit:draft.satuan||'',p_minimum_stock:Number(draft.minimum||0),p_supplier:draft.supplier||'',p_logistics_type:draft.logistics_type||'passive',p_status:draft.status==='Aktif'?'active':'inactive'});
      }else{
-       newId=await rpc('owner_create_inventory_item',{p_name:draft.nama,p_unit:draft.satuan||'',p_minimum_stock:Number(draft.minimum||0),p_supplier:draft.supplier||'',p_logistics_type:draft.logistics_type||'passive'});
+       newId=await rpc('owner_create_inventory_item',{p_name:draft.nama,p_unit:draft.satuan||'',p_minimum_stock:Number(draft.minimum||0),p_supplier:draft.supplier||'',p_logistics_type:draft.logistics_type||'passive',p_initial_quantity:Number(draft.stok||0)});
      }
    }else if(k==='spg'||k==='checker'){
      if(id){
@@ -2278,7 +2292,7 @@ async function crudSave(k,id){
    id=newId;
    let memberRow=null;
    if(k==='spg'||k==='checker') memberRow=await verifyMemberOnServer(k,id,draft.status==='Aktif'?'active':'inactive',draft.nama);
-    else await verifyOnServer(k,id,{...draft,requireLink:wasNew});       // wajib terbukti ada di server
+    else await verifyOnServer(k,id,{...draft,requireLink:wasNew,__edit:!wasNew});       // wajib terbukti ada di server
    window.__crudDraft=null;
    try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah tersimpan, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
    if(k==='gerai'&&wasNew){ showGeraiLinkPopup(id,{fresh:true,after:'list'}); return; }
