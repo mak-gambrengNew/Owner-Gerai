@@ -1494,6 +1494,169 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 .tg-nom{font-size:11.5px;font-weight:600;color:var(--mu)}
 .tg-empty{padding:18px 16px;text-align:center;font-size:13.5px;color:var(--mu)}
 </style>
+<style id="fullpage">
+/* =====================================================================
+   HALAMAN PENUH — menggantikan pop up / bottom sheet
+   Setiap kartu di Dashboard, Kelola Usaha, Laporan & Pengaturan kini
+   membuka halaman layar penuh: bar atas (kembali + judul), konten lega,
+   tombol aksi utama menempel di bawah (mudah dijangkau ibu jari).
+   Hanya tampilan; logika data tidak berubah.
+   ===================================================================== */
+#app{--pg-bg:#F4F9F6;--pg-ink:#0F3A31;--pg-ink2:#173F36;--pg-mut:#66807A;--pg-line:#DDEBE4;--pg-brand:#0E8F6E;--pg-gold:#C9A24A;--pgbar:calc(var(--sat) + 60px)}
+
+#app .sheet{
+  position:absolute;inset:0;height:100%;max-height:none;z-index:30;
+  display:flex;flex-direction:column;
+  padding:0 20px calc(var(--sab) + 28px);
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:radial-gradient(120% 40% at 50% -6%,#E2F3EB 0,rgba(226,243,235,0) 70%),var(--pg-bg)!important;
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  transform:translateX(100%);visibility:hidden;
+  transition:transform .34s cubic-bezier(.22,.9,.28,1),visibility 0s linear .34s;
+}
+#app .sheet.on{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.22,.9,.28,1),visibility 0s}
+#app .sheet::before{display:none}
+#app .sheet.has-dock{padding-bottom:0}
+#app .dim{display:none}
+#app .toast{z-index:80}
+#app .sheet>*{flex:none}
+
+/* ---------- bar atas ---------- */
+.pg-bar{position:sticky;top:0;z-index:12;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;
+  margin:0 -20px 6px;padding:calc(var(--sat) + 8px) 14px 8px;height:var(--pgbar);
+  background:rgba(244,249,246,.88);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);
+  border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s}
+.sheet.scrolled .pg-bar{border-color:var(--pg-line);box-shadow:0 8px 20px -14px rgba(14,70,56,.35)}
+.pg-back,.pg-act{width:44px;height:44px;padding:0;border-radius:15px;display:grid;place-items:center;color:var(--pg-ink);
+  background:#fff;border:1px solid var(--pg-line);box-shadow:0 3px 8px rgba(14,70,56,.07)}
+.pg-back svg,.pg-act svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.pg-back:active,.pg-act:active{transform:scale(.93)}
+.pg-title{min-width:0;text-align:center;font:800 16px/1.2 var(--font-display,'Manrope',system-ui,sans-serif);letter-spacing:-.01em;color:var(--pg-ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s,transform .2s}
+.sheet.has-h1 .pg-title{opacity:0;transform:translateY(5px)}
+.sheet.has-h1.scrolled .pg-title{opacity:1;transform:none}
+.pg-slot{display:flex;justify-content:flex-end;min-width:44px}
+.pg-act.spin svg{animation:pgspin .7s linear infinite}
+@keyframes pgspin{to{transform:rotate(360deg)}}
+
+/* ---------- kepala halaman (judul besar) ---------- */
+#app .sheet .crud-sheet-head{display:block;margin:6px 0 18px;padding:0}
+#app .sheet .crud-sheet-head>div:first-child{min-width:0}
+#app .sheet .crud-sheet-head .eyebrow{display:block;margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:#9B7A2E}
+#app .sheet .crud-sheet-head h3,#app .sheet .crud-form-head h3,#app .sheet>h3{margin:0;font:800 30px/1.1 var(--font-display,'Manrope',system-ui,sans-serif);letter-spacing:-.035em;color:var(--pg-ink)}
+#app .sheet .crud-sheet-head small{display:block;margin-top:8px;font-size:13.5px;line-height:1.5;color:var(--pg-mut)}
+#app .sheet .crud-form-head{margin:6px 0 20px;padding:0}
+#app .sheet .crud-form-head .eyebrow{display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:#9B7A2E}
+
+/* judul seksi di dalam daftar (mis. SPG / Checker pada My Team) */
+#app .sheet .crud-sheet-head.pg-sec{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px}
+#app .sheet .pg-sec b{font:800 15px/1.2 var(--font-display,'Manrope',system-ui,sans-serif);color:var(--pg-ink2)}
+#app .sheet .pg-sec small{margin-top:2px;font-size:12.5px}
+#app .sheet .pg-sec .crud-add{padding:9px 14px;border-radius:12px;font-size:12.5px}
+
+/* ---------- pencarian lengket ---------- */
+#app .sheet .crud-toolbar{position:sticky;top:var(--pgbar);z-index:9;display:block;margin:0 -20px 12px;padding:6px 20px 10px;
+  background:linear-gradient(180deg,var(--pg-bg) 72%,rgba(244,249,246,0))}
+#app .sheet .crud-toolbar>span{display:none}
+#app .sheet .crud-search{margin:0;width:100%;height:50px;padding-left:44px;border-radius:16px;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366807A' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px 50%/20px}
+
+/* ---------- daftar ---------- */
+#app .sheet .crud-list{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+#app .sheet .crud-row{align-items:center;gap:10px;min-height:72px;padding:14px;border-radius:20px;border:1px solid var(--pg-line);background:#fff;box-shadow:0 6px 18px rgba(14,70,56,.06)}
+#app .sheet .crud-row:active{transform:scale(.988);box-shadow:0 2px 8px rgba(14,70,56,.06)}
+#app .sheet .crud-row-main{flex:1;min-width:0;gap:12px}
+#app .sheet .crud-row-icon{width:46px;height:46px;border-radius:15px;font-size:20px;flex:none}
+#app .sheet .crud-row-main b{font-size:15px;font-weight:750;color:var(--pg-ink2)}
+#app .sheet .crud-row-main small{font-size:12.5px;line-height:1.4;color:var(--pg-mut)}
+.crud-row-right{display:flex;align-items:center;gap:6px;flex:none}
+.crud-chips{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.crud-chev{width:20px;height:20px;display:grid;place-items:center;color:#9BB3AB}
+.crud-chev svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#app .sheet .crud-empty{margin:8px 0;padding:44px 20px;border-radius:22px;background:#fff;border:1px dashed #CFE2D9}
+
+/* ---------- kartu & baris umum ---------- */
+#app .sheet>.card{padding:6px 16px;border-radius:22px;margin-bottom:14px}
+#app .sheet .li{padding:15px 0;gap:13px}
+#app .sheet .li .b b,#app .sheet .li .b span{white-space:normal;overflow:visible;text-overflow:clip}
+#app .sheet .li .b b{font-size:15px;line-height:1.3;word-break:break-word}
+#app .sheet .li .b span{margin-top:2px;font-size:12.5px;line-height:1.4}
+#app .sheet .hint{margin:4px 0 14px}
+
+/* ---------- detail ---------- */
+#app .sheet .crud-detail{display:grid;gap:14px}
+#app .sheet .crud-detail-hero{padding:20px;border-radius:24px;gap:15px}
+#app .sheet .crud-detail-icon{width:58px;height:58px;border-radius:18px;font-size:26px}
+#app .sheet .crud-detail-hero b{font-size:19px;line-height:1.25}
+#app .sheet .crud-detail-grid{gap:10px}
+#app .sheet .crud-detail-item{padding:14px 15px;border-radius:17px;background:#fff}
+#app .sheet .crud-detail-item b{font-size:14.5px;line-height:1.4;word-break:break-word}
+.pg-link{display:flex;align-items:center;gap:13px;width:100%;padding:14px 16px;text-align:left;border-radius:20px;background:#fff;border:1px solid var(--pg-line);box-shadow:0 6px 18px rgba(14,70,56,.06)}
+.pg-link-ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;color:#0A7058;background:#E3F5EE}
+.pg-link-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.pg-link b{display:block;font-size:15px;color:var(--pg-ink2)}
+.pg-link small{display:block;margin-top:2px;font-size:12.5px;color:var(--pg-mut)}
+.pg-link>i{margin-left:auto;color:#9BB3AB;font-style:normal;font-size:22px}
+.pg-link:active{transform:scale(.99)}
+
+/* ---------- formulir ---------- */
+#app .sheet .crud-form{display:grid;gap:16px;max-height:none;overflow:visible;padding:0;margin:0}
+#app .sheet .crud-field{gap:8px}
+#app .sheet .crud-field>span{font-size:13px;font-weight:750;color:#2F5B4E}
+#app .sheet .crud-field .fld{margin:0}
+#app .sheet .crud-form-section{padding:14px 15px;border-radius:18px}
+#app .sheet .crud-helper{padding:0 2px;font-size:12.5px;line-height:1.5;color:var(--pg-mut)}
+#app .sheet .crud-comp-row{gap:8px}
+#app .sheet>.fld{margin:0 0 14px}
+#app .sheet textarea.fld{min-height:160px;resize:vertical}
+
+/* ---------- konfirmasi / berhasil / hapus ---------- */
+#app .sheet .crud-confirm{padding:22px 0 8px;display:grid;gap:4px}
+#app .sheet .crud-confirm-icon{width:80px;height:80px;margin:0 auto 18px;font-size:34px}
+#app .sheet:has(.crud-danger-primary) .crud-confirm-icon{color:#fff;background:linear-gradient(150deg,#E27A80,#B03E46);box-shadow:0 12px 26px rgba(176,62,70,.34),0 0 0 8px rgba(214,100,108,.14),0 1px 0 rgba(255,255,255,.4) inset}
+#app .sheet .crud-confirm h3{margin:6px 0 0;font-size:24px}
+#app .sheet .crud-confirm p{margin:10px 4px 18px;font-size:14.5px}
+
+/* ---------- dock aksi (menempel di bawah layar) ---------- */
+.pg-dock{position:sticky;bottom:0;z-index:10;margin:auto -20px 0;padding:22px 20px calc(var(--sab) + 16px);
+  background:linear-gradient(180deg,rgba(244,249,246,0) 0,var(--pg-bg) 38%);pointer-events:none}
+.pg-dock>*{pointer-events:auto}
+.pg-dock .crud-confirm-actions,.pg-dock .crud-detail-actions{margin:0}
+#app .sheet .pg-dock .btn{margin:0}
+.pg-dock.fab{display:flex;justify-content:flex-end;background:none;padding-top:8px}
+.pg-fab{display:inline-flex;align-items:center;gap:9px;height:56px;padding:0 24px 0 18px;border-radius:19px;font-weight:800;font-size:15px;color:#fff;
+  background:linear-gradient(180deg,#14A07F,#0A7058);box-shadow:0 14px 28px rgba(8,100,78,.34),0 1px 0 rgba(255,255,255,.35) inset}
+.pg-fab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.pg-fab:active{transform:scale(.96)}
+
+#app .sheet .download-flow{display:grid;gap:16px}
+#app .sheet .crud-field{display:grid}
+#app .sheet>.pg-dock{margin:auto -20px 0;padding:22px 20px calc(var(--sab) + 16px);gap:10px}
+#app .sheet>.pg-dock.fab{padding-top:8px}
+#app .sheet .crud-row-main small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+.lux-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.lux-actions button{padding:10px 4px!important;min-width:0}
+.lux-actions button b{overflow-wrap:anywhere;text-align:center}
+.lux-actions button small{text-align:center;overflow-wrap:anywhere}
+#app .sheet .report-filter-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;margin-bottom:12px}
+#app .sheet .report-filter-card>div{min-width:0}
+#app .sheet .report-filter-card .btn{width:auto;flex:none;height:44px;padding:0 18px;font-size:14px;border-radius:14px!important}
+#app .sheet .crud-confirm h3{margin-bottom:14px}
+#app .sheet .crud-form>.crud-form-section:first-child b{display:none}
+/* ---------- animasi pindah halaman ---------- */
+.sheet.swap-fwd>*:not(.pg-bar){animation:pgFwd .28s cubic-bezier(.22,.9,.28,1)}
+.sheet.swap-back>*:not(.pg-bar){animation:pgBack .28s cubic-bezier(.22,.9,.28,1)}
+@keyframes pgFwd{from{opacity:0;transform:translateX(22px)}}
+@keyframes pgBack{from{opacity:0;transform:translateX(-22px)}}
+
+/* ---------- laporan (kini halaman penuh) ---------- */
+#app .sheet .report-detail-page{padding:0;margin:0 0 12px}
+#app .sheet .report-filter-card,#app .sheet .report-status-card{margin:0 0 12px}
+#app .sheet .report-preview-box{margin-top:6px}
+
+@media(max-width:380px){#app .sheet{padding-left:16px;padding-right:16px}.pg-bar,.pg-dock,#app .sheet .crud-toolbar{margin-left:-16px;margin-right:-16px}.pg-dock,#app .sheet .crud-toolbar{padding-left:16px;padding-right:16px}}
+@media(prefers-reduced-motion:reduce){#app .sheet,.sheet.swap-fwd>*,.sheet.swap-back>*{transition:none!important;animation:none!important}}
+</style>
 </head>
 <body class="splash-active">
 <div id="app"></div>
@@ -1776,8 +1939,8 @@ function crudRows(k){
    if(k==='spg'||k==='checker'){title=r.nama;meta=`${r.login_code||'ID login belum ada'} · ${r.last_login_at?'Login terakhir '+teamDate(r.last_login_at):'Belum pernah login'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>${r.login_code?'':'<span class="crud-chip warn">Belum lengkap</span>'}`}
    if(k==='menu'){title=r.nama;meta=`${r.kategori||'Umum'}${r.hpp!==''&&r.hpp!=null?` · HPP ${rp(Number(r.hpp)||0)}`:''}`;right=`<b class="crud-price">${rp(Number(r.harga)||0)}</b>`}
    if(k==='logistik'){title=r.nama;meta=`${r.stok??0} ${r.satuan||'unit'} · minimum ${r.minimum??0} · ${r.logistics_type==='active'?'Aktif':'Pasif'}`;right=`<span class="crud-chip ${(Number(r.stok)||0)<(Number(r.minimum)||0)?'warn':'ok'}">${(Number(r.stok)||0)<(Number(r.minimum)||0)?'Stok rendah':'Aman'}</span>`}
-   if(k==='esKristal'){title=r.nama;meta=`${r.perusahaan||'Supplier'}${r.catatan?' · '+r.catatan:''}`;right=r.telepon?`<a class="crud-wa" href="${waHref(r.telepon)}" target="_blank" rel="noopener">WhatsApp</a>`:'<span class="crud-chip muted">Nomor belum diisi</span>'}
-   return `<div class="crud-row" data-crud-action="detail" data-k="${k}" data-id="${esc(r.id)}"><div class="crud-row-main"><span class="crud-row-icon">${crudIcon(k)}</span><div><b>${esc(title)}</b><small>${esc(meta)}</small></div></div><div class="crud-row-right">${right}<button class="crud-mini edit" data-crud-action="edit" data-k="${k}" data-id="${esc(r.id)}" aria-label="Edit">✎</button><button class="crud-mini danger" data-crud-action="delete" data-k="${k}" data-id="${esc(r.id)}" aria-label="Hapus">×</button></div></div>`
+   if(k==='esKristal'){title=r.nama;meta=`${r.perusahaan||'Supplier'}${r.catatan?' · '+r.catatan:''}`;right=r.telepon?`<a class="crud-wa" href="${waHref(r.telepon)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">WhatsApp</a>`:'<span class="crud-chip muted">Nomor belum diisi</span>'}
+   return `<div class="crud-row" data-crud-action="detail" data-k="${k}" data-id="${esc(r.id)}"><div class="crud-row-main"><span class="crud-row-icon">${crudIcon(k)}</span><div><b>${esc(title)}</b><small>${esc(meta)}</small></div></div><div class="crud-row-right"><span class="crud-chips">${right}</span><i class="crud-chev" aria-hidden="true">${PG_ICO.chev}</i></div></div>`
  }).join('')||`<div class="crud-empty"><span>＋</span><b>Belum ada data</b><small>Tekan tombol Tambah untuk menambahkan data pertama.</small></div>`;
 }
 function teamMemberRow(role,x){
@@ -1878,11 +2041,12 @@ function showMemberIssued(k,row,draft){
  const label=k==='spg'?'SPG':'Checker';
  const code=String(draft.access_code||'');
  const item=(a,b)=>`<div class="crud-detail-item"><span>${a}</span><b>${b}</b></div>`;
- sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">TERSIMPAN DI SERVER</span><h3>${label} berhasil didaftarkan</h3><p><strong>${esc(row.full_name||draft.nama)}</strong> sudah terbukti ada di server beserta kode aksesnya.</p><div class="crud-detail-grid">${item('ID login',esc(row.login_code))}${item('Status kode akses',row.identity_status==='active'?'Aktif':'Nonaktif')}<div class="crud-detail-item full"><span>Kode akses ${label}</span><b id="issued-code">••••••••</b></div></div><button type="button" class="btn ghost" id="issued-toggle" style="width:100%;margin-top:10px">Tampilkan kode</button><p><small>Berikan kode ini kepada ${label}. Setelah halaman ini ditutup, kode tidak dapat ditampilkan lagi.</small></p><div class="crud-confirm-actions"><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Lihat daftar</button><button type="button" class="btn ghost" data-crud-action="add" data-k="${k}">Daftarkan lagi</button></div></div>`);
+ sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">TERSIMPAN DI SERVER</span><h3>${label} berhasil didaftarkan</h3><p><strong>${esc(row.full_name||draft.nama)}</strong> sudah terbukti ada di server beserta kode aksesnya.</p><div class="crud-detail-grid">${item('ID login',esc(row.login_code))}${item('Status kode akses',row.identity_status==='active'?'Aktif':'Nonaktif')}<div class="crud-detail-item full"><span>Kode akses ${label}</span><b id="issued-code">••••••••</b></div></div><button type="button" class="btn ghost" id="issued-toggle" style="width:100%;margin-top:10px">Tampilkan kode</button><p><small>Berikan kode ini kepada ${label}. Setelah halaman ini ditutup, kode tidak dapat ditampilkan lagi.</small></p><div class="crud-confirm-actions pg-dock"><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Lihat daftar</button><button type="button" class="btn ghost" data-crud-action="add" data-k="${k}">Daftarkan lagi</button></div></div>`,{title:'Kode akses',back:()=>crudBackToList(k)});
  bindCrudActionEvents();
  let shown=false;const out=$('#issued-code'),tg=$('#issued-toggle');
  if(tg&&out)tg.onclick=()=>{shown=!shown;out.textContent=shown?code:'•'.repeat(Math.max(8,code.length));tg.textContent=shown?'Sembunyikan kode':'Tampilkan kode'};
 }
+function crudBackToList(k){return ((k==='spg'||k==='checker')&&window.__listCtx==='team')?teamSheet():crudSheet(k)}
 function crudSheet(k){
  if(k==='gerai')return geraiSheet();
  if(k==='menu')return menuSheet();
@@ -1905,12 +2069,12 @@ function crudActionHandler(e){
  if(a==='edit')return crudForm(k,id);
  if(a==='delete')return crudConfirmDelete(k,id,1);
  if(a==='save')return crudReview(k,id);
- if(a==='review-back')return crudForm(k,id);
+ if(a==='review-back'){window.__restoreDraft=true;return crudForm(k,id)}
  if(a==='save-confirm')return crudSave(k,id);
  if(a==='delete-next')return crudConfirmDelete(k,id,2);
  if(a==='delete-confirm')return crudDelete(k,id);
  if(a==='delete-cancel')return crudDetail(k,id);
- if(a==='back-list')return ((k==='spg'||k==='checker')&&window.__listCtx==='team')?teamSheet():crudSheet(k);
+ if(a==='back-list')return crudBackToList(k);
  if(a==='add-comp')return addCompositionRow();
  if(a==='remove-comp'){b.closest('.crud-comp-row')?.remove();return;}
 }
@@ -1945,25 +2109,28 @@ function detailItems(k,r){
 }
 function crudDetail(k,id){
  const r=(ownerCrud[k]||[]).find(x=>x.id===id);if(!r)return;
- sheet(`<div class="crud-detail"><div class="crud-detail-hero"><div class="crud-detail-icon">${crudIcon(k)}</div><div><b>${esc(r.nama)}</b><small>${crudLabel(k)} · detail data</small></div></div><div class="crud-detail-grid">${detailItems(k,r)}</div><div class="crud-detail-actions"><button type="button" class="btn" data-crud-action="edit" data-k="${k}" data-id="${esc(id)}">✎ Revisi data</button><button type="button" class="btn danger-btn" data-crud-action="delete" data-k="${k}" data-id="${esc(id)}">× Hapus</button></div>${k==='gerai'?`<button type="button" class="btn" style="width:100%;margin-top:10px" data-crud-action="gerai-link" data-k="gerai" data-id="${esc(id)}">Link &amp; QR Gerai</button>`:''}</div>`);
+ sheet(`<div class="crud-detail"><div class="crud-detail-hero"><div class="crud-detail-icon">${crudIcon(k)}</div><div><b>${esc(r.nama)}</b><small>${crudLabel(k)} · detail data</small></div></div><div class="crud-detail-grid">${detailItems(k,r)}</div>${k==='gerai'?`<button type="button" class="pg-link" data-crud-action="gerai-link" data-k="gerai" data-id="${esc(id)}"><span class="pg-link-ic">${PG_ICO.qr}</span><div><b>Link &amp; QR Gerai</b><small>Bagikan link &amp; QR Drop Es</small></div><i>›</i></button>`:''}</div><div class="crud-detail-actions pg-dock"><button type="button" class="btn" data-crud-action="edit" data-k="${k}" data-id="${esc(id)}">✎ Revisi data</button><button type="button" class="btn danger-btn" data-crud-action="delete" data-k="${k}" data-id="${esc(id)}">× Hapus</button></div>`,{title:'Detail '+(PG_ADD_LABEL[k]||crudLabel(k)),back:()=>crudBackToList(k)});
  bindCrudActionEvents();
 }
 function crudField(label,name,type='text',placeholder='',value='',extra=''){return `<label class="crud-field"><span>${label}</span><input class="fld ${extra}" id="cf-${name}" type="${type}" value="${esc(value)}" placeholder="${placeholder}"></label>`}
 function crudStatus(value='Aktif'){return `<div class="crud-status-toggle"><label><input type="radio" name="cf-status" value="Aktif" ${value==='Aktif'?'checked':''}><span>Aktif</span></label><label><input type="radio" name="cf-status" value="Nonaktif" ${value==='Nonaktif'?'checked':''}><span>Nonaktif</span></label></div>`}
 function crudForm(k,id){
- const title=crudLabel(k),r=id?(ownerCrud[k]||[]).find(x=>x.id===id):null;
+ const title=crudLabel(k);
+ const useDraft=!!(window.__restoreDraft&&window.__crudDraft&&window.__crudDraft.k===k&&(window.__crudDraft.id||'')===(id||''));
+ window.__restoreDraft=false;
+ const r=useDraft?window.__crudDraft.r:(id?(ownerCrud[k]||[]).find(x=>x.id===id):null);
  let body=`<div class="crud-form-section"><b>${id?'Perubahan data':'Data baru'}</b><small>${id?'Periksa perubahan sebelum disimpan. Perubahan ini dapat memengaruhi bagian lain aplikasi.':'Isi data utama terlebih dahulu. Isi dengan lengkap, lalu periksa sekali lagi sebelum disimpan.'}</small></div>`;
  if(k==='gerai') body+=crudField('Nama gerai','nama','text','Contoh: Sunter',r?.nama)+crudField('Alamat','alamat','text','Alamat gerai',r?.alamat)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
- if(k==='spg') body+=crudField('Nama SPG','nama','text','Nama lengkap',r?.nama)+(!id?crudField('Kode akses SPG','access_code','password','Minimal 6 karakter',''):'')+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label><div class="crud-helper">SPG masuk ke aplikasi dengan kode akses ini. Berikan kode kepada SPG yang bersangkutan.</div>`;
- if(k==='checker') body+=crudField('Nama checker','nama','text','Nama lengkap',r?.nama)+(!id?crudField('Kode akses Checker','access_code','password','Minimal 6 karakter',''):'')+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label><div class="crud-helper">Checker masuk ke aplikasi dengan kode akses ini. Berikan kode kepada Checker yang bersangkutan.</div>`;
+ if(k==='spg') body+=crudField('Nama SPG','nama','text','Nama lengkap',r?.nama)+(!id?crudField('Kode akses SPG','access_code','password','Minimal 6 karakter',r?.access_code||''):'')+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label><div class="crud-helper">SPG masuk ke aplikasi dengan kode akses ini. Berikan kode kepada SPG yang bersangkutan.</div>`;
+ if(k==='checker') body+=crudField('Nama checker','nama','text','Nama lengkap',r?.nama)+(!id?crudField('Kode akses Checker','access_code','password','Minimal 6 karakter',r?.access_code||''):'')+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label><div class="crud-helper">Checker masuk ke aplikasi dengan kode akses ini. Berikan kode kepada Checker yang bersangkutan.</div>`;
  if(k==='menu'){
    body+=crudField('Nama menu','nama','text','Nama produk',r?.nama)+crudField('Kategori','kategori','text','Minuman / makanan',r?.kategori)+crudField('Harga jual','harga','number','0',r?.harga)+crudField('HPP','hpp','number','Opsional',r?.hpp)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
    const comps=r?.komposisi||[];
    body+=`<div class="crud-form-section"><b>Logistik aktif menu</b><small>Sematkan logistik aktif dan jumlah pemakaian per 1 menu terjual. Stok logistik di gerai akan berkurang otomatis sesuai jumlah menu yang terjual.</small></div><div class="crud-composition" id="crud-composition">${comps.map((c,i)=>`<div class="crud-comp-row"><select class="fld comp-item" data-i="${i}">${compOptions(c.inventory_item_id)}</select><input class="fld comp-qty" data-i="${i}" type="number" min="0.0001" step="0.0001" value="${esc(c.quantity_per_sale??1)}"><button class="crud-comp-remove" type="button" data-crud-action="remove-comp" data-i="${i}">×</button></div>`).join('')}<button type="button" class="crud-add-comp" data-crud-action="add-comp">＋ Tambahkan logistik aktif</button></div>`;
  }
- if(k==='logistik') body+=crudField('Nama item','nama','text','Contoh: Cup',r?.nama)+crudField('Satuan','satuan','text','pcs / box / kg',r?.satuan)+(id?`<div class="crud-helper">Stok saat ini: <b>${esc(String(r?.stok??0))} ${esc(r?.satuan||'')}</b>. Stok hanya berubah lewat restok/penjualan.</div>`:crudField('Jumlah awal','stok','number','0','','stok','number','0',''))+crudField('Minimum stok','minimum','number','0',r?.minimum)+crudField('Supplier','supplier','text','Nama supplier',r?.supplier)+`<label class="crud-field"><span>Tipe logistik</span><select class="fld" id="cf-logistics_type"><option value="passive" ${(r?.logistics_type||'passive')==='passive'?'selected':''}>Pasif</option><option value="active" ${r?.logistics_type==='active'?'selected':''}>Aktif — berkurang saat penjualan</option></select></label><label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
+ if(k==='logistik') body+=crudField('Nama item','nama','text','Contoh: Cup',r?.nama)+crudField('Satuan','satuan','text','pcs / box / kg',r?.satuan)+(id?`<div class="crud-helper">Stok saat ini: <b>${esc(String(r?.stok??0))} ${esc(r?.satuan||'')}</b>. Stok hanya berubah lewat restok/penjualan.</div>`:crudField('Jumlah awal','stok','number','0',useDraft?r.stok:'','stok'))+crudField('Minimum stok','minimum','number','0',r?.minimum)+crudField('Supplier','supplier','text','Nama supplier',r?.supplier)+`<label class="crud-field"><span>Tipe logistik</span><select class="fld" id="cf-logistics_type"><option value="passive" ${(r?.logistics_type||'passive')==='passive'?'selected':''}>Pasif</option><option value="active" ${r?.logistics_type==='active'?'selected':''}>Aktif — berkurang saat penjualan</option></select></label><label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
  if(k==='esKristal') body+=crudField('Nama kontak','nama','text','Kontak utama',r?.nama)+crudField('Nama perusahaan','perusahaan','text','Supplier es kristal',r?.perusahaan)+crudField('Nomor WhatsApp','telepon','tel','628xxxxxxxxxx',r?.telepon)+crudField('Catatan','catatan','text','Jadwal / keterangan',r?.catatan)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
- sheet(`<div class="crud-form-head"><span class="eyebrow">${id?'EDIT DATA':'DATA BARU'}</span><h3>${id?'Edit':'Tambah'} ${title}</h3></div><div class="crud-form">${body}</div><button class="btn crud-save" data-crud-action="save" data-k="${k}" data-id="${id||''}">${id?'Simpan perubahan':'Tambah data'}</button>`);
+ sheet(`<div class="crud-form-head"><span class="eyebrow">${id?'EDIT DATA':'DATA BARU'}</span><h3>${id?'Edit':'Tambah'} ${title}</h3></div><div class="crud-form">${body}</div><div class="pg-dock"><button class="btn crud-save" data-crud-action="save" data-k="${k}" data-id="${id||''}">${id?'Simpan perubahan':'Tambah data'}</button></div>`,{back:()=>id?crudDetail(k,id):crudBackToList(k)});
  bindCrudActionEvents();
  bindCompositionEvents();
 }
@@ -1994,7 +2161,7 @@ function crudReview(k,id){
  const impact=k==='logistik'?(r.logistics_type==='active'?'Logistik Aktif akan menjadi bagian dari konsumsi otomatis saat penjualan.':'Logistik Pasif tidak dikonsumsi otomatis dari penjualan.'):
    k==='menu'?'Perubahan harga/status/komposisi akan berlaku untuk transaksi berikutnya; riwayat transaksi lama tidak berubah.':
    'Data akan langsung berlaku setelah disimpan.';
- sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">${action.toUpperCase()} · REVIEW</span><h3>Periksa sebelum disimpan</h3><div class="crud-detail-grid">${detailItems(k,r)}</div><div class="crud-form-section"><b>Dampak</b><small>${esc(impact)}</small></div><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="review-back" data-k="${k}" data-id="${esc(id||'')}">‹ Kembali</button><button type="button" class="btn" data-crud-action="save-confirm" data-k="${k}" data-id="${esc(id||'')}">${id?'Simpan revisi':'Daftarkan'}</button></div></div>`);
+ sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">${action.toUpperCase()} · REVIEW</span><h3>Periksa sebelum disimpan</h3><div class="crud-detail-grid">${detailItems(k,r)}</div><div class="crud-form-section"><b>Dampak</b><small>${esc(impact)}</small></div><div class="crud-confirm-actions pg-dock"><button type="button" class="btn ghost" data-crud-action="review-back" data-k="${k}" data-id="${esc(id||'')}">‹ Kembali</button><button type="button" class="btn" data-crud-action="save-confirm" data-k="${k}" data-id="${esc(id||'')}">${id?'Simpan revisi':'Daftarkan'}</button></div></div>`,{title:'Periksa data',back:()=>{window.__restoreDraft=true;crudForm(k,id)}});
  bindCrudActionEvents();
 }
 const ERR_TEXT={
@@ -2113,7 +2280,7 @@ function resolveGeraiLink(row){
 }
 async function showGeraiLinkPopup(storeId,opts={}){
  const after=opts.after||'list';
- closeSheet(); closeGeraiPopup(true);
+ closeGeraiPopup(true);
  const known=(ownerCrud.gerai||[]).find(x=>x.id===storeId);
  const ov=document.createElement('div'); ov.className='gl-ov'; ov.id='gl-ov';
  ov.innerHTML=`<div class="gl-card" role="dialog" aria-modal="true" aria-labelledby="gl-title">
@@ -2298,7 +2465,7 @@ async function crudSave(k,id){
    if(k==='gerai'&&wasNew){ showGeraiLinkPopup(id,{fresh:true,after:'list'}); return; }
    if((k==='spg'||k==='checker')&&wasNew&&memberRow){ showMemberIssued(k,memberRow,draft); return; }
    const saved=(ownerCrud[k]||[]).find(x=>x.id===id)||draft;
-   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>${id?'Revisi berhasil disimpan':'Data berhasil didaftarkan'}</h3><p><strong>${esc(saved.nama||draft.nama)}</strong> sudah tersimpan.</p><div class="crud-confirm-actions"><button type="button" class="btn" data-crud-action="detail" data-k="${k}" data-id="${esc(saved.id||id||'')}">Buka detail</button><button type="button" class="btn ghost" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div></div>`);
+   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>${id?'Revisi berhasil disimpan':'Data berhasil didaftarkan'}</h3><p><strong>${esc(saved.nama||draft.nama)}</strong> sudah tersimpan.</p><div class="crud-confirm-actions pg-dock"><button type="button" class="btn" data-crud-action="detail" data-k="${k}" data-id="${esc(saved.id||id||'')}">Buka detail</button><button type="button" class="btn ghost" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div></div>`,{title:'Berhasil',back:()=>crudBackToList(k)});
    bindCrudActionEvents();
  }catch(e){
    console.error(e);
@@ -2314,9 +2481,9 @@ function crudConfirmDelete(k,id,step=1){
  const r=(ownerCrud[k]||[]).find(x=>x.id===id);if(!r)return;
  if(step===1){
   const dep=k==='menu'?'Menu dihapus permanen beserta komposisinya. Riwayat harga dan penjualan menu ini dipindahkan ke Arsip Riwayat.':k==='logistik'?'Item dihapus permanen dari stok pusat, stok gerai, dan komposisi menu. Riwayat pergerakannya dipindahkan ke Arsip Riwayat.':k==='gerai'?'Gerai dihapus permanen beserta seluruh data operasionalnya (sesi, penjualan, kas, stok, tagihan). Seluruh riwayatnya dipindahkan ke Arsip Riwayat.':k==='spg'?'Akun SPG dan kode aksesnya dihapus permanen. Catatan gerai yang pernah dibuatnya tetap ada tanpa nama pembuat, dan jejaknya tersimpan di Arsip Riwayat.':k==='checker'?'Akun Checker dan kode aksesnya dihapus permanen. Catatan pemeriksaan yang pernah dibuatnya tetap ada tanpa nama pembuat, dan jejaknya tersimpan di Arsip Riwayat.':'Kontak dihapus permanen. Salinannya tersimpan di Arsip Riwayat.';
-  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">⚠️</div><span class="eyebrow">PENGHAPUSAN</span><h3>Periksa sebelum menghapus</h3><p>Anda memilih <strong>${esc(r.nama)}</strong>.</p><div class="crud-form-section"><b>Ketergantungan data</b><small>${esc(dep)}</small></div><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-next" data-k="${k}" data-id="${esc(id)}">Lanjutkan</button></div></div>`);
+  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">⚠️</div><span class="eyebrow">PENGHAPUSAN</span><h3>Periksa sebelum menghapus</h3><p>Anda memilih <strong>${esc(r.nama)}</strong>.</p><div class="crud-form-section"><b>Ketergantungan data</b><small>${esc(dep)}</small></div><div class="crud-confirm-actions pg-dock"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-next" data-k="${k}" data-id="${esc(id)}">Lanjutkan</button></div></div>`,{title:'Hapus data',back:()=>crudDetail(k,id)});
  }else{
-  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">!</div><span class="eyebrow">KONFIRMASI TERAKHIR</span><h3>Hapus ${crudLabel(k)}?</h3><p><strong>${esc(r.nama)}</strong> akan dihapus permanen dan tidak dapat dikembalikan. Riwayat dan lognya tetap tersimpan di Arsip Riwayat.</p><div class="crud-confirm-actions"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-confirm" data-k="${k}" data-id="${esc(id)}">Hapus permanen</button></div></div>`);
+  sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">!</div><span class="eyebrow">KONFIRMASI TERAKHIR</span><h3>Hapus ${crudLabel(k)}?</h3><p><strong>${esc(r.nama)}</strong> akan dihapus permanen dan tidak dapat dikembalikan. Riwayat dan lognya tetap tersimpan di Arsip Riwayat.</p><div class="crud-confirm-actions pg-dock"><button type="button" class="btn ghost" data-crud-action="delete-cancel" data-k="${k}" data-id="${esc(id)}">Batal</button><button type="button" class="btn crud-danger-primary" data-crud-action="delete-confirm" data-k="${k}" data-id="${esc(id)}">Hapus permanen</button></div></div>`,{title:'Konfirmasi akhir',back:()=>crudConfirmDelete(k,id,1)});
  }
  bindCrudActionEvents();
 }
@@ -2353,7 +2520,7 @@ async function crudDelete(k,id){
    await verifyRemovedOnServer(k,id);
    try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah terhapus, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
    const arsip=Object.values(res.archived||{}).reduce((a,n)=>a+Number(n||0),0);
-   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>Data dihapus permanen</h3><p><strong>${esc(r.nama)}</strong> sudah dihapus dari server sampai bersih.${arsip?` ${arsip} catatan riwayat dipindahkan ke Arsip Riwayat.`:' Riwayat dan lognya tetap tersimpan di Arsip Riwayat.'}</p><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div>`);
+   sheet(`<div class="crud-confirm"><div class="crud-confirm-icon">✓</div><span class="eyebrow">BERHASIL</span><h3>Data dihapus permanen</h3><p><strong>${esc(r.nama)}</strong> sudah dihapus dari server sampai bersih.${arsip?` ${arsip} catatan riwayat dipindahkan ke Arsip Riwayat.`:' Riwayat dan lognya tetap tersimpan di Arsip Riwayat.'}</p><div class="pg-dock"><button type="button" class="btn" data-crud-action="back-list" data-k="${k}">Kembali ke daftar</button></div></div>`,{title:'Selesai',back:()=>crudBackToList(k)});
    bindCrudActionEvents();
  }catch(e){
    console.error(e);
@@ -2377,8 +2544,81 @@ const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectU
 
 /* ===== UI helpers ===== */
 function toast(t){const e=$('.toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200)}
-function sheet(html){$('.sheet').innerHTML='<div class="sheet-bar"><div class="grab"></div><button type="button" class="sheet-x" aria-label="Tutup" onclick="closeSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+html;$('.sheet').scrollTop=0;svgify($('.sheet'));$('.sheet').classList.add('on');$('.dim').classList.add('on')}
-function closeSheet(){$('.sheet').classList.remove('on');$('.dim').classList.remove('on')}
+/* ===== Halaman penuh (pengganti pop up) =====
+   sheet(html,{title,back}) tetap menjadi satu-satunya pintu masuk, jadi seluruh alur lama
+   (daftar → detail → form → review → hasil) otomatis tampil sebagai halaman layar penuh.
+   - back : fungsi tujuan tombol kembali (default: tutup halaman, kembali ke dashboard)
+   - tombol Back Android / gestur kembali ikut menutup halaman, bukan keluar dari aplikasi */
+const PG={open:false,entry:false,skip:false,back:null,title:'',dir:'fwd'};
+const PG_ICO={
+ back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+ refresh:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+ qr:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>'
+};
+function pgPush(){ if(PG.entry||PG.skip)return; try{history.pushState({pg:1},'');PG.entry=true}catch(_){} }
+function pgPop(){ if(!PG.entry)return; PG.entry=false; PG.skip=true; try{history.back()}catch(_){PG.skip=false} }
+window.addEventListener('popstate',()=>{
+ if(PG.skip){PG.skip=false; if(PG.open)pgPush(); return}   /* pop buatan kita sendiri */
+ if(!PG.entry)return;
+ PG.entry=false;                                            /* tombol Back perangkat ditekan */
+ if(!PG.open)return;
+ if(PG.back){pgPush();pageBack()}else pgHide();
+});
+function pgHide(){
+ PG.open=false;PG.back=null;PG.title='';
+ const el=$('.sheet'); if(el){el.classList.remove('on','swap-fwd','swap-back');el.setAttribute('aria-hidden','true')}
+}
+function closeSheet(){ if(!PG.open)return; pgHide(); pgPop(); }
+function pageBack(){
+ if(PG.back){const f=PG.back;PG.dir='back';try{f()}finally{PG.dir='fwd'}}
+ else closeSheet();
+}
+const pgHead=(eyebrow,title,sub)=>`<div class="crud-sheet-head"><div>${eyebrow?`<span class="eyebrow">${eyebrow}</span>`:''}<h3>${title}</h3>${sub?`<small>${sub}</small>`:''}</div></div>`;
+function pgInit(){
+ const el=$('.sheet'); if(!el||el.__pg)return; el.__pg=1;
+ el.addEventListener('scroll',()=>el.classList.toggle('scrolled',el.scrollTop>26),{passive:true});
+}
+const PG_ADD_LABEL={gerai:'Gerai',spg:'SPG',checker:'Checker',menu:'Menu',logistik:'Item',esKristal:'Kontak'};
+function sheet(html,o){
+ if(typeof o==='function')o={back:o};
+ o=o||{};
+ const el=$('.sheet'); if(!el)return;
+ pgInit();
+ /* judul: dari opsi, atau dari <h3> pertama (emoji di depan dibuang) */
+ const m=/<h3[^>]*>([\s\S]*?)<\/h3>/.exec(html);
+ const h3Text=m?m[1].replace(/<[^>]+>/g,'').replace(/^[^\p{L}\p{N}]+/u,'').trim():'';
+ const title=o.title||h3Text||'Detail';
+ const wasOpen=PG.open, same=wasOpen&&PG.title===title&&PG.dir!=='back'&&!o.animate;
+ PG.back=o.back||null; PG.title=title;
+ el.innerHTML=`<header class="pg-bar"><button type="button" class="pg-back" aria-label="Kembali" onclick="pageBack()">${PG_ICO.back}</button><div class="pg-title">${esc(title)}</div><div class="pg-slot"></div></header>`+html;
+ el.setAttribute('aria-label',title); el.removeAttribute('aria-hidden');
+ el.classList.toggle('has-h1',!!h3Text);
+ /* emoji di judul besar dibuang agar tampil bersih & konsisten */
+ el.querySelectorAll(':scope>h3,.crud-sheet-head h3,.crud-form-head h3').forEach(h=>{const t=h.firstChild; if(t&&t.nodeType===3)t.textContent=t.textContent.replace(/^[^\p{L}\p{N}]+/u,'')});
+ el.querySelectorAll('.crud-sheet-head').forEach(h=>h.classList.add(h.querySelector('h3')?'pg-head':'pg-sec'));
+ /* tombol muat-ulang pindah ke bar atas sebagai ikon */
+ const rf=el.querySelector('.pg-head [id$="-refresh"]');
+ if(rf){rf.className='pg-act';rf.setAttribute('aria-label','Muat ulang');rf.innerHTML=PG_ICO.refresh;el.querySelector('.pg-slot').appendChild(rf)}
+ /* tombol Tambah pada daftar menjadi tombol melayang di bawah */
+ const add=el.querySelector('.pg-head [data-crud-action="add"]');
+ if(add){const k=add.dataset.k;add.className='pg-fab';add.innerHTML=PG_ICO.plus+'<span>Tambah '+(PG_ADD_LABEL[k]||'')+'</span>';const d=document.createElement('div');d.className='pg-dock fab';d.appendChild(add);el.appendChild(d)}
+ /* dock aksi selalu menjadi anak langsung halaman agar menempel di bawah layar */
+ el.querySelectorAll('.pg-dock').forEach(d=>{if(d.parentElement!==el)el.appendChild(d)});
+ el.classList.toggle('has-dock',!!el.querySelector(':scope>.pg-dock'));
+ el.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>actX(b.dataset.x));
+ svgify(el);
+ /* tampilkan */
+ el.classList.remove('swap-fwd','swap-back');
+ if(!wasOpen){
+   PG.open=true; el.scrollTop=0; el.classList.remove('scrolled');
+   void el.offsetWidth; el.classList.add('on'); pgPush();
+ }else if(!same){
+   el.scrollTop=0; el.classList.remove('scrolled');
+   void el.offsetWidth; el.classList.add(PG.dir==='back'?'swap-back':'swap-fwd');
+ }
+}
 const li=(ic,t,s,r)=>`<div class="li"><div class="ic">${ic}</div><div class="b"><b>${t}</b><span>${s}</span></div>${r||''}</div>`;
 
 /* ===== Login ===== */
@@ -2451,7 +2691,7 @@ const tabs=[['home','🏠','Dashboard'],['lap','📊','Laporan'],['gud','📦','
 function shell(){
  app.innerHTML=`<div class="scr" id="v"></div><nav class="tabs">${tabs.map(t=>`<button data-t="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav><div class="dim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Detail"></div><div class="toast"></div>`;
  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
- $('.dim').onclick=closeSheet;draw();
+ PG.open=false;PG.back=null;PG.title='';if(PG.entry)pgPop();pgInit();draw();
 }
 function draw(){
  if(tab!=='home')clearInterval(highlightTimer);
@@ -2603,22 +2843,26 @@ const REPORT_DEFS={
  es:['Laporan Pemakaian Es Kristal','Pemakaian Es Kristal','Khusus pesanan, penerimaan, stok, pemakaian, dan pergerakan es kristal.']
 };
 async function showReport(key,start=todayJakarta(),end=todayJakarta()){
- window.__selectedReport=key;
+ window.__selectedReport=key;window.__reportRange={start,end};
  const d=REPORT_DEFS[key]||REPORT_DEFS.penjualan;
- tab='lap';
- const v=$('#v');
- if(v){v.innerHTML=head(d[0],d[1])+`<section class="report-detail-page"><button class="report-back" data-o="back-reports">‹ Kembali ke daftar laporan</button><div class="report-detail-head"><span class="eyebrow">LAPORAN OWNER</span><h2>${d[0]}</h2><p>${d[2]}</p></div><div class="report-filter-card"><div><b>Periode laporan</b><small>${esc(start)} s/d ${esc(end)}</small></div><button class="btn ghost" data-o="report-period">Ubah tanggal</button></div><div class="report-status-card"><span>Status data</span><b>Data terbaru</b><small>Laporan disusun dari transaksi yang tercatat.</small></div><div class="report-empty"><span>⏳</span><b>Memuat laporan...</b><small>Menyiapkan laporan...</small></div></section>`;bind();svgify(v)}
+ sheet(`${pgHead('LAPORAN OWNER',d[0],d[2])}<section class="report-detail-page"><div class="report-filter-card"><div><b>Periode laporan</b><small>${esc(start)} s/d ${esc(end)}</small></div><button class="btn ghost" data-o="report-period">Ubah tanggal</button></div><div class="report-status-card"><span>Status data</span><b>Data terbaru</b><small>Laporan disusun dari transaksi yang tercatat.</small></div><div class="report-empty"><span>⏳</span><b>Memuat laporan...</b><small>Menyiapkan laporan...</small></div></section>`,{title:d[0]});
+ bind();
+ const host=$('.sheet');
  try{
    const data=await rpc('owner_get_report',{p_report_type:key,p_start_date:start,p_end_date:end,p_store_id:null});
-   
-   if(v)v.querySelector('.report-empty').outerHTML=renderReportData(data);
+   const box=host&&window.__selectedReport===key?host.querySelector('.report-empty'):null;
+   if(box)box.outerHTML=renderReportData(data);
  }catch(e){
-   if(v)v.querySelector('.report-empty').innerHTML=`<span>⚠️</span><b>Laporan tidak tersedia</b><small>${esc(friendlyError(e,'Laporan belum dapat ditampilkan. Coba lagi sebentar.'))}</small>`;
+   const box=host&&window.__selectedReport===key?host.querySelector('.report-empty'):null;
+   if(box)box.innerHTML=`<span>⚠️</span><b>Laporan tidak tersedia</b><small>${esc(friendlyError(e,'Laporan belum dapat ditampilkan. Coba lagi sebentar.'))}</small>`;
  }
 }
-function backReports(){draw()}
+function backReports(){closeSheet()}
 function downloadReportFlow(){
- sheet(`<div class="download-flow"><div class="crud-form-head"><span class="eyebrow">DOWNLOAD LAPORAN</span><h3>Pilih tanggal</h3></div><label class="crud-field"><span>Tanggal mulai</span><input class="fld" id="dl-start" type="date" value="${todayJakarta()}"></label><label class="crud-field"><span>Tanggal akhir</span><input class="fld" id="dl-end" type="date" value="${todayJakarta()}"></label><button class="btn" data-x="preview-report">Preview laporan</button><div class="hint">PDF hanya dapat diunduh jika laporan tersedia. Angka laporan selalu berasal dari data yang tercatat.</div></div>`);
+ const fromReport=!!document.querySelector('.sheet .report-detail-page');
+ const rg=(fromReport&&window.__reportRange)||{start:todayJakarta(),end:todayJakarta()};
+ const key=window.__selectedReport;
+ sheet(`<div class="download-flow"><div class="crud-form-head"><span class="eyebrow">DOWNLOAD LAPORAN</span><h3>Pilih tanggal</h3></div><label class="crud-field"><span>Tanggal mulai</span><input class="fld" id="dl-start" type="date" value="${esc(rg.start)}"></label><label class="crud-field"><span>Tanggal akhir</span><input class="fld" id="dl-end" type="date" value="${esc(rg.end)}"></label><div class="hint">PDF hanya dapat diunduh jika laporan tersedia. Angka laporan selalu berasal dari data yang tercatat.</div></div><div class="pg-dock"><button class="btn" data-x="preview-report">Preview laporan</button></div>`,{back:fromReport&&key?()=>showReport(key,rg.start,rg.end):null});
 }
 function owner(){ return ownerCrudPage(); }
 
@@ -2657,7 +2901,7 @@ function tagihanSheet(){
   };
   const tiles=groups.filter(g=>g.key!=='other').map(g=>`<div class="tg-tile ${g.cls}"><small>${g.title}</small><b>${g.rows.length}</b><em>${qtyTxt(sumQty(g.rows))}</em></div>`).join('');
   const secs=groups.map(g=>`<section class="tg-sec ${g.cls}"><div class="tg-sec-h"><span class="tg-ic">${g.icon}</span><div class="t"><b>${g.title}</b><small>${g.sub}</small></div><span class="chip ${g.cls}">${g.rows.length} drop</span></div>${g.rows.length?byStore(g.rows):'<div class="tg-empty">Belum ada drop dengan opsi ini.</div>'}</section>`).join('');
-  sheet(`<h3>Tagihan</h3><div class="tg-sum">${tiles}</div>${secs}`);
+  sheet(`${pgHead('KEUANGAN','Tagihan',bills.length+' drop tercatat')}<div class="tg-sum">${tiles}</div>${secs}`);
 }
 function bind(){document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>act(b.dataset.o))}
 async function act(o){
@@ -2671,7 +2915,7 @@ async function act(o){
   if(o==='gerai'){geraiSheet();return;}
   if(o==='nota'||o==='hist'){
     const rows=state.transactions||[];
-    sheet(`<h3>History Penjualan</h3><div class="card">${rows.length?rows.map(x=>li('🧾',esc(x.transaction_id||'Transaksi'),`${esc(x.occurred_at||'')} · ${esc(x.payment_method||'')}`,`<span class="amt">${rp(x.total_amount)}</span>`)).join(''):'<div class="empty">Belum ada transaksi yang tercatat.</div>'}</div>`);
+    sheet(`${pgHead('RIWAYAT PENJUALAN','History Penjualan',rows.length?rows.length+' transaksi tercatat':'Belum ada transaksi')}<div class="card">${rows.length?rows.map(x=>li('🧾',esc(x.transaction_id||'Transaksi'),`${esc(x.occurred_at||'')} · ${esc(x.payment_method||'')}`,`<span class="amt">${rp(x.total_amount)}</span>`)).join(''):'<div class="empty">Belum ada transaksi yang tercatat.</div>'}</div>`);
     return;
   }
   if(o==='tagihan'){
@@ -2680,59 +2924,60 @@ async function act(o){
     return;
   }
   if(o==='history-beli-bayar'||o==='finance'){
-    sheet(`<h3>Aktivitas Keuangan</h3><div class="card">${state.moneyTimeline.length?state.moneyTimeline.map(x=>li('💰',esc(x.title||x.description||x.type||'Aktivitas'),esc(x.created_at||x.occurred_at||''),`<span class="amt">${rp(x.amount||x.total_amount||0)}</span>`)).join(''):'<div class="empty">Belum ada aktivitas keuangan yang memiliki catatan sumber.</div>'}</div>`);
+    sheet(`${pgHead('KEUANGAN','History Beli &amp; Bayar','Pendapatan dan aktivitas keuangan yang tercatat')}<div class="card">${state.moneyTimeline.length?state.moneyTimeline.map(x=>li('💰',esc(x.title||x.description||x.type||'Aktivitas'),esc(x.created_at||x.occurred_at||''),`<span class="amt">${rp(x.amount||x.total_amount||0)}</span>`)).join(''):'<div class="empty">Belum ada aktivitas keuangan yang memiliki catatan sumber.</div>'}</div>`);
     return;
   }
   if(o==='pengumuman'){
-    sheet('<h3>Buat Pengumuman</h3><input class="fld" id="announcement-title" placeholder="Judul pengumuman"><textarea class="fld" id="announcement-body" rows="5" placeholder="Tulis isi pengumuman"></textarea><button class="btn" data-x="announcement">Kirim pengumuman</button><div class="hint">Pengumuman akan dikirim sebagai pesan kepada seluruh SPG dan Checker.</div>');
+    sheet(`${pgHead('TIM GERAI','Buat Pengumuman','Dikirim sebagai pesan kepada seluruh SPG dan Checker.')}<label class="crud-field"><span>Judul</span><input class="fld" id="announcement-title" placeholder="Contoh: Jadwal stok minggu ini" maxlength="120" autocomplete="off"></label><label class="crud-field" style="margin-top:16px"><span>Isi pengumuman</span><textarea class="fld" id="announcement-body" rows="6" placeholder="Tulis isi pengumuman"></textarea></label><div class="pg-dock"><button class="btn" data-x="announcement">Kirim pengumuman</button></div>`);
     return;
   }
   if(o==='arsip'){
     const TIPE={store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak WhatsApp'};
     let rows=[];
     try{rows=asArray(await selectRows('owner_deletion_log',q=>q.order('deleted_at',{ascending:false}).limit(200)))}catch(e){console.error(e);toast('Arsip riwayat belum dapat dimuat. Coba lagi.');return}
-    sheet(`<h3>Arsip Riwayat Terhapus</h3><div class="card">${rows.length?rows.map(x=>{
+    sheet(`${pgHead('ARSIP','Arsip Riwayat Terhapus',rows.length?rows.length+' catatan tersimpan':'Belum ada data yang dihapus')}<div class="card">${rows.length?rows.map(x=>{
       const n=Object.values(x.summary||{}).reduce((a,v)=>a+Number(v||0),0);
       return li('🗄️',esc(x.entity_name||'Tanpa nama'),esc((TIPE[x.entity_type]||'Data')+' · dihapus '+fmtWaktu(x.deleted_at)),`<span class="chip">${n} catatan</span>`);
     }).join(''):'<div class="empty">Belum ada data yang dihapus.</div>'}</div>`);
     return;
   }
   if(o==='log-aktifitas'||o==='audit'){
-    sheet(`<h3>Riwayat Aktivitas</h3><div class="card">${audit.length?audit.map(a=>li('🧾',esc(auditText(a)),esc(fmtWaktu(a.created_at)),'')).join(''):'<div class="empty">Belum ada riwayat aktivitas.</div>'}</div>`);
+    sheet(`${pgHead('AKTIVITAS','Riwayat Aktivitas','Catatan perubahan data usaha')}<div class="card">${audit.length?audit.map(a=>li('🧾',esc(auditText(a)),esc(fmtWaktu(a.created_at)),'')).join(''):'<div class="empty">Belum ada riwayat aktivitas.</div>'}</div>`);
     return;
   }
   if(o==='set-menu'||o==='menu'){menuSheet();return;}
   if(o==='spg'||o==='checker'){
     const rows=o==='spg'?state.spg:state.checker;
-    sheet(`<h3>${o==='spg'?'SPG':'Checker'}</h3><div class="card">${rows.length?rows.map(x=>li(o==='spg'?'🧑':'🧑‍💼',esc(x.full_name||'Tanpa nama'),`${esc(x.phone||'Nomor belum diisi')}`,`<span class="chip ${String(x.profile_status).toLowerCase()==='active'?'ok':'warn'}">${esc(statusLabel(x.profile_status))}</span>`)).join(''):'<div class="empty">Belum ada data yang tersedia.</div>'}</div>`);
+    sheet(`${pgHead('TIM OPERASIONAL',o==='spg'?'SPG':'Checker',rows.length+' anggota')}<div class="card">${rows.length?rows.map(x=>li(o==='spg'?'🧑':'🧑‍💼',esc(x.full_name||'Tanpa nama'),`${esc(x.phone||'Nomor belum diisi')}`,`<span class="chip ${String(x.profile_status).toLowerCase()==='active'?'ok':'warn'}">${esc(statusLabel(x.profile_status))}</span>`)).join(''):'<div class="empty">Belum ada data yang tersedia.</div>'}</div>`);
     return;
   }
   if(o==='es'){
-    sheet(`<h3>Es Kristal</h3><div class="card">${state.iceOrders.length?state.iceOrders.map(x=>li('🧊','Pesanan es',`${esc(statusLabel(x.status))} · ${esc(fmtWaktu(x.requested_at))}`,`<span class="amt">${esc(x.quantity||0)} ${esc(x.unit||'')}</span>`)).join(''):'<div class="empty">Belum ada pesanan es.</div>'}</div>`);
+    sheet(`${pgHead('LOGISTIK','Es Kristal',state.iceOrders.length+' pesanan tercatat')}<div class="card">${state.iceOrders.length?state.iceOrders.map(x=>li('🧊','Pesanan es',`${esc(statusLabel(x.status))} · ${esc(fmtWaktu(x.requested_at))}`,`<span class="amt">${esc(x.quantity||0)} ${esc(x.unit||'')}</span>`)).join(''):'<div class="empty">Belum ada pesanan es.</div>'}</div>`);
     return;
   }
   if(o==='report'){tab='lap';draw();return}
   if(o==='pdf'){downloadReportFlow();return}
   if(o==='kode'){
-    sheet('<h3>Ubah kode akses</h3><div class="hint">Kode akses mengikuti kata sandi akun Owner yang tersimpan di sistem. Perubahan kode dilakukan melalui pengelolaan akun.</div>');
+    sheet(pgHead('KEAMANAN','Ubah kode akses','')+'<div class="hint">Kode akses mengikuti kata sandi akun Owner yang tersimpan di sistem. Perubahan kode dilakukan melalui pengelolaan akun.</div>');
     return;
   }
   if(o==='hpp'){
-    sheet('<h3>Periode HPP</h3><div class="hint">Pengaturan periode HPP belum tersedia. Tidak ada perubahan yang disimpan sampai pengaturan ini siap.</div>');
+    sheet(pgHead('DATA USAHA','Periode HPP','')+'<div class="hint">Pengaturan periode HPP belum tersedia. Tidak ada perubahan yang disimpan sampai pengaturan ini siap.</div>');
     return;
   }
   if(o==='edit'){
-    sheet('<h3>Pusat Edit Data</h3><div class="hint">Gunakan menu Kelola Usaha untuk mengubah data utama. Perubahan langsung disimpan ke sistem.</div>');
+    sheet(pgHead('KEAMANAN','Pusat Edit Data','')+'<div class="hint">Gunakan menu Kelola Usaha untuk mengubah data utama. Perubahan langsung disimpan ke sistem.</div>');
     return;
   }
   if(o.startsWith('crud-')){crudSheet(o.replace('crud-',''));return}
+  if(o==='report-period'){downloadReportFlow();return}
   if(o.startsWith('report-')){await showReport(o.replace('report-',''));return}
-  if(o==='back-reports'){tab='lap';draw();return}
+  if(o==='back-reports'){closeSheet();return}
   if(o==='report-period'){downloadReportFlow();return}
   if(o==='download-report'){downloadReportFlow();return}
  }catch(e){console.error(e);toast(friendlyError(e,'Aksi belum berhasil. Coba lagi.'))}
- document.querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{
-   const x=b.dataset.x;
+}
+async function actX(x){
    try{
      if(x==='announcement'){
        const title=$('#announcement-title')?.value.trim(), body=$('#announcement-body')?.value.trim();
@@ -2749,13 +2994,11 @@ async function act(o){
      if(x==='preview-report'){
        const a=$('#dl-start')?.value,b=$('#dl-end')?.value;
        if(!a||!b)return toast('Tanggal mulai dan tanggal akhir wajib diisi');
-       closeSheet();
        const key=window.__selectedReport||'penjualan';
        await showReport(key,a,b);
        return;
      }
    }catch(e){console.error(e);toast(friendlyError(e,'Aksi belum berhasil. Coba lagi.'))}
- });
 }
 /* ===== Ikon SVG (menggantikan emoji agar konsisten di Android & iOS) ===== */
 const N=x=>x.replace(/[\uFE0F\u200D]/g,'');
@@ -2772,12 +3015,8 @@ function svgify(r){r.querySelectorAll('.ic,.tabs span,.av').forEach(e=>{const n=
  if(T[k]){n.replaceWith(Object.assign(document.createElement('b'),{className:'rk',textContent:T[k]}));return}
  if(P[k]){const t=document.createElement('template');t.innerHTML=`<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[k]}"/></svg>`;n.replaceWith(t.content.firstChild)}})}
 
-/* ===== Sheet: geser ke bawah / Esc untuk menutup ===== */
-(()=>{let y=null;const sh=()=>$('.sheet');
-document.addEventListener('touchstart',e=>{const s=e.target.closest('.sheet');y=s&&s.scrollTop===0?e.touches[0].clientY:null},{passive:true});
-document.addEventListener('touchmove',e=>{if(y==null)return;const d=e.touches[0].clientY-y;if(d>0){sh().style.transition='none';sh().style.transform=`translateY(${d}px)`}},{passive:true});
-document.addEventListener('touchend',e=>{if(y==null)return;const d=e.changedTouches[0].clientY-y;sh().style.transition='';sh().style.transform='';if(d>90)closeSheet();y=null});
-document.addEventListener('keydown',e=>e.key==='Escape'&&closeSheet())})();
+/* ===== Halaman penuh: Esc = kembali ===== */
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&PG.open&&!document.getElementById('gl-ov'))pageBack()});
 
 /* ===== Start ===== */
 async function bootOwnerApp(){
