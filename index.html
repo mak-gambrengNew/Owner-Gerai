@@ -1703,6 +1703,31 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 
 @media(max-width:380px){#app .sheet{padding-left:16px;padding-right:16px}.pg-bar,.pg-dock,#app .sheet .crud-toolbar{margin-left:-16px;margin-right:-16px}.pg-dock,#app .sheet .crud-toolbar{padding-left:16px;padding-right:16px}}
 @media(prefers-reduced-motion:reduce){#app .sheet,.sheet.swap-fwd>*,.sheet.swap-back>*{transition:none!important;animation:none!important}}
+
+/* ===== Pengumuman ===== */
+.ann-opts{display:grid;gap:12px;margin:6px 0 4px}
+.ann-opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:0 8px 20px -14px rgba(22,53,45,.35)}
+.ann-opt:active{transform:scale(.99)}
+.ann-opt .ic{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:23px;background:var(--p3)}
+.ann-opt b{display:block;font-size:16px}
+.ann-opt small{display:block;color:var(--mu);font-size:12.5px;margin-top:2px}
+.ann-opt .go{margin-left:auto;color:var(--mu);font-size:22px}
+.ann-opt.live .ic{background:var(--gold-soft)}
+.ann-opt .n{margin-left:auto;min-width:26px;height:26px;padding:0 8px;border-radius:99px;display:grid;place-items:center;background:var(--p);color:#fff;font-weight:800;font-size:13px}
+.ann-note{display:flex;gap:10px;padding:12px 14px;border-radius:14px;background:var(--gold-soft);color:#5E4500;font-size:13px;line-height:1.45;margin:4px 0 14px}
+.ann-count{text-align:right;font-size:12px;color:var(--mu);margin:-6px 2px 4px}
+.ann-count.warn{color:var(--bad);font-weight:700}
+.ann-prev{margin:6px 0 4px;padding:11px 12px;border-radius:12px;background:#FFF6D1;border:1px solid #F2DC8A;font-size:14px;font-weight:600;color:#3A2C00;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ann-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 14px}
+.ann-seg button{padding:11px 4px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:13px;color:var(--mu)}
+.ann-seg button.on{background:var(--p);border-color:var(--p);color:#fff}
+.ann-row{padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin-top:10px}
+.ann-row p{margin:8px 0;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.ann-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--mu)}
+.ann-act{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ann-act button{height:42px;border-radius:12px;font-weight:700;font-size:14px;background:var(--p3);color:var(--p2)}
+.ann-act button.del{background:#E5484D14;color:var(--bad)}
+.ann-act button.del.sure{background:var(--bad);color:#fff}
 </style>
 </head>
 <body class="splash-active">
@@ -2263,7 +2288,7 @@ function fmtWaktu(v){
  try{return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}catch(_){return '—'}
 }
 const AUD_ACTION={create:'ditambahkan',update:'diubah',set_status:'status diubah',status_change:'status diubah',logistics_type_change:'jenis logistik diubah',delete:'dihapus permanen'};
-const AUD_ENTITY={store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak es kristal',ice_invoice:'Invoice es kristal'};
+const AUD_ENTITY={announcement:'Pengumuman',store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak es kristal',ice_invoice:'Invoice es kristal'};
 function auditText(a){const nm=a.entity_name||(a.details&&(a.details.name||a.details.label||a.details.full_name))||'';return (AUD_ENTITY[a.entity]||'Data')+(nm?' “'+nm+'”':'')+' '+(AUD_ACTION[a.action]||'diperbarui')}
 const REP_LABEL={store_name:'Gerai',store:'Gerai',menu_name:'Menu',menu:'Menu',name:'Nama',quantity:'Jumlah',qty:'Jumlah',total:'Total',total_sales:'Total penjualan',total_amount:'Total',amount:'Nilai',price:'Harga',revenue:'Pendapatan',sales_date:'Tanggal',date:'Tanggal',status:'Status',transactions:'Transaksi',transaction_count:'Jumlah transaksi',sold_quantity:'Terjual',cash:'Tunai',qris:'QRIS',payment_method:'Metode bayar',hpp:'HPP',profit:'Laba',category:'Kategori',stock:'Stok',unit:'Satuan',occurred_at:'Waktu',created_at:'Dibuat'};
 function repLabel(k){if(REP_LABEL[k])return REP_LABEL[k];const t=String(k).replace(/_/g,' ').trim();return t.charAt(0).toUpperCase()+t.slice(1)}
@@ -2852,7 +2877,7 @@ function home(){
 <button data-o="nota"><span class="lux-action-icon">🧾</span><b>Nota</b><small>Transaksi</small></button>
 <button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>${(state.bills||[]).filter(b=>b.status==='open').length} belum dibayar</small></button>
 <button data-o="history-beli-bayar"><span class="lux-action-icon">🛒</span><b>History Beli&amp;Bayar</b><small>Riwayat</small></button>
-<button data-o="pengumuman"><span class="lux-action-icon">📣</span><b>Buat Pengumuman</b><small>Tim gerai</small></button>
+<button data-o="pengumuman"><span class="lux-action-icon">📣</span><b>Pengumuman</b><small>Marquee tim</small></button>
 <button data-o="log-aktifitas"><span class="lux-action-icon">🧾</span><b>Riwayat Aktivitas</b><small>Catatan perubahan data</small></button>
 <button data-o="set-menu"><span class="lux-action-icon">🍹</span><b>Set Menu</b><small>${menu.length} menu</small></button>
 </div></section>
@@ -3181,6 +3206,73 @@ function invoiceView(id){
   };
   el.querySelector('#invback').onclick=()=>tagihanSheet();
 }
+
+/* ================= Pengumuman (marquee Gerai & Checker) ================= */
+const ANN_AUD={gerai:{t:'Untuk Gerai',ic:'🏪',d:'Tampil di PWA Gerai (SPG)'},checker:{t:'Untuk Checker',ic:'🧑‍💼',d:'Tampil di Panel Checker'},semua:{t:'Untuk Semua',ic:'📢',d:'Tampil di Gerai dan Checker'}};
+const ANN_MAX=280;
+async function annFetch(){const r=await rpc('owner_list_announcements');return Array.isArray(r)?r:[]}
+function annLeft(a){const ms=new Date(a.expires_at)-Date.now();if(ms<=0)return 'berakhir';const m=Math.floor(ms/60000),h=Math.floor(m/60);return 'sisa '+(h?h+' j ':'')+(m%60)+' mnt'}
+function annErr(e){const m=String(e?.message||e||'');
+ if(/announcement_too_long/.test(m))return 'Pengumuman maksimal '+ANN_MAX+' karakter.';
+ if(/announcement_message_required/.test(m))return 'Isi pengumuman wajib diisi.';
+ if(/announcement_not_found/.test(m))return 'Pengumuman sudah berakhir atau dihapus.';
+ if(/owner_access_denied/.test(m))return 'Sesi Owner tidak valid. Masuk kembali.';
+ return friendlyError(e,'Pengumuman belum berhasil diproses. Coba lagi.')}
+async function annMenu(){
+ let n='';try{n=(await annFetch()).length}catch(e){}
+ sheet(`${pgHead('PENGUMUMAN','Pengumuman','Teks berjalan di bagian atas aplikasi, hilang otomatis setelah 24 jam.')}<div class="ann-opts">
+  ${['gerai','checker','semua'].map(k=>`<button class="ann-opt" data-ann="${k}"><span class="ic">${ANN_AUD[k].ic}</span><span><b>${ANN_AUD[k].t}</b><small>${ANN_AUD[k].d}</small></span><span class="go">›</span></button>`).join('')}
+  <button class="ann-opt live" data-ann="aktif"><span class="ic">📋</span><span><b>Cek Pengumuman Aktif</b><small>Lihat, ubah, atau hapus yang sedang tayang</small></span>${n!==''?`<span class="n">${n}</span>`:'<span class="go">›</span>'}</button></div>`);
+ document.querySelectorAll('.sheet [data-ann]').forEach(b=>b.onclick=()=>b.dataset.ann==='aktif'?annActive():annCompose(b.dataset.ann));
+}
+function annForm(aud,text){
+ return `<div class="ann-note"><span>ℹ️</span><span>Pengumuman baru <b>ditambahkan</b> di belakang yang masih aktif, tidak menggantikan. Tayang 24 jam sejak dikirim.</span></div>
+ <label class="crud-field"><span>Isi pengumuman</span><textarea class="fld" id="ann-text" rows="5" maxlength="${ANN_MAX}" placeholder="Tulis singkat dan jelas. Contoh: Stok gelas dikirim besok pagi.">${esc(text||'')}</textarea></label>
+ <div class="ann-count" id="ann-count">0/${ANN_MAX}</div>
+ <div class="ann-prev" id="ann-prev" aria-label="Pratinjau"></div>`;
+}
+function annWire(){
+ const t=$('#ann-text'),c=$('#ann-count'),pv=$('#ann-prev');if(!t)return;
+ const upd=()=>{const n=t.value.length;c.textContent=n+'/'+ANN_MAX;c.classList.toggle('warn',n>=ANN_MAX-20);pv.textContent=t.value.trim()||'Pratinjau teks berjalan…';pv.style.opacity=t.value.trim()?1:.5};
+ t.addEventListener('input',upd);upd();
+}
+function annCompose(aud){
+ sheet(`${pgHead('PENGUMUMAN',ANN_AUD[aud].t,ANN_AUD[aud].d)}${annForm(aud,'')}<div class="pg-dock"><button class="btn" id="ann-send">Tayangkan pengumuman</button></div>`,annMenu);
+ annWire();
+ $('#ann-send').onclick=async ev=>{
+  const b=ev.currentTarget,msg=$('#ann-text').value.trim();
+  if(!msg)return toast('Isi pengumuman wajib diisi');
+  b.disabled=true;b.textContent='Mengirim…';
+  try{await rpc('owner_create_announcement',{p_audience:aud,p_message:msg});toast('Pengumuman tayang selama 24 jam');annActive()}
+  catch(e){console.error(e);b.disabled=false;b.textContent='Tayangkan pengumuman';toast(annErr(e))}
+ };
+}
+async function annActive(){
+ let rows;
+ try{rows=await annFetch()}catch(e){console.error(e);return toast(annErr(e))}
+ sheet(`${pgHead('PENGUMUMAN','Pengumuman Aktif',rows.length?rows.length+' sedang tayang':'Tidak ada yang tayang')}${rows.length?rows.map(a=>`<div class="ann-row" data-id="${esc(a.id)}"><div class="ann-meta"><span class="chip ${a.audience==='semua'?'ok':''}">${ANN_AUD[a.audience].t}</span><span>${esc(fmtWaktu(a.created_at))}</span><span>· ${annLeft(a)}</span></div><p>${esc(a.message)}</p><div class="ann-act"><button data-e="${esc(a.id)}">Edit</button><button class="del" data-d="${esc(a.id)}">Hapus</button></div></div>`).join(''):'<div class="empty">Belum ada pengumuman aktif.<br>Pengumuman hilang otomatis 24 jam setelah dikirim.</div>'}`,annMenu);
+ document.querySelectorAll('.sheet [data-e]').forEach(b=>b.onclick=()=>annEdit(rows.find(x=>x.id===b.dataset.e)));
+ document.querySelectorAll('.sheet [data-d]').forEach(b=>{let t;b.onclick=async()=>{
+  if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Yakin hapus?';t=setTimeout(()=>{b.classList.remove('sure');b.textContent='Hapus'},3500);return}
+  clearTimeout(t);b.disabled=true;
+  try{await rpc('owner_remove_announcement',{p_id:b.dataset.d});toast('Pengumuman dihapus');annActive()}
+  catch(e){console.error(e);b.disabled=false;toast(annErr(e));annActive()}
+ }});
+}
+function annEdit(a){
+ if(!a)return annActive();
+ let aud=a.audience;
+ sheet(`${pgHead('PENGUMUMAN','Edit Pengumuman','Masa tayang tidak diperpanjang.')}<div class="ann-seg">${['gerai','checker','semua'].map(k=>`<button data-a="${k}" class="${k===aud?'on':''}">${ANN_AUD[k].t.replace('Untuk ','')}</button>`).join('')}</div>${annForm(aud,a.message)}<div class="pg-dock"><button class="btn" id="ann-save">Simpan perubahan</button></div>`,annActive);
+ annWire();
+ document.querySelectorAll('.sheet [data-a]').forEach(b=>b.onclick=()=>{aud=b.dataset.a;document.querySelectorAll('.sheet [data-a]').forEach(x=>x.classList.toggle('on',x===b))});
+ $('#ann-save').onclick=async ev=>{
+  const b=ev.currentTarget,msg=$('#ann-text').value.trim();
+  if(!msg)return toast('Isi pengumuman wajib diisi');
+  b.disabled=true;b.textContent='Menyimpan…';
+  try{await rpc('owner_update_announcement',{p_id:a.id,p_audience:aud,p_message:msg});toast('Pengumuman diperbarui');annActive()}
+  catch(e){console.error(e);b.disabled=false;b.textContent='Simpan perubahan';toast(annErr(e))}
+ };
+}
 function bind(){document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>act(b.dataset.o))}
 async function act(o){
  try{
@@ -3206,10 +3298,7 @@ async function act(o){
     sheet(`${pgHead('KEUANGAN','History Beli &amp; Bayar','Pendapatan dan aktivitas keuangan yang tercatat')}<div class="card">${state.moneyTimeline.length?state.moneyTimeline.map(x=>li('💰',esc(x.title||x.description||x.type||'Aktivitas'),esc(x.created_at||x.occurred_at||''),`<span class="amt">${rp(x.amount||x.total_amount||0)}</span>`)).join(''):'<div class="empty">Belum ada aktivitas keuangan yang memiliki catatan sumber.</div>'}</div>`);
     return;
   }
-  if(o==='pengumuman'){
-    sheet(`${pgHead('TIM GERAI','Buat Pengumuman','Dikirim sebagai pesan kepada seluruh SPG dan Checker.')}<label class="crud-field"><span>Judul</span><input class="fld" id="announcement-title" placeholder="Contoh: Jadwal stok minggu ini" maxlength="120" autocomplete="off"></label><label class="crud-field" style="margin-top:16px"><span>Isi pengumuman</span><textarea class="fld" id="announcement-body" rows="6" placeholder="Tulis isi pengumuman"></textarea></label><div class="pg-dock"><button class="btn" data-x="announcement">Kirim pengumuman</button></div>`);
-    return;
-  }
+  if(o==='pengumuman'){annMenu();return;}
   if(o==='arsip'){
     const TIPE={store:'Gerai',menu:'Menu',inventory_item:'Item logistik',spg:'SPG',checker:'Checker',ice_whatsapp_contact:'Kontak WhatsApp'};
     let rows=[];
@@ -3258,18 +3347,6 @@ async function act(o){
 }
 async function actX(x){
    try{
-     if(x==='announcement'){
-       const title=$('#announcement-title')?.value.trim(), body=$('#announcement-body')?.value.trim();
-       if(!title||!body)return toast('Judul dan isi wajib diisi');
-       const me=(await sbClient.auth.getUser()).data.user;
-       const {data:conv,error:ce}=await sbClient.from('chat_conversations').insert({business_id:state.header.business_id,conversation_type:'broadcast',created_by:me.id,title}).select('id').single();
-       if(ce)throw ce;
-       const participants=[...state.spg,...state.checker].map(x=>({business_id:state.header.business_id,conversation_id:conv.id,user_id:x.profile_id,role_at_join:(x.role||'member')}));
-       if(participants.length){const {error:pe}=await sbClient.from('chat_participants').insert(participants);if(pe)throw pe}
-       const {error:meErr}=await sbClient.from('chat_messages').insert({business_id:state.header.business_id,conversation_id:conv.id,sender_id:me.id,client_message_id:crypto.randomUUID(),body,message_type:'text'});
-       if(meErr)throw meErr;
-       closeSheet();toast('Pengumuman terkirim');return;
-     }
      if(x==='preview-report'){
        const a=$('#dl-start')?.value,b=$('#dl-end')?.value;
        if(!a||!b)return toast('Tanggal mulai dan tanggal akhir wajib diisi');
