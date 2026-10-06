@@ -1536,7 +1536,8 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 .inv-sum b{font-size:24px;letter-spacing:-.02em;color:#0F3D35}
 .inv-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 18px 16px}
 .inv-foot p{margin:0;font-size:12px;color:#718079;flex:1}
-.inv-stamp{border:3px solid #16845F;color:#16845F;font-weight:800;font-size:20px;letter-spacing:.08em;padding:4px 14px;border-radius:10px;transform:rotate(-6deg)}
+.inv-sum>div{min-width:0}
+.inv-sum em{display:block;font-style:normal;font-size:12px;color:#587267;margin-top:3px}
 .inv-actions{display:grid;gap:10px;margin:0 0 16px}
 .inv-actions .btn{margin:0}
 </style>
@@ -2995,7 +2996,7 @@ function tagihanSheet(){
   const selAll=TG.select?`<label class="tg-selall"><input type="checkbox" class="tg-chk" data-tgall> Pilih semua (${unpaid.length})</label>`:'';
   const unpaidSec=`<section class="tg-sec warn"><div class="tg-sec-h"><span class="tg-ic">🧾</span><div class="t"><b>Belum Dibayar</b><small>${TG.select?'Pilih tagihan yang akan dibayar':'Menunggu pembayaran'}</small></div>${actBtn}</div>${selAll}${unpaid.length?byStore(unpaid,rowUnpaid,TG.select):'<div class="tg-empty">Tidak ada tagihan yang belum dibayar.</div>'}</section>`;
   const paidSec=`<section class="tg-sec ok"><div class="tg-sec-h"><span class="tg-ic">💵</span><div class="t"><b>Sudah Dibayar</b><small>Lunas dan tercatat</small></div><span class="chip ok">${paid.length} drop</span></div>${paid.length?byStore(paid,rowPaid,false):'<div class="tg-empty">Belum ada tagihan yang dibayar.</div>'}</section>`;
-  const invSec=invoices.length?`<section class="tg-sec ok"><div class="tg-sec-h"><span class="tg-ic">📄</span><div class="t"><b>Invoice Terbit</b><small>Ketuk untuk membuka, menyimpan, atau mengirim</small></div><span class="chip ok">${invoices.length}</span></div><div class="tg-store">${invoices.slice(0,30).map(i=>`<div class="tg-row tg-link" data-tginv="${esc(i.id)}"><div class="tg-main"><b>${esc(i.invoice_number)}</b><span>${esc([fmtWaktu(i.issued_at),i.depo_name,i.bill_count+' tagihan'].filter(Boolean).join(' · '))}</span></div><div class="tg-side"><span class="amt">${rp(i.total_amount)}</span><span class="chip ok">Lunas</span></div></div>`).join('')}</div></section>`:'';
+  const invSec=invoices.length?`<section class="tg-sec ok"><div class="tg-sec-h"><span class="tg-ic">📄</span><div class="t"><b>Invoice Terbit</b><small>Ketuk untuk membuka, menyimpan, atau mengirim</small></div><span class="chip ok">${invoices.length}</span></div><div class="tg-store">${invoices.slice(0,30).map(i=>`<div class="tg-row tg-link" data-tginv="${esc(i.id)}"><div class="tg-main"><b>${esc(i.invoice_number)}</b><span>${esc([fmtWaktu(i.issued_at),i.depo_name,i.bill_count+' tagihan'].filter(Boolean).join(' · '))}</span></div><div class="tg-side"><span class="amt">${rp(i.total_amount)}</span></div></div>`).join('')}</div></section>`:'';
   const dock=TG.select?`<div class="pg-dock" id="tgdock"><div class="tg-dock-in"><div class="tg-dock-t"><b id="tgbarN">0 tagihan dipilih</b><small id="tgbarQ">Centang tagihan yang akan dibayar</small></div><button type="button" class="btn" id="tgmake" disabled>Buat Invoice</button></div></div>`:'';
   sheet(`${pgHead('KEUANGAN','Tagihan',bills.length+' drop tercatat')}<div class="tg-sum">${tile('warn','Belum dibayar',unpaid)}${tile('ok','Sudah dibayar',paid)}</div>${unpaidSec}${paidSec}${invSec}${dock}`);
   const el=$('.sheet');if(!el)return;
@@ -3076,22 +3077,21 @@ function invoiceItemsOf(id){
 }
 function invoiceCardHtml(inv,items){
   const rows=items.map(it=>`<div class="inv-tr"><div><b>${esc(it.store_name||'Gerai')}</b><span>${esc([fmtTglPendek(it.bill_date),it.quantity?tgQty(it.quantity):'',Number(it.unit_price)>0?'× '+rp(it.unit_price):''].filter(Boolean).join(' · '))}</span></div><em>${rp(it.amount)}</em></div>`).join('');
-  return `<article class="inv-card"><header class="inv-top"><img class="inv-logo" src="./gerai/icon-192.png" alt="Logo Teh Solo Ma'Gambreng"><div><b>Teh Solo Ma'Gambreng</b><small>Invoice Pembelian Es Kristal</small></div><span class="inv-tag">INVOICE</span></header><div class="inv-meta"><div><small>No. Invoice</small><b>${esc(inv.invoice_number)}</b></div><div><small>Tanggal</small><b>${esc(fmtTglPanjang(inv.issued_at))}</b><span>${esc(fmtJamWib(inv.issued_at))}</span></div><div class="wide"><small>Kepada</small><b>${esc(inv.depo_name||'—')}</b>${inv.depo_phone?`<span>${esc(inv.depo_phone)}</span>`:''}</div></div><div class="inv-th"><span>RINCIAN TAGIHAN</span><span>SUBTOTAL</span></div>${rows}<div class="inv-sum"><small>TOTAL TAGIHAN</small><b>${rp(inv.total_amount)}</b></div><div class="inv-foot"><p>${inv.notes?'Catatan: '+esc(inv.notes):'Tagihan di atas telah dicatat lunas.'}</p><span class="inv-stamp">LUNAS</span></div></article>`;
+  return `<article class="inv-card"><header class="inv-top"><img class="inv-logo" src="./gerai/icon-192.png" alt="Logo Teh Solo Ma'Gambreng"><div><b>Teh Solo Ma'Gambreng</b><small>Rangkuman Tagihan Es Kristal</small></div><span class="inv-tag">RINGKASAN</span></header><div class="inv-meta"><div><small>No. Invoice</small><b>${esc(inv.invoice_number)}</b></div><div><small>Tanggal</small><b>${esc(fmtTglPanjang(inv.issued_at))}</b><span>${esc(fmtJamWib(inv.issued_at))}</span></div><div class="wide"><small>Kepada</small><b>${esc(inv.depo_name||'—')}</b>${inv.depo_phone?`<span>${esc(inv.depo_phone)}</span>`:''}</div></div><div class="inv-th"><span>RINCIAN TAGIHAN</span><span>SUBTOTAL</span></div>${rows}<div class="inv-sum"><div><small>TOTAL TAGIHAN</small><em>${items.length} tagihan terpilih</em></div><b>${rp(inv.total_amount)}</b></div><div class="inv-foot"><p>${inv.notes?'Catatan: '+esc(inv.notes):'Rangkuman dari tagihan yang dipilih.'}</p></div></article>`;
 }
 function invoiceWaText(inv,items){
   const m=new Map();
-  items.forEach(it=>{const k=it.store_name||'Gerai';const v=m.get(k)||{n:0,q:0,a:0};v.n++;v.q+=Number(it.quantity)||0;v.a+=Number(it.amount)||0;m.set(k,v)});
-  const rows=[...m.entries()].map(([k,v],i)=>`${i+1}. ${k} — ${v.n} drop${v.q?' · '+tgQty(v.q):''} — ${rp(v.a)}`);
+  items.forEach(it=>{const k=it.store_name||'Gerai';const v=m.get(k)||{q:0,a:0};v.q+=Number(it.quantity)||0;v.a+=Number(it.amount)||0;m.set(k,v)});
+  const rows=[...m.entries()].map(([k,v],i)=>`${i+1}. ${k} - ${v.q?tgQty(v.q):'-'} = ${rp(v.a)}`);
   return [
-    "*INVOICE — Teh Solo Ma'Gambreng*",
-    'No: '+inv.invoice_number,
-    'Tanggal: '+fmtTglPanjang(inv.issued_at),
-    ...(inv.depo_name?['Kepada: '+inv.depo_name]:[]),
-    '','Rincian:',...rows,'',
-    '*Total: '+rp(inv.total_amount)+'*',
-    'Status: LUNAS',
-    ...(inv.notes?['Catatan: '+inv.notes]:[]),
-    '','Terima kasih 🙏'
+    'RINGKASAN PEMAKAIAN ES KRISTAL',
+    'TGL : '+fmtTglPanjang(inv.issued_at),
+    '',
+    ...rows,
+    '',
+    'TOTAL JUMLAH TAGIHAN = '+rp(inv.total_amount),
+    '',
+    '- tagihan ini otomatis berdasarkan perhitungan sistem penerimaan es kristal panel app Ma Gambreng'
   ].join('\n');
 }
 function invLoadLogo(){return new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src='./gerai/icon-192.png'})}
@@ -3100,7 +3100,7 @@ async function invoicePng(inv,items){
   const S=2,W=860,P=48,FONT='-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
   const rowsH=Math.max(items.length,1)*66;
   const tableTop=392,rowsTop=tableTop+44,totalTop=rowsTop+rowsH+24,totalH=96;
-  const H=totalTop+totalH+130+(inv.notes?56:0)+64;
+  const H=totalTop+totalH+(inv.notes?64:24)+64;
   const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
   const x=cv.getContext('2d');x.scale(S,S);
   const rr=(px,py,w,h,r)=>{x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()};
@@ -3116,8 +3116,8 @@ async function invoicePng(inv,items){
   x.fillStyle='#FFFFFF';x.beginPath();x.arc(P+48,75,48,0,Math.PI*2);x.fill();
   if(logo){x.save();x.beginPath();x.arc(P+48,75,46,0,Math.PI*2);x.clip();x.drawImage(logo,P+2,29,92,92);x.restore()}
   t("Teh Solo Ma'Gambreng",P+120,72,{size:32,weight:800,color:'#FFFFFF'});
-  t('Invoice Pembelian Es Kristal',P+120,106,{size:18,color:'#CFEFE3'});
-  t('INVOICE',W-P,86,{size:34,weight:800,color:'#CFEFE3',align:'right'});
+  t('Rangkuman Tagihan Es Kristal',P+120,106,{size:18,color:'#CFEFE3'});
+  t('RINGKASAN',W-P,86,{size:30,weight:800,color:'#CFEFE3',align:'right'});
   const c2=W/2+10,lab={size:14,weight:700,color:'#718079'};
   t('NO. INVOICE',P,196,lab);t(inv.invoice_number,P,228,{size:26,weight:800});
   t('TANGGAL',c2,196,lab);t(fmtTglPanjang(inv.issued_at),c2,228,{size:26,weight:800});
@@ -3137,13 +3137,10 @@ async function invoicePng(inv,items){
   });
   x.fillStyle='#E7F7F0';rr(P,totalTop,W-2*P,totalH,18);x.fill();
   t('TOTAL TAGIHAN',P+24,totalTop+40,{size:15,weight:800,color:'#118A6A'});
+  t(items.length+' tagihan terpilih',P+24,totalTop+68,{size:16,color:'#587267'});
   t(rp(inv.total_amount),W-P-24,totalTop+72,{size:42,weight:800,color:'#0F3D35',align:'right'});
-  x.save();x.translate(W-P-110,totalTop+totalH+72);x.rotate(-0.1);
-  x.strokeStyle='#16845F';x.lineWidth=4;rr(-78,-30,156,60,10);x.stroke();
-  t('LUNAS',0,12,{size:32,weight:800,color:'#16845F',align:'center'});
-  x.restore();
-  if(inv.notes)t('Catatan: '+inv.notes,P,totalTop+totalH+60,{size:17,color:'#4A5A54',maxW:W-2*P-240});
-  t('Invoice diterbitkan melalui sistem Owner Ma-Gambreng. Tagihan di atas telah dicatat lunas.',W/2,H-30,{size:14,color:'#718079',align:'center',maxW:W-2*P});
+  if(inv.notes)t('Catatan: '+inv.notes,P,totalTop+totalH+48,{size:17,color:'#4A5A54',maxW:W-2*P});
+  t('Rangkuman tagihan diterbitkan melalui sistem Owner Ma-Gambreng.',W/2,H-30,{size:14,color:'#718079',align:'center',maxW:W-2*P});
   return cv;
 }
 async function invoiceFile(inv,items){
@@ -3162,7 +3159,7 @@ function invoiceView(id){
   if(!inv){tagihanSheet();return}
   const items=invoiceItemsOf(id);
   const canShare=!!navigator.share;
-  sheet(`${pgHead('INVOICE',esc(inv.invoice_number),'Tagihan sudah dicatat lunas')}${invoiceCardHtml(inv,items)}<div class="inv-actions"><button type="button" class="btn" id="invwa">Kirim ke WhatsApp Depo</button><button type="button" class="btn ghost" id="invsave">Simpan Gambar Invoice</button>${canShare?'<button type="button" class="btn ghost" id="invshare">Bagikan Gambar…</button>':''}<button type="button" class="btn ghost" id="invback">Kembali ke Tagihan</button></div>`,{back:()=>tagihanSheet()});
+  sheet(`${pgHead('INVOICE',esc(inv.invoice_number),'Rangkuman tagihan terpilih')}${invoiceCardHtml(inv,items)}<div class="inv-actions"><button type="button" class="btn" id="invwa">Kirim ke WhatsApp Depo</button><button type="button" class="btn ghost" id="invsave">Simpan Gambar Invoice</button>${canShare?'<button type="button" class="btn ghost" id="invshare">Bagikan Gambar…</button>':''}<button type="button" class="btn ghost" id="invback">Kembali ke Tagihan</button></div>`,{back:()=>tagihanSheet()});
   const el=$('.sheet');if(!el)return;
   el.querySelector('#invwa').onclick=()=>{
     const contact=(ownerCrud.esKristal||[]).find(c=>c.id===inv.contact_id);
