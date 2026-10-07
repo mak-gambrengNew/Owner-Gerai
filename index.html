@@ -1137,6 +1137,13 @@ h1,h2,h3,.owner-identity strong,.lux-section-head h2{font-family:var(--font-disp
 @media(max-width:380px){.lg{padding:20px 14px}.lg-brand .logo{width:104px;height:104px}.lg-brand h1{font-size:30px}.lg-card{padding:21px 16px 18px}.lg-heading strong{font-size:22px}}
 </style>
 <style id="bell-style">
+/* Kartu auto swap yang membuka tautan (Live Monitoring) */
+a.highlight-card{display:block;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a.highlight-card:active{transform:scale(.985)}
+.highlight-card.highlight-monitoring::before{background:#2F6FD6}
+.highlight-card.highlight-monitoring .highlight-icon{background:#EEF4FE!important;border-color:#D9E6FB;color:#2F6FD6}
+.highlight-card.highlight-monitoring .highlight-progress i{background:#2F6FD6!important}
+.highlight-go{position:absolute;right:14px;bottom:15px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#EEF4FE;color:#2F6FD6;font-size:14px;font-weight:800;z-index:3}
 /* Lonceng Owner: titik hanya tampil bila ada notifikasi penting yang belum dibaca */
 .owner-notify i:not(.on),.lux-head-btn[data-o="bell"] i:not(.on){display:none}
 .card.bell-list{padding:2px 14px 8px}
@@ -2940,11 +2947,13 @@ function draw(){
 function head(t,s){return `<header class="lux-head page-top"><div class="lux-brand"><div class="lux-logo-wrap"><img class="lux-logo" src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div><div class="lux-brand-copy"><span class="lux-overline">MA-GAMBRENG · OWNER</span><strong>${t}</strong><span>${s}</span></div><div class="lux-head-rule"></div><button class="lux-head-btn" data-o="bell" aria-label="Notifikasi">🔔<i class="${bellDot()}"></i></button></div></header>`}
 
 /* ===== Dashboard Highlight ===== */
+const LIVE_MONITORING_URL='https://live-monitoring-realtime.vercel.app/';
 function defaultHighlights(){
  return [
   {kind:'default',eyebrow:'RINGKASAN HARI INI',title:'Transaksi Hari Ini',value:totalTransactions+' transaksi',meta:'Jumlah transaksi tercatat hari ini',icon:'🧾'},
   {kind:'default',eyebrow:'MENU TERLARIS',title:'Menu Terlaris Hari Ini',value:topMenu[0],meta:topMenu[1]+' terjual hari ini',icon:'🍹'},
-  {kind:'default',eyebrow:'PENDAPATAN',title:'Pendapatan Hari Ini',value:rp(total),meta:'Total pendapatan tercatat hari ini',icon:'💰'}
+  {kind:'default',eyebrow:'PENDAPATAN',title:'Pendapatan Hari Ini',value:rp(total),meta:'Total pendapatan tercatat hari ini',icon:'💰'},
+  {kind:'monitoring',eyebrow:'LIVE MONITORING',title:'Pantau Gerai Real-time',value:'Buka Live Monitoring',meta:'Ketuk untuk membuka dashboard realtime',icon:'📡',url:LIVE_MONITORING_URL}
  ]
 }
 function ownerGreeting(){
@@ -2990,12 +2999,16 @@ function renderHighlight(){
  const value=esc(x.value??'—');
  const meta=esc(x.meta||'Tercatat hari ini');
  const icon=esc(x.icon||'📊');
- return `<article class="highlight-card ${cls}">
+ const link=/^https:\/\//.test(String(x.url||''))?String(x.url):'';
+ const tag=link?'a':'article';
+ const attrs=link?` href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="${title} - buka tautan"`:'';
+ return `<${tag} class="highlight-card ${cls}${link?' highlight-link':''}"${attrs}>
    <div class="highlight-pattern"></div><div class="highlight-glow"></div>
    <div class="highlight-top"><span class="highlight-eyebrow">${eyebrow}</span><span class="highlight-index">${i+1}/${items.length}</span></div>
    <div class="highlight-body"><div class="highlight-icon">${icon}</div><div class="highlight-copy"><h2>${title}</h2><strong>${value}</strong><p>${meta}</p></div></div>
+   ${link?'<span class="highlight-go" aria-hidden="true">↗</span>':''}
    <div class="highlight-progress"><i></i></div>
- </article>`;
+ </${tag}>`;
 }
 function startHighlight(){
  const host=$('.highlight-host');
