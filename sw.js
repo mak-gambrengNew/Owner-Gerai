@@ -11,7 +11,7 @@
  * 5. Service worker baru langsung mengambil alih halaman yang tersedia.
  */
 
-const SW_VERSION = 'pwa-update-2026-10-06-announcements';
+const SW_VERSION = 'pwa-update-2026-10-07-sales-report';
 const CACHE_NAME = `${SW_VERSION}-cache`;
 
 self.addEventListener('install', event => {

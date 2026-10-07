@@ -1729,6 +1729,81 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 .ann-act button.del{background:#E5484D14;color:var(--bad)}
 .ann-act button.del.sure{background:var(--bad);color:#fff}
 </style>
+<style id="sr-css">
+/* Laporan Penjualan harian */
+#app .sheet .sr-page{padding:0;margin:0 0 12px;display:grid;gap:14px}
+.sr-nav{display:grid;grid-template-columns:46px 1fr 46px;gap:8px;align-items:stretch}
+.sr-step{width:46px;border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:16px;display:grid;place-items:center;padding:0;cursor:pointer}
+.sr-step:disabled{opacity:.35;cursor:default}
+.sr-step svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sr-pick{position:relative;display:block;text-align:center;padding:11px 12px;border:1px solid var(--line);background:var(--card);border-radius:16px;cursor:pointer;min-width:0}
+.sr-pick-top{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--p2)}
+.sr-pick b{display:block;font-size:15px;font-weight:780;margin:3px 0 2px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-pick small{display:block;font-size:11.5px;color:var(--mu)}
+.sr-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;border:0;padding:0;background:none}
+.sr-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.sr-chips::-webkit-scrollbar{display:none}
+.sr-chip{flex:none;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--mu);font:inherit;font-size:12.5px;font-weight:720;cursor:pointer}
+.sr-chip.on{background:var(--p);border-color:var(--p);color:#fff}
+.sr-hero{padding:18px;border-radius:22px;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));box-shadow:0 10px 26px rgba(17,138,106,.22)}
+.sr-eyebrow{display:block;font-size:10.5px;font-weight:800;letter-spacing:.1em;opacity:.85}
+.sr-big{display:flex;align-items:baseline;gap:8px;margin:6px 0 14px}
+.sr-big b{font-size:46px;line-height:1;font-weight:830;letter-spacing:-1.5px}
+.sr-big span{font-size:14px;font-weight:650;opacity:.9}
+.sr-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sr-kpis>div{background:rgba(255,255,255,.15);border-radius:14px;padding:10px 8px;text-align:center;min-width:0}
+.sr-kpis b{display:block;font-size:17px;font-weight:800}
+.sr-kpis small{display:block;font-size:11px;opacity:.85;margin-top:2px}
+.sr-final{display:flex;align-items:center;gap:7px;margin-top:13px;font-size:12px;opacity:.92}
+.sr-final i{width:8px;height:8px;border-radius:50%;background:#7CF0C4;flex:none}
+.sr-sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 9px}
+.sr-sec-head h4{margin:0;font-size:15px;font-weight:780;color:var(--tx)}
+.sr-sec-head span{font-size:12px;color:var(--mu)}
+.sr-card{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:2px 14px;box-shadow:0 5px 18px rgba(15,61,53,.045)}
+.sr-row{padding:13px 0;border-bottom:1px solid var(--line)}
+.sr-row:last-child{border-bottom:0}
+.sr-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sr-row-top b{font-size:14.5px;font-weight:740;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-row-top strong{font-size:17px;font-weight:800;flex:none;color:var(--tx)}
+.sr-row-top small{font-size:11.5px;font-weight:600;color:var(--mu)}
+.sr-bar{display:block;height:7px;border-radius:9px;background:var(--card2);overflow:hidden;margin-top:8px}
+.sr-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#55D0A9,var(--p2))}
+.sr-meta{margin-top:7px;font-size:12px;color:var(--mu)}
+.sr-menu{border-bottom:1px solid var(--line)}
+.sr-menu:last-child{border-bottom:0}
+.sr-menu summary{list-style:none;display:grid;grid-template-columns:28px 1fr auto 14px;gap:10px;align-items:center;padding:12px 0;cursor:pointer}
+.sr-menu summary::-webkit-details-marker{display:none}
+.sr-menu summary::after{content:"";width:7px;height:7px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:rotate(-45deg);transition:transform .2s;justify-self:end}
+.sr-menu[open] summary::after{transform:rotate(45deg)}
+.sr-rank{width:26px;height:26px;border-radius:9px;background:var(--p3);color:var(--p2);font-size:12px;font-weight:800;display:grid;place-items:center}
+.sr-rank.gold{background:var(--accent);color:#3a2a00}
+.sr-mmain{min-width:0;display:block}
+.sr-mmain>b{display:block;font-size:14px;font-weight:720;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-mmain .sr-bar{margin-top:6px;height:6px}
+.sr-mqty{text-align:right}
+.sr-mqty b{display:block;font-size:16px;font-weight:800}
+.sr-mqty small{display:block;font-size:11px;color:var(--mu);margin-top:1px}
+.sr-by{list-style:none;margin:0 0 12px 38px;padding:9px 12px;border-radius:13px;background:var(--card2);display:grid;gap:7px}
+.sr-by li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--mu)}
+.sr-by li b{color:var(--tx);font-weight:740}
+.sr-none{padding:20px 4px;text-align:center;font-size:13.5px;color:var(--mu)}
+.sr-note{margin:2px 6px 0;text-align:center;font-size:11.5px;line-height:1.5;color:var(--mu)}
+.sr-empty{text-align:center;padding:30px 18px;background:var(--card);border:1px solid var(--line);border-radius:19px}
+.sr-empty-ic{width:58px;height:58px;margin:0 auto 12px;border-radius:19px;background:var(--p3);color:var(--p2);display:grid;place-items:center;font-size:24px;font-weight:800}
+.sr-empty-ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr-empty-ic.err{background:#D94B5514;color:var(--bad)}
+.sr-empty b{display:block;font-size:16px;font-weight:780;color:var(--tx)}
+.sr-empty p{margin:7px auto 0;max-width:30ch;font-size:13.5px;line-height:1.55;color:var(--mu)}
+.sr-links{display:grid;gap:8px;margin-top:16px;text-align:left}
+.sr-link{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card2);color:var(--tx);font:inherit;cursor:pointer}
+.sr-link span{font-size:13px;color:var(--mu)}
+.sr-link b{font-size:13.5px;font-weight:760}
+.sr-skel{display:grid;gap:12px}
+.sr-skel i{display:block;border-radius:19px;background:linear-gradient(90deg,var(--card2),var(--card),var(--card2));background-size:200% 100%;animation:srShimmer 1.3s linear infinite}
+.sr-skel .a{height:62px}.sr-skel .b{height:150px}.sr-skel .c{height:120px}
+@keyframes srShimmer{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.sr-skel i{animation:none}.sr-menu summary::after{transition:none}}
+</style>
 </head>
 <body class="splash-active">
 <div id="app"></div>
@@ -1890,6 +1965,7 @@ async function menuReload(){
   if(t)t.textContent=`${menu.length} menu`;
 }
 async function loadServerState(){
+  const salesLatestP=safeLoad(rpc('owner_list_sales_report_dates',{p_limit:1}),null);
   const [header,stores,menus,inventory,consumptions,spg,checker,notifs,bills,transactions,iceOrders,restocks,auditRows,money] = await Promise.all([
     rpc('owner_get_header_context'),
     selectRows('stores',q=>q.order('created_at',{ascending:true})),
@@ -1908,6 +1984,7 @@ async function loadServerState(){
   ]);
 
   state.header=header||null;
+  try{const sl=await salesLatestP;state.salesLatest=(sl&&sl.latest)||null}catch(_){state.salesLatest=null}
   state.spg=asArray(spg);
   state.checker=asArray(checker);
   state.notifications=asArray(notifs);
@@ -1961,7 +2038,7 @@ async function loadServerState(){
   }catch(_){}
 }
 async function refreshAndDraw(){
-  try{await loadServerState();draw()}catch(e){console.error(e);toast(friendlyError(e,'Data belum dapat dimuat. Coba lagi sebentar.'))}
+  try{await loadServerState();draw();if(PG.open&&PG.title==='Laporan Penjualan'&&document.querySelector('#sr-root'))srLoad(true)}catch(e){console.error(e);toast(friendlyError(e,'Data belum dapat dimuat. Coba lagi sebentar.'))}
 }
 // Debounce event realtime agar rentetan perubahan hanya memicu satu fetch ulang.
 let _rtTimer=null,_rtDown=false;
@@ -2898,7 +2975,7 @@ function lap(){
  `<section class="report-picker">
    <div class="report-picker-title"><span class="eyebrow">PUSAT LAPORAN OWNER</span><h2>Pilih laporan</h2><p>Setiap laporan memiliki halaman dan data masing-masing.</p></div>
    <div class="report-choice-grid">
-    <button data-o="report-penjualan"><span>🧾</span><b>Laporan Penjualan</b><small>Transaksi, menu, jumlah, pembayaran, dan detail penjualan.</small></button>
+    <button data-o="report-penjualan"><span>🧾</span><b>Laporan Penjualan</b><small>${state.salesLatest?'Total porsi terjual per gerai &amp; per menu · terakhir '+esc(srDate(state.salesLatest)):'Belum ada laporan masuk · muncul otomatis setelah semua gerai tutup'}</small></button>
     <button data-o="report-gerai"><span>🏪</span><b>Laporan Performa Gerai</b><small>Aktivitas dan hasil penjualan per gerai.</small></button>
     <button data-o="report-menu"><span>🍹</span><b>Laporan Performa Menu</b><small>Pergerakan dan penjualan setiap menu.</small></button>
     <button data-o="report-checker"><span>✅</span><b>Laporan Pengecekkan Oleh Checker</b><small>Hasil audit dan pemeriksaan gerai.</small></button>
@@ -2940,6 +3017,128 @@ function downloadReportFlow(){
  const rg=(fromReport&&window.__reportRange)||{start:todayJakarta(),end:todayJakarta()};
  const key=window.__selectedReport;
  sheet(`<div class="download-flow"><div class="crud-form-head"><span class="eyebrow">DOWNLOAD LAPORAN</span><h3>Pilih tanggal</h3></div><label class="crud-field"><span>Tanggal mulai</span><input class="fld" id="dl-start" type="date" value="${esc(rg.start)}"></label><label class="crud-field"><span>Tanggal akhir</span><input class="fld" id="dl-end" type="date" value="${esc(rg.end)}"></label><div class="hint">PDF hanya dapat diunduh jika laporan tersedia. Angka laporan selalu berasal dari data yang tercatat.</div></div><div class="pg-dock"><button class="btn" data-x="preview-report">Preview laporan</button></div>`,{back:fromReport&&key?()=>showReport(key,rg.start,rg.end):null});
+}
+/* ===== Laporan Penjualan harian =====
+   Sumber: snapshot final hari itu (dibuat saat SEMUA gerai tutup + penutupan hari oleh Checker).
+   "Total penjualan" = jumlah porsi terjual, bukan nominal rupiah.
+   Default menampilkan laporan terakhir; tanggal lain lewat panah, chip tanggal, atau kalender. */
+const SR={date:null,pinned:false,latest:null,dates:[],seq:0};
+const srNum=n=>(Number(n)||0).toLocaleString('id-ID');
+function srDate(d,mode){
+ if(!d)return '—';
+ try{
+  const str=String(d);
+  const dt=str.length>10?new Date(str):new Date(str+'T12:00:00+07:00');
+  const o=mode==='short'?{day:'numeric',month:'short'}:mode==='long'?{weekday:'long',day:'numeric',month:'long',year:'numeric'}:{day:'numeric',month:'short',year:'numeric'};
+  return new Intl.DateTimeFormat('id-ID',Object.assign({timeZone:'Asia/Jakarta'},o)).format(dt);
+ }catch(_){return String(d)}
+}
+function srNav(cur,d){
+ const isLatest=!!SR.latest&&cur===SR.latest;
+ const step=(dt,prev)=>`<button type="button" class="sr-step" data-sr-go="${esc(dt||'')}" aria-label="${prev?'Laporan sebelumnya':'Laporan berikutnya'}"${dt?'':' disabled'}>${prev?PG_ICO.back:PG_ICO.chev}</button>`;
+ return `<div class="sr-nav">${step(d&&d.prev_date,true)}<label class="sr-pick"><span class="sr-pick-top">${isLatest?'Laporan terakhir':'Tanggal laporan'}</span><b>${esc(srDate(cur,'long'))}</b><small>Ketuk untuk memilih tanggal</small><input type="date" id="sr-date" value="${esc(cur)}" max="${esc(todayJakarta())}" aria-label="Pilih tanggal laporan"></label>${step(d&&d.next_date,false)}</div>`;
+}
+function srChips(cur){
+ const ds=SR.dates.slice(0,14);
+ if(ds.length<2)return '';
+ return `<div class="sr-chips" aria-label="Tanggal laporan tersedia">${ds.map(x=>`<button type="button" class="sr-chip${x===cur?' on':''}" data-sr-go="${esc(x)}">${esc(srDate(x,'short'))}</button>`).join('')}</div>`;
+}
+function srHero(d){
+ const s=d.summary||{};
+ const fin=d.finalized_at?`Dikunci ${srDate(d.finalized_at)} · ${fmtJamWib(d.finalized_at)}`:'Laporan final';
+ return `<section class="sr-hero"><span class="sr-eyebrow">TOTAL PENJUALAN HARIAN</span><div class="sr-big"><b>${srNum(s.items_sold)}</b><span>porsi terjual</span></div><div class="sr-kpis"><div><b>${srNum(s.transaction_count)}</b><small>Transaksi</small></div><div><b>${srNum(s.closed_store_count)}/${srNum(s.store_count)}</b><small>Gerai tutup</small></div><div><b>${srNum(s.menu_count)}</b><small>Menu terjual</small></div></div><div class="sr-final"><i></i>${esc(fin)}</div></section>`;
+}
+function srStores(d){
+ const rows=asArray(d.stores);
+ const head=`<div class="sr-sec-head"><h4>Penjualan per gerai</h4><span>${rows.length} gerai</span></div>`;
+ if(!rows.length)return `<section class="sr-sec">${head}<div class="sr-card"><div class="sr-none">Tidak ada data gerai pada laporan ini.</div></div></section>`;
+ const max=Math.max(1,...rows.map(r=>Number(r.items_sold)||0));
+ return `<section class="sr-sec">${head}<div class="sr-card">${rows.map(r=>{
+  const q=Number(r.items_sold)||0,w=q?Math.max(4,Math.round(q/max*100)):0;
+  const meta=[`${srNum(r.transaction_count)} transaksi`,r.closed_at?`tutup ${fmtJamWib(r.closed_at)}`:''].filter(Boolean).join(' · ');
+  return `<div class="sr-row"><div class="sr-row-top"><b>${esc(r.store_name||'Gerai')}</b><strong>${srNum(q)}<small> porsi</small></strong></div><div class="sr-bar"><i style="width:${w}%"></i></div><div class="sr-meta">${esc(meta)}</div></div>`;
+ }).join('')}</div></section>`;
+}
+function srMenus(d){
+ const rows=asArray(d.menus);
+ const head=`<div class="sr-sec-head"><h4>Menu terjual</h4><span>${rows.length} menu</span></div>`;
+ if(!rows.length)return `<section class="sr-sec">${head}<div class="sr-card"><div class="sr-none">Tidak ada menu terjual pada hari ini.</div></div></section>`;
+ const tot=rows.reduce((a,r)=>a+(Number(r.quantity)||0),0)||1;
+ const max=Math.max(1,...rows.map(r=>Number(r.quantity)||0));
+ return `<section class="sr-sec">${head}<div class="sr-card">${rows.map((r,i)=>{
+  const q=Number(r.quantity)||0,w=q?Math.max(4,Math.round(q/max*100)):0,pct=Math.round(q/tot*100);
+  const by=asArray(r.by_store);
+  return `<details class="sr-menu"><summary><span class="sr-rank${i<3?' gold':''}">${i+1}</span><span class="sr-mmain"><b>${esc(r.menu_name||'Menu')}</b><span class="sr-bar"><i style="width:${w}%"></i></span></span><span class="sr-mqty"><b>${srNum(q)}</b><small>${pct}%</small></span></summary>${by.length?`<ul class="sr-by">${by.map(x=>`<li><span>${esc(x.store_name||'Gerai')}</span><b>${srNum(x.quantity)} porsi</b></li>`).join('')}</ul>`:''}</details>`;
+ }).join('')}</div></section>`;
+}
+function srEmpty(d){
+ const ic='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6"/></svg>';
+ if(d.status==='NONE_AVAILABLE')return `<div class="sr-empty"><div class="sr-empty-ic">${ic}</div><b>Belum ada laporan harian</b><p>Laporan masuk otomatis setelah semua gerai dinyatakan tutup dan Checker menyelesaikan penutupan hari.</p></div>`;
+ const cur=d.sales_date,today=todayJakarta();
+ const why=cur>today?'Tanggal ini belum terjadi.':cur===today?'Hari ini belum ditutup. Laporan akan muncul otomatis setelah semua gerai tutup.':'Tidak ada laporan final pada tanggal ini. Gerai mungkin tidak beroperasi, atau penutupan hari belum diselesaikan.';
+ const link=(dt,label)=>dt?`<button type="button" class="sr-link" data-sr-go="${esc(dt)}"><span>${label}</span><b>${esc(srDate(dt))}</b></button>`:'';
+ const links=[link(d.latest_date&&d.latest_date!==cur?d.latest_date:null,'Lihat laporan terakhir'),link(d.prev_date&&d.prev_date!==d.latest_date?d.prev_date:null,'Laporan sebelumnya'),link(d.next_date&&d.next_date!==d.latest_date?d.next_date:null,'Laporan berikutnya')].join('');
+ return `<div class="sr-empty"><div class="sr-empty-ic">${ic}</div><b>Belum ada laporan untuk ${esc(srDate(cur))}</b><p>${esc(why)}</p>${links?`<div class="sr-links">${links}</div>`:''}</div>`;
+}
+function srSkeleton(){return '<div class="sr-skel" aria-busy="true"><i class="a"></i><i class="b"></i><i class="c"></i><i class="c"></i></div>'}
+function srRender(d){
+ const root=document.querySelector('#sr-root');if(!root)return;
+ const sheetEl=document.querySelector('.sheet'),st=sheetEl?sheetEl.scrollTop:0;
+ if(d.status==='NONE_AVAILABLE'){
+  root.innerHTML=srEmpty(d);
+ }else{
+  const cur=d.sales_date;
+  root.innerHTML=srNav(cur,d)+srChips(cur)+(d.status==='FINAL'?srHero(d)+srStores(d)+srMenus(d)+'<p class="sr-note">Angka menunjukkan jumlah porsi terjual (bukan nilai rupiah). Laporan dikunci setelah semua gerai tutup dan tidak berubah lagi.</p>':srEmpty(d));
+ }
+ root.querySelectorAll('[data-sr-go]').forEach(b=>b.onclick=()=>{const v=b.dataset.srGo;if(v)srGo(v)});
+ const inp=root.querySelector('#sr-date');
+ if(inp){
+  inp.onchange=()=>{if(inp.value)srGo(inp.value)};
+  inp.onclick=()=>{try{if(inp.showPicker)inp.showPicker()}catch(_){}};
+ }
+ const on=root.querySelector('.sr-chip.on'),strip=root.querySelector('.sr-chips');
+ if(on&&strip)strip.scrollLeft=Math.max(0,on.offsetLeft-strip.clientWidth/2+on.offsetWidth/2);
+ if(sheetEl)sheetEl.scrollTop=st;
+}
+async function srLoad(silent){
+ const my=++SR.seq;
+ try{
+  const [d,list]=await Promise.all([
+   rpc('owner_get_sales_report',{p_sales_date:SR.pinned?SR.date:null}),
+   safeLoad(rpc('owner_list_sales_report_dates',{p_limit:60}),null)
+  ]);
+  if(my!==SR.seq||!document.querySelector('#sr-root'))return;
+  const prevLatest=SR.latest;
+  SR.dates=asArray(list&&list.dates);
+  SR.latest=(d&&d.latest_date)||(list&&list.latest)||null;
+  state.salesLatest=SR.latest;
+  if(!SR.pinned&&d&&d.sales_date)SR.date=d.sales_date;
+  srRender(d||{status:'NONE_AVAILABLE'});
+  if(silent&&!SR.pinned&&prevLatest&&SR.latest&&SR.latest!==prevLatest)toast('Laporan terbaru sudah masuk');
+ }catch(e){
+  console.error(e);
+  if(my!==SR.seq)return;
+  if(silent)return;
+  const root=document.querySelector('#sr-root');
+  if(root){
+   root.innerHTML=`<div class="sr-empty"><div class="sr-empty-ic err">!</div><b>Laporan belum dapat dimuat</b><p>${esc(friendlyError(e,'Periksa koneksi internet lalu coba lagi.'))}</p><div class="sr-links"><button type="button" class="sr-link" data-sr-retry><span>Coba lagi</span><b>Muat ulang</b></button></div></div>`;
+   const r=root.querySelector('[data-sr-retry]');if(r)r.onclick=()=>{root.innerHTML=srSkeleton();srLoad(false)};
+  }
+ }
+}
+function srGo(date){
+ SR.pinned=!(SR.latest&&date===SR.latest);
+ SR.date=date;
+ const root=document.querySelector('#sr-root');
+ if(root){const keep=root.querySelector('.sr-nav');if(!keep)root.innerHTML=srSkeleton()}
+ srLoad(false);
+}
+async function showSalesReport(){
+ SR.pinned=false;SR.date=null;
+ sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">LAPORAN HARIAN</span><h3>Laporan Penjualan</h3><small>Rekap otomatis seluruh gerai setelah semua tutup</small></div><button type="button" id="sr-refresh">↻</button></div><div id="sr-root" class="sr-page">${srSkeleton()}</div>`,{title:'Laporan Penjualan'});
+ const rf=document.getElementById('sr-refresh');
+ if(rf)rf.onclick=()=>{const root=document.querySelector('#sr-root');if(root&&!root.querySelector('.sr-nav'))root.innerHTML=srSkeleton();srLoad(false)};
+ await srLoad(false);
 }
 function owner(){ return ownerCrudPage(); }
 
@@ -3339,6 +3538,7 @@ async function act(o){
   }
   if(o.startsWith('crud-')){crudSheet(o.replace('crud-',''));return}
   if(o==='report-period'){downloadReportFlow();return}
+  if(o==='report-penjualan'){await showSalesReport();return}
   if(o.startsWith('report-')){await showReport(o.replace('report-',''));return}
   if(o==='back-reports'){closeSheet();return}
   if(o==='report-period'){downloadReportFlow();return}
