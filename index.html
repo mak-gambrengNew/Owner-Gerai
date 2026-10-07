@@ -70,7 +70,7 @@ button:active{transform:scale(.97)}
 .set:last-child{border:0}
 select,.fld{width:100%;height:48px;border:1.5px solid var(--line);border-radius:14px;padding:0 14px;font:inherit;background:var(--bg);color:var(--tx);margin:6px 0 12px;user-select:text}
 /* tab bar */
-.tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(var(--sab) + 6px);z-index:5}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(var(--sab) + 6px);z-index:5}
 .tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mu);font-weight:600;padding:4px 0}
 .tabs button span{font-size:22px;filter:grayscale(1);opacity:.7}
 .tabs button.on{color:var(--p2)}.tabs button.on span{filter:none;opacity:1}
@@ -1138,6 +1138,19 @@ h1,h2,h3,.owner-identity strong,.lux-section-head h2{font-family:var(--font-disp
 .lg .toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#173f38;color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;z-index:20;transition:.2s}.lg .toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:380px){.lg{padding:20px 14px}.lg-brand .logo{width:104px;height:104px}.lg-brand h1{font-size:30px}.lg-card{padding:21px 16px 18px}.lg-heading strong{font-size:22px}}
 </style>
+<style id="owner-settings-style">
+.lux-head-actions{display:flex;align-items:center;gap:4px;position:relative;margin-left:auto;z-index:12}
+.owner-menu-pop{position:absolute;top:calc(100% + 8px);right:0;min-width:174px;max-width:calc(100vw - 16px);padding:6px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 14px 34px #173d3530;opacity:0;visibility:hidden;transform:translateY(-5px) scale(.98);transform-origin:top right;transition:opacity .16s ease,transform .16s ease,visibility .16s ease;z-index:50}
+.owner-menu-pop.on{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+.owner-menu-pop button{width:100%;min-height:44px;border:0;background:transparent;border-radius:12px;display:flex;align-items:center;gap:10px;padding:9px 11px;color:var(--tx);font:inherit;font-weight:800;text-align:left}
+.owner-menu-pop button:active{background:var(--p3)}
+.owner-menu-pop button svg.i{width:20px;height:20px;color:var(--p2)}
+.about-row{display:flex;justify-content:space-between;gap:16px;padding:13px 2px;border-bottom:1px solid var(--line)}
+.about-row:last-child{border-bottom:0}
+.about-row span{color:var(--mu);font-size:13px}
+.about-row b{font-size:13px;text-align:right;max-width:65%;overflow-wrap:anywhere}
+@media(max-width:360px){.owner-menu-pop{min-width:164px}.lux-head-actions{gap:1px}.lux-head-btn{width:42px;height:42px}}
+</style>
 <style id="bell-style">
 /* Kartu auto swap yang membuka tautan (Live Monitoring) */
 a.highlight-card{display:block;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1979,20 +1992,31 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 .nt-void-btn.sure{background:var(--bad);color:#fff}
 .nt-row{cursor:pointer}
 </style>
+<style id="splash-type-v2">
+#elite-splash .splash-welcome{font:italic 600 clamp(32px,9vw,46px)/1.1 "Playfair Display",Georgia,"Times New Roman",serif;letter-spacing:-.01em;color:#fff;text-shadow:0 10px 34px rgba(0,62,49,.28)}
+#elite-splash .splash-welcome span{display:block;margin-top:4px;font-size:.62em;font-weight:500;letter-spacing:.04em;color:#F6DE96}
+#elite-splash .splash-owner{display:flex;align-items:center;gap:12px;margin-top:4px;font-size:clamp(11px,3.1vw,13px);font-weight:700;letter-spacing:.42em;text-indent:.42em;color:rgba(255,255,255,.82);text-shadow:none}
+#elite-splash .splash-owner::before,#elite-splash .splash-owner::after{content:"";width:30px;height:1px;background:linear-gradient(90deg,transparent,#F1D57D)}
+#elite-splash .splash-owner::after{transform:scaleX(-1)}
+#elite-splash .splash-title{font:700 clamp(28px,7.8vw,38px)/1.08 "Playfair Display",Georgia,"Times New Roman",serif;letter-spacing:-.01em;color:#155A48}
+#elite-splash .splash-title em{display:block;font-style:italic;font-weight:600;color:#B88728;margin-top:2px}
+#elite-splash .splash-caption{font:italic 500 13.5px/1.3 "Playfair Display",Georgia,serif;letter-spacing:.01em;text-transform:none;color:#5E7B70}
+@media(max-height:620px){#elite-splash .splash-title{font-size:23px}}
+</style>
 </head>
 <body class="splash-active">
 <div id="app"></div>
 <div id="elite-splash" aria-label="Teh Solo Ma-Gambreng, Panel Owner" role="status">
   <div class="splash-stage">
     <div class="splash-intro" aria-hidden="true">
-      <div class="splash-welcome">Welcome to.....</div>
+      <div class="splash-welcome">Selamat datang<span>di....</span></div>
       <div class="splash-owner">Panel Owner</div>
     </div>
     <div class="splash-wash" aria-hidden="true"></div>
     <div class="splash-brand">
       <div class="splash-coin-wrap" aria-hidden="true"><div class="splash-coin"><div class="splash-coin-inner"><img id="splash-logo" alt=""><img id="splash-logo-back" class="splash-coin-back" alt=""></div></div><div class="splash-glint"></div></div>
-      <div class="splash-title">Teh Solo Mak Gambreng</div>
-      <div class="splash-caption">Owner Command Center</div><div class="splash-rule" aria-hidden="true"></div>
+      <div class="splash-title">Teh Solo<em>Mak Gambreng</em></div>
+      <div class="splash-caption">Segar di gelas, rapi di genggaman.</div><div class="splash-rule" aria-hidden="true"></div>
     </div>
     <div class="splash-credit" aria-label="Special Designed by Sky-D">
       <div class="splash-credit-label">Special Designed by...</div>
@@ -2029,7 +2053,6 @@ let stok=[];
 let audit=[];
 let total=0;
 let totalTransactions=0;
-let hpp=0;
 let bersih=0;
 let topMenu=['—',0];
 let state={
@@ -2194,7 +2217,6 @@ async function loadServerState(){
   }
   const top=Object.entries(byMenu).sort((a,b)=>b[1]-a[1])[0];
   topMenu=top?[top[0],top[1]]:['—',0];
-  hpp=menu.length?state.transactions.reduce((a,x)=>a+Number(x.total_amount||0),0)*0:0;
   bersih=total;
 
   ownerCrud={
@@ -2958,6 +2980,7 @@ const PG_ICO={
 function pgPush(){ if(PG.entry||PG.skip)return; try{history.pushState({pg:1},'');PG.entry=true}catch(_){} }
 function pgPop(){ if(!PG.entry)return; PG.entry=false; PG.skip=true; try{history.back()}catch(_){PG.skip=false} }
 window.addEventListener('popstate',()=>{
+ if(document.querySelector('.owner-menu-pop.on')){closeOwnerMenu();return}
  if(PG.skip){PG.skip=false; if(PG.open)pgPush(); return}   /* pop buatan kita sendiri */
  if(!PG.entry)return;
  PG.entry=false;                                            /* tombol Back perangkat ditekan */
@@ -3085,10 +3108,19 @@ function login(){
  }
 }
 /* ===== Shell ===== */
-const tabs=[['home','🏠','Dashboard'],['lap','📊','Laporan'],['gud','📦','Logistik'],['owner','✨','Kelola Usaha'],['adm','⚙️','Pengaturan']];
+const tabs=[['home','🏠','Dashboard'],['lap','📊','Laporan'],['gud','📦','Logistik'],['owner','✨','Kelola Usaha']];
 function shell(){
  app.innerHTML=`<div class="scr" id="v"></div><nav class="tabs">${tabs.map(t=>`<button data-t="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav><div class="dim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Detail"></div><div class="toast"></div>`;
  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+ if(!window.__ownerMenuBound){
+   window.__ownerMenuBound=true;
+   document.addEventListener('click',e=>{
+     const pop=document.querySelector('.owner-menu-pop');
+     const btn=document.querySelector('[data-o="owner-menu"]');
+     if(pop&&pop.classList.contains('on')&&!pop.contains(e.target)&&!btn?.contains(e.target))closeOwnerMenu();
+   });
+   window.addEventListener('resize',()=>closeOwnerMenu());
+ }
  PG.open=false;PG.back=null;PG.title='';if(PG.entry)pgPop();pgInit();draw();
 }
 function draw(){
@@ -3096,7 +3128,7 @@ function draw(){
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
  const v=$('#v');v.innerHTML=({home,lap,gud,owner,adm})[tab]();v.scrollTop=0;bind();svgify(app);
 }
-function head(t,s){return `<header class="lux-head page-top"><div class="lux-brand"><div class="lux-logo-wrap"><img class="lux-logo" src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div><div class="lux-brand-copy"><span class="lux-overline">MA-GAMBRENG · OWNER</span><strong>${t}</strong><span>${s}</span></div><div class="lux-head-rule"></div><button class="lux-head-btn" data-o="bell" aria-label="Notifikasi">🔔<i class="${bellDot()}"></i></button></div></header>`}
+function head(t,s){return `<header class="lux-head page-top"><div class="lux-brand"><div class="lux-logo-wrap"><img class="lux-logo" src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div><div class="lux-brand-copy"><span class="lux-overline">MA-GAMBRENG · OWNER</span><strong>${t}</strong><span>${s}</span></div><div class="lux-head-rule"></div><div class="lux-head-actions"><button class="lux-head-btn" data-o="bell" aria-label="Notifikasi">🔔<i class="${bellDot()}"></i></button><button class="lux-head-btn" data-o="owner-menu" aria-label="Menu Owner" aria-expanded="false" aria-haspopup="menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="owner-menu-pop" role="menu" aria-hidden="true"><button type="button" data-owner-menu="settings" role="menuitem"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg><span>Pengaturan</span></button></div></div></div></header>`}
 
 /* ===== Dashboard Highlight ===== */
 const LIVE_MONITORING_URL='https://live-monitoring-realtime.vercel.app/';
@@ -3402,10 +3434,89 @@ async function showSalesReport(){
 }
 function owner(){ return ownerCrudPage(); }
 
+function closeOwnerMenu(){
+ const pop=document.querySelector('.owner-menu-pop');
+ const btn=document.querySelector('[data-o="owner-menu"]');
+ if(pop)pop.classList.remove('on');
+ if(pop)pop.setAttribute('aria-hidden','true');
+ if(btn)btn.setAttribute('aria-expanded','false');
+}
+function toggleOwnerMenu(){
+ const pop=document.querySelector('.owner-menu-pop');
+ const btn=document.querySelector('[data-o="owner-menu"]');
+ if(!pop||!btn)return;
+ const open=!pop.classList.contains('on');
+ pop.classList.toggle('on',open);
+ pop.setAttribute('aria-hidden',open?'false':'true');
+ btn.setAttribute('aria-expanded',open?'true':'false');
+ if(open){
+   requestAnimationFrame(()=>{
+     const r=pop.getBoundingClientRect();
+     if(r.right>window.innerWidth-8)pop.style.right='8px';
+     if(r.left<8)pop.style.left='8px';
+   });
+ }
+}
+function openSettings(back){
+ closeOwnerMenu();
+ sheet(`${pgHead('PENGATURAN','Pengaturan Owner','Kelola keamanan, notifikasi, dan informasi aplikasi')}${adm()}`,{title:'Pengaturan',back:back||null});
+}
+function notificationSettings(){
+ sheet(`${pgHead('NOTIFIKASI','Pengaturan Notifikasi','Preferensi pemberitahuan Owner')}<div class="card">
+   <div class="set"><span>Aktivitas penting Owner</span><small>Preferensi server untuk kategori ini belum tersedia pada struktur backend yang terdeteksi.</small></div>
+   <div class="set"><span>Laporan &amp; aktivitas gerai</span><small>Preferensi server untuk kategori ini belum tersedia pada struktur backend yang terdeteksi.</small></div>
+   <div class="set"><span>Pemberitahuan sistem</span><small>Preferensi server untuk kategori ini belum tersedia pada struktur backend yang terdeteksi.</small></div>
+ </div><div class="hint">Tidak ada toggle palsu: aplikasi tidak mengklaim menyimpan preferensi sampai backend penyimpanannya tersedia.</div>`,()=>openSettings(()=>closeSheet()));
+}
+function aboutApp(){
+ const desc=document.querySelector('meta[name="description"]')?.content||'';
+ const appName=document.querySelector('meta[name="application-name"]')?.content||'';
+ sheet(`${pgHead('TENTANG APLIKASI','Tentang Teh Solo Mak Gambreng','Informasi aplikasi dan sistem')}<div class="card">
+   <div class="about-row"><span>Nama aplikasi</span><b>Teh Solo Mak Gambreng</b></div>
+   <div class="about-row"><span>Versi aplikasi</span><b>Tidak ditetapkan pada sumber aplikasi</b></div>
+   <div class="about-row"><span>Informasi sistem</span><b>${esc(appName||'Ma-Gambreng Owner Command Center')}</b></div>
+   ${desc?`<div class="about-row"><span>Keterangan</span><b>${esc(desc)}</b></div>`:''}
+ </div>`,()=>openSettings(()=>closeSheet()));
+}
+function changeOwnerAccess(){
+ sheet(`${pgHead('KEAMANAN','Ubah Kode Akses Owner','Mengubah kata sandi akun Owner melalui Supabase Auth')}<div class="crud-form">
+   ${crudField('Kode akses baru','owner-new-code','password','Minimal 6 karakter','')}
+   ${crudField('Ulangi kode akses baru','owner-new-code-2','password','Masukkan kembali','')}
+   <button class="btn" id="owner-change-code">Simpan Kode Akses</button>
+ </div><div class="hint">Kode akses tidak disimpan di localStorage atau tabel biasa. Perubahan menggunakan Supabase Auth pada sesi Owner yang sedang aktif.</div>`,()=>openSettings(()=>closeSheet()));
+ const btn=$('#owner-change-code');
+ if(btn)btn.onclick=async()=>{
+   const a=$('#owner-new-code')?.value.trim()||'',b=$('#owner-new-code-2')?.value.trim()||'';
+   if(a.length<6)return toast('Kode akses minimal 6 karakter.');
+   if(a!==b)return toast('Ulangi kode akses belum sama.');
+   btn.disabled=true;btn.textContent='Menyimpan…';
+   try{
+     const {data:{session}}=await sbClient.auth.getSession();
+     if(!session)throw new Error('Sesi Owner sudah berakhir. Silakan masuk kembali.');
+     const {error}=await sbClient.auth.updateUser({password:a});
+     if(error)throw error;
+     btn.textContent='Kode Akses Diperbarui';
+     toast('Kode akses berhasil diperbarui.');
+     setTimeout(()=>openSettings(()=>closeSheet()),500);
+   }catch(e){console.error('OWNER_CHANGE_ACCESS',e);btn.disabled=false;btn.textContent='Simpan Kode Akses';toast(friendlyError(e,'Kode akses belum berhasil diperbarui.'))}
+ };
+}
 function adm(){
- return head('Pengaturan','Keamanan, akun & data')+`<div class="sec" style="margin-top:16px"><h2>Keamanan</h2><div class="card"><button class="set" data-o="kode">Ubah kode akses Owner <span>›</span></button><button class="set" data-o="audit">Riwayat Aktivitas <span>›</span></button><button class="set" data-o="arsip">Arsip Riwayat Terhapus <span>›</span></button><button class="set" data-o="edit">Pusat Edit Data <span>🔒</span></button></div></div>
- <div class="sec"><h2>Data usaha</h2><div class="card"><button class="set" data-o="menu">Kelola Menu <span>›</span></button><button class="set" data-o="hpp">Periode perhitungan HPP <span>›</span></button></div></div>
- <div class="sec"><button class="btn" style="background:var(--bad)" data-o="out">Keluar</button><div class="hint">Mak-Gambreng Owner</div></div>`;
+ return `<div class="sec" style="margin-top:4px"><h2>Keamanan</h2><div class="card">
+ <button class="set" data-o="kode">Ubah Kode Akses Owner <span>›</span></button>
+ <button class="set" data-o="audit">Riwayat Aktivitas <span>›</span></button>
+ <button class="set" data-o="arsip">Arsip Riwayat Terhapus <span>›</span></button>
+ <button class="set" data-o="edit">Pusat Edit Data <span>🔒</span></button>
+ </div></div>
+ <div class="sec"><h2>Notifikasi</h2><div class="card">
+ <button class="set" data-o="notif-settings">Pengaturan Notifikasi <span>›</span></button>
+ </div></div>
+ <div class="sec"><h2>Tentang Aplikasi</h2><div class="card">
+ <button class="set" data-o="about">Tentang Teh Solo Mak Gambreng <span>›</span></button>
+ </div></div>
+ <div class="sec"><h2>Akun</h2><div class="card">
+ <button class="set" style="color:var(--bad)" data-o="out">Keluar <span>›</span></button>
+ </div></div>`;
 }
 
 /* ===== Aksi ===== */
@@ -3841,9 +3952,20 @@ async function ntHistory(){
  const wire=()=>document.querySelectorAll('#nt-list .nt-row').forEach(el=>el.onclick=()=>ntDetail(rows.find(x=>x.id===el.dataset.id),ntHistory));
  wire();$('#nt-q').oninput=e=>{$('#nt-list').innerHTML=list(e.target.value);wire()};
 }
-function bind(){document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>act(b.dataset.o))}
+function bind(){
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>act(b.dataset.o));
+ document.querySelectorAll('[data-owner-menu]').forEach(b=>b.onclick=e=>{
+   e.stopPropagation();
+   if(b.dataset.ownerMenu==='settings')openSettings(()=>{closeSheet();});
+ });
+}
 async function act(o){
  try{
+  if(o==='owner-menu'){toggleOwnerMenu();return;}
+  if(o==='settings'){openSettings();return;}
+  if(o==='notif-settings'){notificationSettings();return;}
+  if(o==='about'){aboutApp();return;}
+  if(o==='kode'){changeOwnerAccess();return;}
   if(o==='out'){
     await sbClient.auth.signOut();
     if(realtimeChannel)await sbClient.removeChannel(realtimeChannel);
@@ -3897,10 +4019,6 @@ async function act(o){
   if(o==='pdf'){downloadReportFlow();return}
   if(o==='kode'){
     sheet(pgHead('KEAMANAN','Ubah kode akses','')+'<div class="hint">Kode akses mengikuti kata sandi akun Owner yang tersimpan di sistem. Perubahan kode dilakukan melalui pengelolaan akun.</div>');
-    return;
-  }
-  if(o==='hpp'){
-    sheet(pgHead('DATA USAHA','Periode HPP','')+'<div class="hint">Pengaturan periode HPP belum tersedia. Tidak ada perubahan yang disimpan sampai pengaturan ini siap.</div>');
     return;
   }
   if(o==='edit'){
