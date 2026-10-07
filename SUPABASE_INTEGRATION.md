@@ -43,3 +43,17 @@ Migrasi wajib diterapkan: `supabase/migrations/owner_audit_append_only_snapshot_
 - Hapus Owner hanya lewat `owner_remove_*` (atomik: arsip -> hapus -> audit). Jalur DELETE langsung dan fungsi hapus lama dinonaktifkan.
 - Edit SPG/Checker atomik lewat `owner_save_member`.
 - Jika tombol hapus tidak menambah baris di `owner_deletion_log`, aplikasi yang berjalan adalah build lama: deploy ulang.
+
+## Laporan Penjualan harian (tab Laporan)
+Migrasi wajib: `supabase/migrations/owner_sales_daily_report.sql`.
+
+Alur data: semua gerai tutup (`checker_close_store_session`) → Checker menjalankan `finalize_monitoring_day` → snapshot final `monitoring_daily_*` dibuat dan `monitoring_daily_closures.status='closed'` → trigger mengirim notifikasi ke Owner → tab Laporan memuat laporan terbaru.
+
+| RPC | Fungsi |
+| --- | --- |
+| `owner_get_sales_report(p_sales_date date default null)` | `null` = laporan final terakhir. Status: `FINAL`, `NO_REPORT` (tanggal tanpa laporan; berisi tanggal terdekat), `NONE_AVAILABLE` (belum ada laporan sama sekali). |
+| `owner_list_sales_report_dates(p_limit int default 60)` | Daftar tanggal yang punya laporan final (untuk chip tanggal). |
+
+- "Total penjualan" = jumlah porsi terjual, **bukan** nominal rupiah. Ditampilkan total, per gerai, dan per menu (dengan rincian per gerai).
+- Kedua RPC `SECURITY DEFINER`, read-only, memvalidasi Owner lewat `auth.uid()`. Role `authenticated` tidak punya SELECT langsung pada `monitoring_daily_closures`, `monitoring_daily_store_closures`, dan `monitoring_daily_menu_sales`, sehingga `owner_get_report` (invoker) tidak bisa dipakai untuk halaman ini.
+- Halaman yang terbuka ikut diperbarui saat notifikasi/polling masuk; bila Owner sedang melihat "laporan terakhir" dan laporan baru tiba, tampilan berpindah otomatis.
