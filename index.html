@@ -1136,6 +1136,22 @@ h1,h2,h3,.owner-identity strong,.lux-section-head h2{font-family:var(--font-disp
 .lg .toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#173f38;color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;z-index:20;transition:.2s}.lg .toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:380px){.lg{padding:20px 14px}.lg-brand .logo{width:104px;height:104px}.lg-brand h1{font-size:30px}.lg-card{padding:21px 16px 18px}.lg-heading strong{font-size:22px}}
 </style>
+<style id="bell-style">
+/* Lonceng Owner: titik hanya tampil bila ada notifikasi penting yang belum dibaca */
+.owner-notify i:not(.on),.lux-head-btn[data-o="bell"] i:not(.on){display:none}
+.card.bell-list{padding:2px 14px 8px}
+.bell-day{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);padding:14px 2px 6px}
+.bell-item{display:flex;align-items:flex-start;gap:12px;padding:12px 10px;margin:0 -10px;border-radius:14px;border-bottom:1px solid var(--line)}
+.bell-item.new{background:var(--p3);border-bottom-color:transparent}
+.bell-item .ic{width:40px;height:40px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:18px;background:var(--p3);color:var(--p2)}
+.bell-item.new .ic{background:#fff}
+.bell-item .ic svg.i{width:20px;height:20px}
+.bell-copy{flex:1;min-width:0}
+.bell-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.bell-top time{font-size:11.5px;color:var(--mu);white-space:nowrap}
+.bell-copy b{display:block;font-size:14.5px;line-height:1.3}
+.bell-copy p{margin:3px 0 0;font-size:13px;line-height:1.45;color:var(--mu);overflow-wrap:anywhere}
+</style>
 <style id="gl-style">
 .gl-ov{position:fixed;inset:0;z-index:100000;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:rgba(4,22,18,.64);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .25s ease}
 .gl-ov.on{opacity:1}
@@ -1974,7 +1990,7 @@ async function loadServerState(){
     selectRows('menu_inventory_consumptions',q=>q.order('created_at',{ascending:true})),
     rpc('owner_list_members',{p_role:'spg'}),
     rpc('owner_list_members',{p_role:'checker'}),
-    safeLoad(selectRows('user_notifications',q=>q.is('read_at',null).order('created_at',{ascending:false}).limit(30))),
+    safeLoad(selectRows('user_notifications',bellQuery)),
     safeLoad(selectRows('owner_bills',q=>q.order('created_at',{ascending:false}).limit(500))),
     safeLoad(selectRows('monitoring_daily_transactions',q=>q.eq('sales_date',todayJakarta()).order('occurred_at',{ascending:false}).limit(100))),
     safeLoad(selectRows('ice_orders',q=>q.order('created_at',{ascending:false}).limit(50))),
@@ -2037,8 +2053,77 @@ async function loadServerState(){
     ownerCrud.esKristal=asArray(contacts).map(x=>({id:x.id,nama:x.display_name||x.label||'Kontak Es Kristal',perusahaan:x.label||'',telepon:x.phone_number||'',catatan:x.notes||'',status:statusLabel(x.status)}));
   }catch(_){}
 }
+/* ===== LONCENG: hanya notifikasi penting untuk Owner =====
+   Sumber: tabel user_notifications (dibuat server oleh trigger, lihat
+   supabase/migrations/owner_bell_important_notifications.sql). Jenis dibedakan lewat entity_type.
+   Log perubahan data TIDAK ada di sini: itu tugas kartu "Riwayat Aktivitas". */
+const BELL_KINDS={
+ store_open:{ic:'🏪',tag:'Gerai buka',tone:'ok'},
+ store_close:{ic:'🔒',tag:'Gerai tutup',tone:''},
+ all_stores_closed:{ic:'🌙',tag:'Semua gerai tutup',tone:''},
+ restock_request:{ic:'📦',tag:'Permintaan restok',tone:'warn'},
+ restock_followup:{ic:'✅',tag:'Tindak lanjut Checker',tone:'ok'},
+ ice_reception:{ic:'🧊',tag:'Es kristal diterima',tone:'ok'}
+};
+const BELL_FOLLOWUP={ic:'✅',tag:'Tindak lanjut Checker',tone:'ok'};
+const bellQuery=q=>q.in('entity_type',[...Object.keys(BELL_KINDS),'store_emergency_request']).order('created_at',{ascending:false}).limit(60);
+function bellKind(n){
+ if(!n)return null;
+ if(BELL_KINDS[n.entity_type])return BELL_KINDS[n.entity_type];
+ // Checker menyatakan siap menangani permintaan urgent gerai (dikirim server dengan pengirim = Checker).
+ if(n.type==='emergency'&&n.entity_type==='store_emergency_request'&&n.sender_user_id&&asArray(state.checker).some(c=>c.profile_id===n.sender_user_id))return BELL_FOLLOWUP;
+ return null;
+}
+const bellItems=()=>asArray(state.notifications).filter(n=>bellKind(n));
+const bellUnread=()=>bellItems().filter(n=>!n.read_at).length;
+const bellDot=()=>bellUnread()?'on':'';
+function bellSyncDots(){const on=bellUnread()>0;document.querySelectorAll('[data-o="bell"] i').forEach(i=>i.classList.toggle('on',on))}
+function bellDayKey(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}
+function bellDayLabel(v){
+ const d=new Date(v);if(isNaN(d))return 'Sebelumnya';
+ const k=bellDayKey(d);
+ if(k===bellDayKey(new Date()))return 'Hari ini';
+ if(k===bellDayKey(new Date(Date.now()-864e5)))return 'Kemarin';
+ return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'numeric',month:'long',year:'numeric'}).format(d);
+}
+function bellTime(v){
+ try{return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(v)).replace('.',':')+' WIB'}catch(_){return ''}
+}
+let bellFresh=new Set();
+function bellSheet(){
+ const items=bellItems();
+ let lastDay='';
+ const rows=items.map(n=>{
+   const k=bellKind(n),day=bellDayLabel(n.created_at);
+   const head=day!==lastDay?`<div class="bell-day">${esc(day)}</div>`:'';lastDay=day;
+   return head+`<article class="bell-item${bellFresh.has(n.id)?' new':''}"><div class="ic">${k.ic}</div><div class="bell-copy"><div class="bell-top"><span class="chip ${k.tone}">${esc(k.tag)}</span><time>${esc(bellTime(n.created_at))}</time></div><b>${esc(n.title||k.tag)}</b><p>${esc(n.body||'')}</p></div></article>`;
+ }).join('');
+ sheet(`${pgHead('NOTIFIKASI','Notifikasi',bellFresh.size?`${bellFresh.size} baru`:'Info penting dari gerai')}<div class="card bell-list">${rows||'<div class="empty">Belum ada notifikasi penting.</div>'}</div>`);
+ bellMarkRead();
+}
+async function bellMarkRead(){
+ const ids=bellItems().filter(n=>!n.read_at).map(n=>n.id);
+ if(!ids.length)return;
+ const res=await Promise.allSettled(ids.map(id=>rpc('owner_mark_notification_read',{p_notification_id:id})));
+ const now=new Date().toISOString();
+ res.forEach((r,i)=>{
+   if(r.status==='fulfilled'){const n=state.notifications.find(x=>x.id===ids[i]);if(n&&!n.read_at)n.read_at=now}
+   else console.error('Notifikasi belum dapat ditandai dibaca:',r.reason);
+ });
+ bellSyncDots();
+}
+async function openBell(){
+ state.notifications=asArray(await safeLoad(selectRows('user_notifications',bellQuery),state.notifications));
+ bellFresh=new Set(bellItems().filter(n=>!n.read_at).map(n=>n.id));
+ bellSheet();
+}
+// Halaman lonceng sedang terbuka lalu ada notifikasi baru: tambahkan tanpa menutup halaman.
+function bellRefreshOpen(){
+ bellItems().filter(n=>!n.read_at).forEach(n=>bellFresh.add(n.id));
+ bellSheet();
+}
 async function refreshAndDraw(){
-  try{await loadServerState();draw();if(PG.open&&PG.title==='Laporan Penjualan'&&document.querySelector('#sr-root'))srLoad(true)}catch(e){console.error(e);toast(friendlyError(e,'Data belum dapat dimuat. Coba lagi sebentar.'))}
+  try{await loadServerState();draw();if(PG.open&&PG.title==='Laporan Penjualan'&&document.querySelector('#sr-root'))srLoad(true);if(PG.open&&PG.title==='Notifikasi'&&document.querySelector('.bell-list'))bellRefreshOpen()}catch(e){console.error(e);toast(friendlyError(e,'Data belum dapat dimuat. Coba lagi sebentar.'))}
 }
 // Debounce event realtime agar rentetan perubahan hanya memicu satu fetch ulang.
 let _rtTimer=null,_rtDown=false;
@@ -2852,7 +2937,7 @@ function draw(){
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
  const v=$('#v');v.innerHTML=({home,lap,gud,owner,adm})[tab]();v.scrollTop=0;bind();svgify(app);
 }
-function head(t,s){return `<header class="lux-head page-top"><div class="lux-brand"><div class="lux-logo-wrap"><img class="lux-logo" src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div><div class="lux-brand-copy"><span class="lux-overline">MA-GAMBRENG · OWNER</span><strong>${t}</strong><span>${s}</span></div><div class="lux-head-rule"></div><button class="lux-head-btn" data-o="audit" aria-label="Notifikasi">🔔<i></i></button></div></header>`}
+function head(t,s){return `<header class="lux-head page-top"><div class="lux-brand"><div class="lux-logo-wrap"><img class="lux-logo" src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div><div class="lux-brand-copy"><span class="lux-overline">MA-GAMBRENG · OWNER</span><strong>${t}</strong><span>${s}</span></div><div class="lux-head-rule"></div><button class="lux-head-btn" data-o="bell" aria-label="Notifikasi">🔔<i class="${bellDot()}"></i></button></div></header>`}
 
 /* ===== Dashboard Highlight ===== */
 function defaultHighlights(){
@@ -2940,7 +3025,7 @@ function home(){
        <div class="owner-logo"><img src="${BRAND_LOGO}" alt="Teh Solo Ma-Gambreng"></div>
        <div class="owner-identity"><span>${esc(state.header?.business_name||'TEH SOLO MA-GAMBRENG')}</span><strong>${esc(greeting)}</strong></div>
      </div>
-     <button class="owner-notify" data-o="audit" aria-label="Notifikasi">🔔<i class="${state.notifications.length?'on':''}"></i></button>
+     <button class="owner-notify" data-o="bell" aria-label="Notifikasi">🔔<i class="${bellDot()}"></i></button>
    </div>
    <div class="owner-header-bottom">
      <div class="owner-date-block"><span>OWNER COMMAND CENTER</span><b id="owner-date">Memuat tanggal...</b></div>
@@ -3508,6 +3593,7 @@ async function act(o){
     }).join(''):'<div class="empty">Belum ada data yang dihapus.</div>'}</div>`);
     return;
   }
+  if(o==='bell'){await openBell();return}
   if(o==='log-aktifitas'||o==='audit'){
     sheet(`${pgHead('AKTIVITAS','Riwayat Aktivitas','Catatan perubahan data usaha')}<div class="card">${audit.length?audit.map(a=>li('🧾',esc(auditText(a)),esc(fmtWaktu(a.created_at)),'')).join(''):'<div class="empty">Belum ada riwayat aktivitas.</div>'}</div>`);
     return;
@@ -3566,6 +3652,7 @@ const P0={'🏪':'M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6','🧑‍�
 '👤':'M12 12a4 4 0 100-8 4 4 0 000 8M4.5 20a7.5 7.5 0 0115 0','🧑':'M12 12a4 4 0 100-8 4 4 0 000 8M4.5 20a7.5 7.5 0 0115 0','🧑‍💼':'M12 12a4 4 0 100-8 4 4 0 000 8M4.5 20a7.5 7.5 0 0115 0','⚠️':'M12 4l9 16H3zM12 10v4M12 17.5h.01','ℹ️':'M12 21a9 9 0 100-18 9 9 0 000 18M12 11v5M12 8h.01',
 '⬆️':'M7 17L17 7M8 7h9v9','⬇️':'M17 7L7 17M16 17H7V8','👁️':'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12M12 15a3 3 0 100-6 3 3 0 000 6','🔒':'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 017 0v3','🔔':'M6 16v-5a6 6 0 0112 0v5l1.5 2h-15zM10 20.5a2 2 0 004 0',
 '🍵':'M5 10h11v4a5 5 0 01-5 5h-1a5 5 0 01-5-5zM16 11h1.5a2.5 2.5 0 010 5H16M8 3c0 1.5 1.5 1.5 1.5 3M12 3c0 1.5 1.5 1.5 1.5 3'};
+P0['🌙']='M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z';
 const P={},T={};for(const k in P0)P[N(k)]=P0[k];['🥇','🥈','🥉','4️⃣','5️⃣'].forEach((k,i)=>T[N(k)]=i+1);
 function svgify(r){r.querySelectorAll('.ic,.tabs span,.av').forEach(e=>{const n=[...e.childNodes].find(x=>x.nodeType===3&&x.textContent.trim());if(!n)return;const k=N(n.textContent.trim());
  if(T[k]){n.replaceWith(Object.assign(document.createElement('b'),{className:'rk',textContent:T[k]}));return}
