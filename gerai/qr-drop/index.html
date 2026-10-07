@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="/gerai/icon-192.png">
 <link rel="apple-touch-icon" href="/gerai/icon-192.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,20 +29,26 @@
   --accent:#FFD21F;
   --accent-ink:#241D00;
   --danger:#C0392B;
+
   --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
   --body:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
 
 *{
   box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent
+  -webkit-tap-highlight-color:transparent;
 }
 
-html,body{
-  margin:0;
+html,
+body{
+  width:100%;
   height:100%;
+  min-height:100%;
+  margin:0;
+  overflow:hidden;
 }
 
 body{
@@ -54,7 +61,8 @@ body{
   overscroll-behavior:none;
 }
 
-button,input{
+button,
+input{
   font:inherit;
   color:inherit;
 }
@@ -67,13 +75,18 @@ button{
 .screen{
   position:fixed;
   inset:0;
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
   display:none;
   flex-direction:column;
+  overflow:hidden;
 }
 
 .screen.on{
   display:flex;
 }
+
 
 /* =========================================================
    SPLASH
@@ -84,7 +97,10 @@ button{
   align-items:center;
   justify-content:center;
   text-align:center;
-  padding:28px;
+  padding:
+    calc(24px + var(--safe-t))
+    24px
+    calc(24px + var(--safe-b));
   overflow:hidden;
   cursor:pointer;
 }
@@ -118,10 +134,11 @@ button{
   display:flex;
   flex-direction:column;
   align-items:center;
+  max-width:92vw;
 }
 
 .sp-logo{
-  width:min(34vw,128px);
+  width:min(30vw,118px);
   aspect-ratio:1;
   border-radius:30%;
   box-shadow:0 18px 34px -10px rgba(0,0,0,.35);
@@ -131,10 +148,10 @@ button{
 }
 
 .sp-greet{
-  margin:26px 0 0;
+  margin:22px 0 0;
   font-family:var(--display);
   font-weight:800;
-  font-size:clamp(34px,10vw,52px);
+  font-size:clamp(31px,9vw,50px);
   line-height:1;
   letter-spacing:-.035em;
   color:var(--accent);
@@ -144,8 +161,8 @@ button{
 }
 
 .sp-at{
-  margin:14px 0 0;
-  font-size:13px;
+  margin:11px 0 0;
+  font-size:12px;
   font-weight:700;
   letter-spacing:.2em;
   text-transform:uppercase;
@@ -155,10 +172,10 @@ button{
 }
 
 .sp-store{
-  margin:6px 0 0;
+  margin:5px 0 0;
   font-family:var(--display);
   font-weight:800;
-  font-size:clamp(28px,8.5vw,44px);
+  font-size:clamp(26px,8vw,42px);
   line-height:1.05;
   letter-spacing:-.03em;
   color:#fff;
@@ -171,12 +188,12 @@ button{
 }
 
 .sp-tag{
-  margin:22px 0 0;
-  padding:8px 16px;
+  margin:18px 0 0;
+  padding:7px 15px;
   border-radius:999px;
   background:rgba(0,0,0,.16);
   color:#fff;
-  font-size:12.5px;
+  font-size:12px;
   font-weight:600;
   opacity:0;
   animation:rise .6s ease 2s forwards;
@@ -185,11 +202,11 @@ button{
 .sp-skip{
   position:absolute;
   z-index:1;
-  bottom:calc(22px + var(--safe-b));
+  bottom:calc(18px + var(--safe-b));
   left:0;
   right:0;
   text-align:center;
-  font-size:12px;
+  font-size:11px;
   color:rgba(255,255,255,.65);
   opacity:0;
   animation:rise .5s ease 2.4s forwards;
@@ -198,16 +215,17 @@ button{
 @keyframes pop{
   to{
     opacity:1;
-    transform:none
+    transform:none;
   }
 }
 
 @keyframes rise{
   to{
     opacity:1;
-    transform:none
+    transform:none;
   }
 }
+
 
 /* =========================================================
    APP / FORM
@@ -220,7 +238,10 @@ button{
 .top{
   background:var(--brand);
   color:#fff;
-  padding:calc(14px + var(--safe-t)) 20px 74px;
+  padding:
+    calc(11px + var(--safe-t))
+    18px
+    62px;
   position:relative;
   flex:none;
 }
@@ -231,21 +252,21 @@ button{
   left:0;
   right:0;
   bottom:-1px;
-  height:34px;
+  height:30px;
   background:var(--paper);
-  border-radius:28px 28px 0 0;
+  border-radius:25px 25px 0 0;
 }
 
 .top-row{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
 }
 
 .top-logo{
-  width:42px;
-  height:42px;
-  border-radius:13px;
+  width:39px;
+  height:39px;
+  border-radius:12px;
   flex:none;
 }
 
@@ -255,7 +276,7 @@ button{
 
 .top-meta small{
   display:block;
-  font-size:11px;
+  font-size:10px;
   font-weight:700;
   letter-spacing:.16em;
   text-transform:uppercase;
@@ -266,7 +287,7 @@ button{
   display:block;
   font-family:var(--display);
   font-weight:800;
-  font-size:20px;
+  font-size:19px;
   letter-spacing:-.02em;
   text-transform:uppercase;
   white-space:nowrap;
@@ -275,11 +296,11 @@ button{
 }
 
 .top h1{
-  margin:18px 0 0;
+  margin:13px 0 0;
   font-family:var(--display);
   font-weight:800;
-  font-size:30px;
-  line-height:1.02;
+  font-size:28px;
+  line-height:1;
   letter-spacing:-.035em;
 }
 
@@ -288,40 +309,51 @@ button{
 }
 
 .top p{
-  margin:6px 0 0;
-  font-size:14px;
+  margin:5px 0 0;
+  font-size:13px;
   opacity:.88;
 }
 
+
+/* =========================================================
+   NON-SCROLLING FORM AREA
+========================================================= */
+
 .scroll{
   flex:1;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding:0 16px calc(28px + var(--safe-b));
-  margin-top:-46px;
+  min-height:0;
+  overflow:hidden;
+  padding:
+    0
+    14px
+    calc(10px + var(--safe-b));
+  margin-top:-38px;
   position:relative;
   z-index:1;
 }
 
 .wrap{
+  width:100%;
+  height:100%;
   max-width:520px;
   margin:0 auto;
+  position:relative;
 }
 
 .card{
   background:var(--card);
   border:1px solid var(--line);
-  border-radius:22px;
-  padding:20px 18px;
+  border-radius:20px;
+  padding:16px 16px;
   box-shadow:0 14px 30px -22px rgba(10,57,33,.55);
 }
 
 .step{
   display:flex;
   align-items:center;
-  gap:8px;
-  margin:0 0 16px;
-  font-size:12px;
+  gap:7px;
+  margin:0 0 12px;
+  font-size:11px;
   font-weight:700;
   letter-spacing:.14em;
   text-transform:uppercase;
@@ -332,26 +364,26 @@ button{
   font-style:normal;
   display:grid;
   place-items:center;
-  width:22px;
-  height:22px;
+  width:21px;
+  height:21px;
   border-radius:50%;
   background:var(--ink);
   color:#fff;
-  font-size:11px;
+  font-size:10px;
   letter-spacing:0;
 }
 
 .field{
   display:block;
-  margin:0 0 18px;
+  margin:0 0 13px;
 }
 
 .lab{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  margin:0 0 8px;
-  font-size:14px;
+  margin:0 0 6px;
+  font-size:13px;
   font-weight:700;
   color:var(--ink);
 }
@@ -360,7 +392,7 @@ button{
   display:none;
   align-items:center;
   gap:4px;
-  font-size:11px;
+  font-size:10px;
   font-weight:700;
   color:var(--brand-d);
 }
@@ -371,12 +403,12 @@ button{
 
 .inp{
   width:100%;
-  height:60px;
+  height:54px;
   border:2px solid var(--line);
   background:#fff;
-  border-radius:16px;
-  padding:0 16px;
-  font-size:18px;
+  border-radius:15px;
+  padding:0 14px;
+  font-size:17px;
   font-weight:600;
   outline:none;
   transition:border-color .15s,box-shadow .15s,background .15s;
@@ -406,17 +438,17 @@ button{
 
 .qty{
   display:flex;
-  gap:10px;
+  gap:8px;
   align-items:stretch;
 }
 
 .qty .inp{
   text-align:center;
   font-family:var(--display);
-  font-size:30px;
+  font-size:27px;
   font-weight:800;
   letter-spacing:-.02em;
-  padding:0 8px;
+  padding:0 7px;
   -moz-appearance:textfield;
 }
 
@@ -428,12 +460,12 @@ button{
 
 .step-btn{
   flex:none;
-  width:60px;
-  height:60px;
+  width:54px;
+  height:54px;
   border:2px solid var(--line);
-  border-radius:16px;
+  border-radius:15px;
   background:#fff;
-  font-size:28px;
+  font-size:25px;
   font-weight:700;
   line-height:1;
   color:var(--ink);
@@ -452,14 +484,14 @@ button{
   flex:none;
   display:grid;
   place-items:center;
-  min-width:64px;
-  padding:0 12px;
-  border-radius:16px;
+  min-width:59px;
+  padding:0 9px;
+  border-radius:15px;
   background:var(--ink);
   color:var(--accent);
   font-family:var(--display);
   font-weight:800;
-  font-size:18px;
+  font-size:16px;
   letter-spacing:.04em;
   box-shadow:0 5px 0 #052717;
 }
@@ -471,8 +503,8 @@ button{
 
 .err{
   display:none;
-  margin:8px 2px 0;
-  font-size:12.5px;
+  margin:6px 2px 0;
+  font-size:11.5px;
   font-weight:600;
   color:var(--danger);
 }
@@ -481,41 +513,43 @@ button{
   display:block;
 }
 
+
 /* =========================================================
    PAYMENT BUTTONS
 ========================================================= */
 
 .pay-title{
-  margin:4px 0 4px;
-  font-size:14px;
+  margin:3px 0 4px;
+  font-size:13px;
   font-weight:700;
 }
 
 .pay-hint{
-  margin:0 0 12px;
-  font-size:12.5px;
+  margin:0 0 8px;
+  font-size:11.5px;
+  line-height:1.3;
   color:var(--muted);
 }
 
 .pay{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:9px;
 }
 
 .pbtn{
   border:2px solid transparent;
-  border-radius:20px;
-  min-height:104px;
-  padding:13px 10px;
+  border-radius:17px;
+  min-height:82px;
+  padding:9px 8px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:7px;
+  gap:5px;
   font-weight:800;
-  font-size:15px;
-  line-height:1.15;
+  font-size:14px;
+  line-height:1.1;
   cursor:pointer;
   text-align:center;
   transition:
@@ -530,16 +564,16 @@ button{
 }
 
 .pbtn svg{
-  width:29px;
-  height:29px;
+  width:26px;
+  height:26px;
 }
 
 .pbtn::before{
   content:"";
   position:absolute;
-  left:10px;
-  right:10px;
-  top:6px;
+  left:9px;
+  right:9px;
+  top:5px;
   height:34%;
   border-radius:14px;
   background:rgba(255,255,255,.32);
@@ -551,13 +585,13 @@ button{
   content:"";
   position:absolute;
   inset:1px;
-  border-radius:17px;
+  border-radius:15px;
   border-top:1px solid rgba(255,255,255,.75);
   pointer-events:none;
 }
 
 .pbtn:active{
-  transform:translateY(6px) scale(.985);
+  transform:translateY(5px) scale(.985);
   box-shadow:inset 0 4px 9px rgba(0,0,0,.18)!important;
 }
 
@@ -566,8 +600,8 @@ button{
   color:#fff;
   border-color:#079B47;
   box-shadow:
-    0 7px 0 #067A38,
-    0 14px 24px -13px rgba(8,163,74,.95);
+    0 6px 0 #067A38,
+    0 12px 20px -13px rgba(8,163,74,.95);
 }
 
 .pbtn.bill{
@@ -575,8 +609,8 @@ button{
   color:#302700;
   border-color:#D6B300;
   box-shadow:
-    0 7px 0 #B99800,
-    0 14px 24px -13px rgba(180,145,0,.95);
+    0 6px 0 #B99800,
+    0 12px 20px -13px rgba(180,145,0,.95);
 }
 
 .pbtn.now:active{
@@ -598,8 +632,9 @@ button{
   box-shadow:none;
 }
 
+
 /* =========================================================
-   FULL SCREEN PREVIEW
+   FULL SCREEN PREVIEW — NON SCROLLABLE
 ========================================================= */
 
 #preview{
@@ -607,7 +642,7 @@ button{
   inset:0;
   z-index:20;
   display:none;
-  overflow-y:auto;
+  overflow:hidden;
   margin:0;
   border-radius:0;
   background:
@@ -616,9 +651,9 @@ button{
     linear-gradient(145deg,#FFFDF0 0%,#FFF4A8 100%);
   color:#151500;
   padding:
-    calc(18px + var(--safe-t))
-    18px
-    calc(28px + var(--safe-b));
+    calc(13px + var(--safe-t))
+    14px
+    calc(13px + var(--safe-b));
   animation:previewIn .3s cubic-bezier(.2,.9,.3,1);
 }
 
@@ -628,38 +663,40 @@ button{
 
 .preview-wrap{
   width:100%;
+  height:100%;
   max-width:560px;
-  min-height:100%;
   margin:0 auto;
-  padding:6px 0 18px;
   display:flex;
   flex-direction:column;
+  justify-content:center;
 }
 
 .preview-top{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
-  margin-bottom:18px;
+  gap:10px;
+  margin-bottom:9px;
 }
 
 .pv-brand{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:9px;
+  min-width:0;
 }
 
 .pv-brand img{
-  width:56px;
-  height:56px;
-  border-radius:17px;
-  box-shadow:0 10px 22px rgba(40,32,0,.18);
+  width:45px;
+  height:45px;
+  border-radius:13px;
+  box-shadow:0 8px 17px rgba(40,32,0,.18);
+  flex:none;
 }
 
 .pv-brand small{
   display:block;
-  font-size:10px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.18em;
   text-transform:uppercase;
@@ -669,7 +706,7 @@ button{
 .pv-brand b{
   display:block;
   font-family:var(--display);
-  font-size:19px;
+  font-size:17px;
   font-weight:800;
   letter-spacing:-.03em;
   color:#171400;
@@ -677,20 +714,20 @@ button{
 
 .preview-badge{
   flex:none;
-  padding:8px 11px;
+  padding:7px 10px;
   border-radius:999px;
   background:#0A3921;
   color:#FFD21F;
-  font-size:10px;
+  font-size:9px;
   font-weight:800;
   letter-spacing:.08em;
   text-transform:uppercase;
-  box-shadow:0 5px 0 #052717;
+  box-shadow:0 4px 0 #052717;
 }
 
 .pv-k{
-  margin:2px 0 4px;
-  font-size:11px;
+  margin:0 0 2px;
+  font-size:9px;
   font-weight:800;
   letter-spacing:.18em;
   text-transform:uppercase;
@@ -698,11 +735,11 @@ button{
 }
 
 .pv-t{
-  margin:0 0 18px;
+  margin:0 0 9px;
   font-family:var(--display);
   font-weight:800;
-  font-size:clamp(31px,8vw,42px);
-  line-height:.98;
+  font-size:clamp(25px,7vw,36px);
+  line-height:.96;
   letter-spacing:-.045em;
   color:#171400;
 }
@@ -710,10 +747,10 @@ button{
 .pv-ticket{
   background:#fffef7;
   border:1px solid rgba(36,29,0,.14);
-  border-radius:27px;
-  padding:7px 20px 18px;
+  border-radius:21px;
+  padding:4px 15px 11px;
   box-shadow:
-    0 28px 55px -30px rgba(50,40,0,.62),
+    0 20px 40px -25px rgba(50,40,0,.62),
     0 2px 0 rgba(255,255,255,.9) inset;
   position:relative;
   overflow:hidden;
@@ -722,11 +759,11 @@ button{
 .pv-ticket::before{
   content:"";
   display:block;
-  width:62px;
-  height:5px;
+  width:52px;
+  height:4px;
   border-radius:99px;
   background:#E7D05B;
-  margin:9px auto 8px;
+  margin:6px auto 5px;
 }
 
 .pv-ticket-head{
@@ -734,19 +771,19 @@ button{
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:8px 0 13px;
+  padding:5px 0 7px;
   border-bottom:1px dashed #D7D0A7;
 }
 
 .pv-ticket-head span{
-  font-size:10px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.13em;
   color:#8A825E;
 }
 
 .pv-ticket-head b{
-  font-size:11px;
+  font-size:9px;
   font-weight:800;
   color:#0A3921;
   text-transform:uppercase;
@@ -756,10 +793,10 @@ button{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
-  gap:18px;
-  padding:15px 0;
+  gap:15px;
+  padding:8px 0;
   border-top:1px dashed #D7D0A7;
-  font-size:14px;
+  font-size:12px;
 }
 
 .pv-row:first-of-type{
@@ -781,10 +818,10 @@ button{
 .pv-pay{
   display:inline-flex;
   align-items:center;
-  min-height:30px;
-  padding:5px 11px;
+  min-height:24px;
+  padding:4px 9px;
   border-radius:999px;
-  font-size:12px;
+  font-size:10px;
   font-weight:800;
 }
 
@@ -799,10 +836,10 @@ button{
 }
 
 .pv-ref{
-  margin-top:3px;
-  padding-top:14px;
+  margin-top:1px;
+  padding-top:8px;
   border-top:1px dashed #D7D0A7;
-  font-size:10.5px;
+  font-size:9px;
   color:#8A825E;
   word-break:break-all;
 }
@@ -812,31 +849,31 @@ button{
 }
 
 .preview-confirm{
-  margin-top:15px;
-  padding:14px 15px;
-  border-radius:17px;
+  margin-top:8px;
+  padding:9px 11px;
+  border-radius:13px;
   background:#F5F0D2;
   border:1px solid #E5D995;
   color:#665B2B;
-  font-size:12px;
-  line-height:1.45;
+  font-size:10px;
+  line-height:1.35;
 }
 
 .preview-confirm strong{
   display:block;
   color:#2B260C;
-  margin-bottom:3px;
+  margin-bottom:2px;
 }
 
 .submit-err{
   display:none;
-  margin-top:12px;
-  padding:12px 14px;
-  border-radius:14px;
+  margin-top:7px;
+  padding:8px 10px;
+  border-radius:11px;
   background:#FFF2F0;
   border:1px solid #E6A49C;
   color:#8B2B20;
-  font-size:13.5px;
+  font-size:11px;
 }
 
 .submit-err.on{
@@ -846,22 +883,22 @@ button{
 .pv-acts{
   display:grid;
   grid-template-columns:1.35fr .8fr;
-  gap:10px;
-  margin-top:16px;
+  gap:8px;
+  margin-top:9px;
 }
 
 .btn{
   width:100%;
-  min-height:58px;
+  min-height:48px;
   border:0;
-  border-radius:17px;
+  border-radius:14px;
   font-weight:800;
-  font-size:15px;
+  font-size:13px;
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:7px;
   transition:transform .1s,filter .15s,box-shadow .15s;
 }
 
@@ -873,32 +910,32 @@ button{
   background:#0A3921;
   color:#FFD21F;
   box-shadow:
-    0 7px 0 #052717,
-    0 16px 25px -18px rgba(0,0,0,.55);
-  font-size:16px;
+    0 5px 0 #052717,
+    0 12px 20px -15px rgba(0,0,0,.55);
+  font-size:14px;
 }
 
 .btn.edit{
   background:#fff;
   color:#0A3921;
   border:2px solid #D8C94B;
-  box-shadow:0 5px 0 #D8C94B;
+  box-shadow:0 4px 0 #D8C94B;
 }
 
 .btn.exit{
   background:#0A3921;
   color:#FFD21F;
   box-shadow:
-    0 7px 0 #052717,
-    0 16px 25px -18px rgba(0,0,0,.55);
+    0 6px 0 #052717,
+    0 14px 22px -17px rgba(0,0,0,.55);
 }
 
 .btn.save{
   background:#0A3921;
   color:#FFD21F;
   box-shadow:
-    0 7px 0 #052717,
-    0 16px 25px -18px rgba(0,0,0,.55);
+    0 6px 0 #052717,
+    0 14px 22px -17px rgba(0,0,0,.55);
 }
 
 .btn:disabled{
@@ -907,8 +944,8 @@ button{
 }
 
 .spin{
-  width:18px;
-  height:18px;
+  width:16px;
+  height:16px;
   border-radius:50%;
   border:3px solid rgba(255,210,31,.28);
   border-top-color:#FFD21F;
@@ -916,31 +953,34 @@ button{
 }
 
 @keyframes sp{
-  to{transform:rotate(360deg)}
+  to{
+    transform:rotate(360deg);
+  }
 }
 
 @keyframes previewIn{
   from{
     opacity:0;
-    transform:translateY(18px)
+    transform:translateY(18px);
   }
   to{
     opacity:1;
-    transform:none
+    transform:none;
   }
 }
+
 
 /* =========================================================
    KEYBOARD UX
 ========================================================= */
 
 #app.keyboard .top{
-  padding-bottom:58px;
+  padding-bottom:52px;
 }
 
 #app.keyboard .top h1{
-  font-size:24px;
-  margin-top:10px;
+  font-size:23px;
+  margin-top:8px;
 }
 
 #app.keyboard .top p{
@@ -948,90 +988,30 @@ button{
 }
 
 #app.keyboard .scroll{
-  margin-top:-30px;
-  padding-bottom:calc(190px + var(--safe-b));
+  margin-top:-25px;
 }
 
 #app.keyboard .card{
-  padding-top:16px;
+  padding-top:13px;
 }
 
-@media (max-height:680px){
-  .top{
-    padding-bottom:58px;
-  }
-
-  .top h1{
-    font-size:26px;
-    margin-top:12px;
-  }
-
-  .top p{
-    display:none;
-  }
-
-  .scroll{
-    margin-top:-30px;
-  }
-
-  .card{
-    padding-top:16px;
-  }
-
-  .inp,
-  .step-btn{
-    height:54px;
-  }
-
-  .field{
-    margin-bottom:14px;
-  }
-
-  .pay{
-    gap:8px;
-  }
-
-  .pbtn{
-    min-height:82px;
-  }
+#app.keyboard .field{
+  margin-bottom:9px;
 }
 
-@media (max-width:430px){
-  .pv-acts{
-    grid-template-columns:1fr;
-  }
-
-  .preview-wrap{
-    justify-content:flex-start;
-  }
-
-  .preview-badge{
-    display:none;
-  }
+#app.keyboard .step{
+  margin-bottom:8px;
 }
 
-@media (max-width:370px){
-  .pay{
-    grid-template-columns:1fr;
-  }
-
-  .pbtn{
-    min-height:86px;
-  }
-
-  .qty{
-    gap:7px;
-  }
-
-  .step-btn{
-    width:54px;
-  }
-
-  .unit{
-    min-width:57px;
-    padding:0 8px;
-  }
+#app.keyboard .inp,
+#app.keyboard .step-btn{
+  height:49px;
 }
+
+#app.keyboard .pbtn{
+  min-height:70px;
+}
+
 
 /* =========================================================
    DONE / RECEIPT
@@ -1044,26 +1024,31 @@ button{
 
 .center{
   flex:1;
+  min-height:0;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
-  padding:28px;
+  padding:
+    calc(14px + var(--safe-t))
+    16px
+    calc(14px + var(--safe-b));
+  overflow:hidden;
 }
 
 .ic{
-  width:84px;
-  height:84px;
+  width:70px;
+  height:70px;
   border-radius:50%;
   display:grid;
   place-items:center;
-  margin:0 0 20px;
+  margin:0 0 14px;
 }
 
 .ic svg{
-  width:42px;
-  height:42px;
+  width:36px;
+  height:36px;
 }
 
 .ic.bad{
@@ -1079,10 +1064,10 @@ button{
 }
 
 .center h2{
-  margin:0 0 8px;
+  margin:0 0 6px;
   font-family:var(--display);
   font-weight:800;
-  font-size:30px;
+  font-size:27px;
   letter-spacing:-.035em;
 }
 
@@ -1090,17 +1075,17 @@ button{
   margin:0;
   max-width:340px;
   color:var(--muted);
-  font-size:15px;
+  font-size:14px;
 }
 
 .sum{
   width:100%;
   max-width:380px;
-  margin:22px 0 0;
+  margin:17px 0 0;
   background:#fff;
   border:1px solid var(--line);
-  border-radius:20px;
-  padding:6px 16px;
+  border-radius:17px;
+  padding:4px 14px;
   text-align:left;
 }
 
@@ -1108,8 +1093,8 @@ button{
   display:flex;
   justify-content:space-between;
   gap:14px;
-  padding:12px 0;
-  font-size:14.5px;
+  padding:9px 0;
+  font-size:13px;
 }
 
 .sum .r+.r{
@@ -1128,19 +1113,22 @@ button{
 .again{
   width:100%;
   max-width:380px;
-  margin-top:16px;
+  margin-top:13px;
   background:var(--ink);
   color:#fff;
+  min-height:52px;
 }
 
 .foot{
-  margin-top:18px;
-  font-size:12px;
+  margin-top:11px;
+  font-size:10.5px;
   color:var(--muted);
 }
 
+
 /* =========================================================
    PREMIUM RECEIPT PAGE
+   NON-SCROLLABLE
 ========================================================= */
 
 .receipt-page{
@@ -1148,19 +1136,26 @@ button{
     radial-gradient(circle at 100% 0%,rgba(255,255,255,.9),transparent 32%),
     radial-gradient(circle at 0% 100%,rgba(255,210,31,.25),transparent 35%),
     linear-gradient(160deg,#FFFDF1 0%,#FFF1A0 100%);
+
   padding:
-    calc(24px + var(--safe-t))
-    18px
-    calc(28px + var(--safe-b));
-  justify-content:flex-start;
-  overflow-y:auto;
+    calc(11px + var(--safe-t))
+    14px
+    calc(11px + var(--safe-b));
+
+  justify-content:center;
+  overflow:hidden;
   text-align:left;
 }
 
 .receipt-shell{
   width:100%;
   max-width:470px;
+  height:100%;
+  max-height:100%;
   margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
 .receipt-head{
@@ -1168,27 +1163,29 @@ button{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  margin:0 auto 22px;
+  gap:10px;
+  margin:0 auto 9px;
 }
 
 .receipt-brand{
   display:flex;
   align-items:center;
-  gap:11px;
+  gap:9px;
   text-align:left;
+  min-width:0;
 }
 
 .receipt-brand img{
-  width:52px;
-  height:52px;
-  border-radius:15px;
-  box-shadow:0 9px 20px rgba(10,57,33,.2);
+  width:45px;
+  height:45px;
+  border-radius:13px;
+  box-shadow:0 8px 17px rgba(10,57,33,.2);
+  flex:none;
 }
 
 .receipt-brand small{
   display:block;
-  font-size:9px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.2em;
   color:#6C5B00;
@@ -1197,52 +1194,52 @@ button{
 .receipt-brand b{
   display:block;
   font-family:var(--display);
-  font-size:18px;
+  font-size:16px;
   line-height:1.05;
   color:#0A3921;
 }
 
 .receipt-mark{
-  width:47px;
-  height:47px;
+  width:42px;
+  height:42px;
   border-radius:50%;
   background:#0A3921;
   color:#FFD21F;
   display:grid;
   place-items:center;
   box-shadow:
-    0 7px 0 #052717,
-    0 12px 20px rgba(10,57,33,.2);
+    0 6px 0 #052717,
+    0 10px 17px rgba(10,57,33,.2);
   flex:none;
 }
 
 .receipt-mark svg{
-  width:24px;
-  height:24px;
+  width:21px;
+  height:21px;
 }
 
 .receipt-title{
   width:100%;
   text-align:left;
-  margin:0 auto 15px;
+  margin:0 auto 8px;
 }
 
 .receipt-title span{
   display:inline-flex;
-  padding:6px 9px;
+  padding:5px 8px;
   border-radius:999px;
   background:#0A3921;
   color:#FFD21F;
-  font-size:9px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.15em;
 }
 
 .receipt-title h2{
-  margin:9px 0 0;
+  margin:6px 0 0;
   font-family:var(--display);
-  font-size:32px;
-  line-height:.96;
+  font-size:clamp(26px,7.5vw,34px);
+  line-height:.94;
   letter-spacing:-.045em;
   color:#0A3921;
 }
@@ -1251,10 +1248,10 @@ button{
   width:100%;
   background:#fff;
   border:1px solid #E3D57E;
-  border-radius:26px;
-  padding:7px 19px 18px;
+  border-radius:21px;
+  padding:5px 15px 12px;
   box-shadow:
-    0 26px 48px -28px rgba(45,38,0,.62),
+    0 20px 40px -25px rgba(45,38,0,.62),
     0 2px 0 rgba(255,255,255,.9) inset;
   text-align:left;
   overflow:hidden;
@@ -1263,22 +1260,22 @@ button{
 .receipt-ticket::before{
   content:"";
   display:block;
-  width:60px;
-  height:5px;
+  width:50px;
+  height:4px;
   border-radius:99px;
   background:#D7C35A;
-  margin:8px auto 14px;
+  margin:6px auto 9px;
 }
 
 .receipt-store{
-  padding:4px 0 17px;
+  padding:2px 0 10px;
   border-bottom:1px dashed #D9CE87;
 }
 
 .receipt-store small,
 .receipt-grid small{
   display:block;
-  font-size:9px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.13em;
   color:#8A825E;
@@ -1286,9 +1283,9 @@ button{
 
 .receipt-store b{
   display:block;
-  margin-top:4px;
+  margin-top:3px;
   font-family:var(--display);
-  font-size:23px;
+  font-size:20px;
   color:#0A3921;
   overflow-wrap:anywhere;
 }
@@ -1296,86 +1293,247 @@ button{
 .receipt-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:17px 12px;
-  padding:18px 0;
+  gap:10px 12px;
+  padding:12px 0;
 }
 
 .receipt-grid b{
   display:block;
-  margin-top:4px;
-  font-size:14px;
+  margin-top:3px;
+  font-size:13px;
   color:#171700;
   overflow-wrap:anywhere;
 }
 
 .receipt-ref{
   border-top:1px dashed #D9CE87;
-  padding-top:14px;
+  padding-top:9px;
   display:flex;
   justify-content:space-between;
-  gap:12px;
-  font-size:11px;
+  gap:10px;
+  font-size:9.5px;
   color:#8A825E;
 }
 
 .receipt-ref b{
   font-family:monospace;
-  font-size:10px;
+  font-size:9px;
   color:#4D472D;
   text-align:right;
   overflow-wrap:anywhere;
 }
 
 .receipt-note{
-  margin-top:14px;
-  padding:12px;
-  border-radius:13px;
+  margin-top:9px;
+  padding:9px 10px;
+  border-radius:11px;
   background:#FFF9D9;
   color:#756A35;
-  font-size:11px;
-  line-height:1.45;
+  font-size:9.5px;
+  line-height:1.35;
 }
 
 .receipt-note strong{
   display:block;
   color:#4D4521;
-  margin-bottom:2px;
+  margin-bottom:1px;
 }
 
 .done-actions{
   width:100%;
   display:grid;
-  gap:11px;
-  margin:17px auto 0;
+  grid-template-columns:1.25fr .75fr;
+  gap:8px;
+  margin:10px auto 0;
 }
 
 .done-actions .btn{
-  min-height:61px;
+  min-height:48px;
+  font-size:12.5px;
 }
 
 .receipt-page .foot{
   text-align:center;
-  margin-top:14px;
+  margin-top:8px;
+  font-size:9.5px;
 }
 
-@media (max-width:380px){
-  .receipt-grid{
-    grid-template-columns:1fr;
+
+/* =========================================================
+   SMALL / SHORT DEVICES
+========================================================= */
+
+@media (max-height:700px){
+
+  .top{
+    padding-bottom:55px;
+  }
+
+  .top h1{
+    font-size:25px;
+    margin-top:10px;
+  }
+
+  .top p{
+    display:none;
+  }
+
+  .scroll{
+    margin-top:-30px;
+  }
+
+  .card{
+    padding:13px 14px;
+  }
+
+  .step{
+    margin-bottom:8px;
+  }
+
+  .field{
+    margin-bottom:9px;
+  }
+
+  .inp,
+  .step-btn{
+    height:49px;
+  }
+
+  .pbtn{
+    min-height:70px;
   }
 
   .receipt-title h2{
-    font-size:28px;
+    font-size:27px;
+  }
+
+  .receipt-ticket{
+    padding-bottom:9px;
+  }
+
+  .receipt-grid{
+    padding:9px 0;
+    gap:8px 10px;
+  }
+
+  .receipt-note{
+    margin-top:7px;
+  }
+
+  .done-actions{
+    margin-top:8px;
+  }
+
+  .receipt-page .foot{
+    margin-top:6px;
   }
 }
 
+
+@media (max-width:430px){
+
+  .preview-badge{
+    display:none;
+  }
+
+  .pv-acts{
+    grid-template-columns:1.25fr .75fr;
+  }
+}
+
+
+@media (max-width:370px){
+
+  .top{
+    padding-left:15px;
+    padding-right:15px;
+  }
+
+  .scroll{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .pay{
+    gap:7px;
+  }
+
+  .pbtn{
+    min-height:67px;
+    font-size:12.5px;
+  }
+
+  .qty{
+    gap:6px;
+  }
+
+  .step-btn{
+    width:49px;
+  }
+
+  .unit{
+    min-width:53px;
+    padding:0 7px;
+  }
+
+  .pv-ticket{
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  .pv-row{
+    font-size:11px;
+    padding:7px 0;
+  }
+
+  .preview-confirm{
+    font-size:9.5px;
+  }
+
+  .btn{
+    min-height:45px;
+    font-size:12px;
+  }
+
+  .receipt-grid{
+    gap:8px;
+  }
+
+  .receipt-grid b{
+    font-size:12px;
+  }
+
+  .receipt-brand img{
+    width:41px;
+    height:41px;
+  }
+
+  .receipt-brand b{
+    font-size:15px;
+  }
+
+  .receipt-mark{
+    width:39px;
+    height:39px;
+  }
+}
+
+
 /* =========================================================
-   PRINT HIDDEN — PNG IS THE PRIMARY RECEIPT OUTPUT
+   PRINT HIDDEN — PNG PRIMARY
 ========================================================= */
 
 @media print{
+
   html,
   body{
     background:#fff!important;
+    overflow:visible!important;
   }
 
   .screen:not(#done){
@@ -1391,6 +1549,7 @@ button{
   .receipt-page{
     background:#fff!important;
     padding:18px!important;
+    overflow:visible!important;
   }
 
   .done-actions,
@@ -1403,6 +1562,7 @@ button{
   }
 }
 
+
 .loadwrap{
   position:absolute;
   inset:0;
@@ -1412,11 +1572,14 @@ button{
   z-index:5;
 }
 
+
 @media (prefers-reduced-motion:reduce){
+
   *{
     animation-duration:.01ms!important;
     animation-delay:0s!important;
   }
+
 }
 </style>
 </head>
@@ -1427,7 +1590,11 @@ button{
      SPLASH
 ======================================================= -->
 
-<section id="splash" class="screen on" aria-label="Selamat datang">
+<section
+  id="splash"
+  class="screen on"
+  aria-label="Selamat datang"
+>
 
   <div class="sp-in">
 
@@ -1437,7 +1604,10 @@ button{
       alt="Ma'Gambreng"
     >
 
-    <h1 class="sp-greet" id="spGreet">
+    <h1
+      class="sp-greet"
+      id="spGreet"
+    >
       Selamat Datang
     </h1>
 
@@ -1445,7 +1615,10 @@ button{
       di Gerai
     </div>
 
-    <div class="sp-store" id="spStore">
+    <div
+      class="sp-store"
+      id="spStore"
+    >
       …
     </div>
 
@@ -1486,9 +1659,7 @@ button{
 
         <small>Gerai</small>
 
-        <b id="topStore">
-          —
-        </b>
+        <b id="topStore">—</b>
 
       </div>
 
@@ -1561,7 +1732,6 @@ button{
 
           </span>
 
-
           <input
             class="inp"
             id="depo"
@@ -1572,7 +1742,6 @@ button{
             enterkeyhint="next"
             placeholder="Contoh: Depo Es Jaya"
           >
-
 
           <span
             class="err"
@@ -1622,7 +1791,6 @@ button{
 
           </span>
 
-
           <div class="qty">
 
             <button
@@ -1633,7 +1801,6 @@ button{
             >
               −
             </button>
-
 
             <input
               class="inp"
@@ -1647,7 +1814,6 @@ button{
               aria-label="Jumlah BAL"
             >
 
-
             <button
               type="button"
               class="step-btn"
@@ -1657,13 +1823,11 @@ button{
               +
             </button>
 
-
             <div class="unit">
               BAL
             </div>
 
           </div>
-
 
           <span
             class="err"
@@ -1684,7 +1848,6 @@ button{
             Opsi Pembayaran
           </div>
 
-
           <p
             class="pay-hint"
             id="payHint"
@@ -1692,7 +1855,6 @@ button{
             Isi nama depo dan jumlah dulu.
             Memilih salah satu opsi langsung membuka preview.
           </p>
-
 
           <div class="pay">
 
@@ -1808,7 +1970,6 @@ button{
               </div>
 
             </div>
-
 
             <div class="preview-badge">
               Preview
@@ -2025,8 +2186,6 @@ button{
       </div>
 
 
-      <!-- RECEIPT -->
-
       <div class="receipt-ticket">
 
         <div class="receipt-store">
@@ -2113,8 +2272,6 @@ button{
       </div>
 
 
-      <!-- ONLY SAVE + EXIT -->
-
       <div class="done-actions">
 
         <button
@@ -2124,8 +2281,8 @@ button{
         >
 
           <svg
-            width="19"
-            height="19"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -2232,16 +2389,20 @@ button{
 (function(){
 'use strict';
 
+
 /* =========================================================
    SUPABASE / API
    Integrasi asli dipertahankan
 ========================================================= */
 
-var SUPABASE_URL='https://bhdnkvjktznkdwoqrvlb.supabase.co';
+var SUPABASE_URL=
+  'https://bhdnkvjktznkdwoqrvlb.supabase.co';
 
-var SUPABASE_KEY='sb_publishable_onuPeWTiSyCBT8nOrXeZBQ_mMGHB3j8';
+var SUPABASE_KEY=
+  'sb_publishable_onuPeWTiSyCBT8nOrXeZBQ_mMGHB3j8';
 
-var FN=SUPABASE_URL+'/functions/v1';
+var FN=
+  SUPABASE_URL+'/functions/v1';
 
 var MAX_QTY=100000;
 
@@ -2257,7 +2418,12 @@ function $(id){
 
 function show(id){
 
-  ['splash','app','done','blocked'].forEach(function(s){
+  [
+    'splash',
+    'app',
+    'done',
+    'blocked'
+  ].forEach(function(s){
 
     $(s).classList.toggle(
       'on',
@@ -2305,7 +2471,8 @@ function slugName(s){
 
     ?s.split('-').map(function(w){
 
-      return w.charAt(0).toUpperCase()+w.slice(1);
+      return w.charAt(0).toUpperCase()+
+        w.slice(1);
 
     }).join(' ')
 
@@ -2543,25 +2710,28 @@ function boot(){
   show('splash');
 
 
-  $('spGreet').textContent=greeting();
+  $('spGreet').textContent=
+    greeting();
 
 
-  var vp=validate().then(function(v){
+  var vp=
+    validate()
+    .then(function(v){
 
-    if(
-      v.ok &&
-      v.data &&
-      v.data.store_name
-    ){
+      if(
+        v.ok &&
+        v.data &&
+        v.data.store_name
+      ){
 
-      $('spStore').textContent=
-        v.data.store_name;
+        $('spStore').textContent=
+          v.data.store_name;
 
-    }
+      }
 
-    return v;
+      return v;
 
-  });
+    });
 
 
   Promise.all([
@@ -2662,6 +2832,8 @@ var payBill=$('payBill');
 
 /* =========================================================
    KEYBOARD-AWARE UX
+   Tidak melakukan scrolling.
+   Layout menyesuaikan tinggi viewport.
 ========================================================= */
 
 function keyboardState(){
@@ -2684,24 +2856,6 @@ function keyboardState(){
     small
   );
 
-
-  if(
-    small &&
-    document.activeElement &&
-    document.activeElement.classList.contains('inp')
-  ){
-
-    setTimeout(function(){
-
-      document.activeElement.scrollIntoView({
-        block:'center',
-        behavior:'smooth'
-      });
-
-    },90);
-
-  }
-
 }
 
 
@@ -2709,11 +2863,6 @@ if(window.visualViewport){
 
   window.visualViewport.addEventListener(
     'resize',
-    keyboardState
-  );
-
-  window.visualViewport.addEventListener(
-    'scroll',
     keyboardState
   );
 
@@ -3053,13 +3202,6 @@ function choose(pay){
 
   document.body.style.overflow='hidden';
 
-
-  setTimeout(function(){
-
-    $('preview').scrollTop=0;
-
-  },30);
-
 }
 
 
@@ -3117,7 +3259,7 @@ $('editBtn').addEventListener(
     setTimeout(function(){
 
       depo.focus({
-        preventScroll:false
+        preventScroll:true
       });
 
     },100);
@@ -3444,10 +3586,17 @@ function finish(s){
 
 
 /* =========================================================
-   CANVAS HELPERS FOR PREMIUM PNG
+   CANVAS HELPERS
 ========================================================= */
 
-function roundRectPath(ctx,x,y,w,h,r){
+function roundRectPath(
+  ctx,
+  x,
+  y,
+  w,
+  h,
+  r
+){
 
   r=Math.min(
     r,
@@ -3509,7 +3658,8 @@ function canvasTextWrap(
   lineHeight
 ){
 
-  var words=String(text).split(' ');
+  var words=
+    String(text).split(' ');
 
   var line='';
 
@@ -3571,58 +3721,95 @@ function canvasTextWrap(
 
 /* =========================================================
    SAVE RECEIPT AS PNG
+   LOGO ASLI DIMUAT KE CANVAS
 ========================================================= */
 
 function saveReceiptPNG(){
 
-  var data=
-    state.receiptData;
+  return new Promise(function(resolve,reject){
+
+    var data=
+      state.receiptData;
 
 
-  if(!data)
-    throw new Error(
-      'Data tanda terima tidak tersedia'
+    if(!data){
+
+      reject(
+        new Error(
+          'Data tanda terima tidak tersedia'
+        )
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * Portrait artwork.
+     * Rasio 1200:1700 ≈ 0.706
+     * cocok dengan screenshot portrait.
+     */
+
+    var W=1200;
+
+    var H=1700;
+
+
+    var c=
+      document.createElement(
+        'canvas'
+      );
+
+
+    c.width=W;
+
+    c.height=H;
+
+
+    var x=
+      c.getContext('2d');
+
+
+    x.imageSmoothingEnabled=true;
+
+    x.imageSmoothingQuality='high';
+
+
+    /* -------------------------------------------------------
+       BACKGROUND
+    ------------------------------------------------------- */
+
+    var bg=
+      x.createLinearGradient(
+        0,
+        0,
+        W,
+        H
+      );
+
+
+    bg.addColorStop(
+      0,
+      '#FFFDF1'
     );
 
 
-  /*
-   * High-resolution portrait artwork.
-   * Tidak menggunakan PDF.
-   */
-
-  var W=1200;
-
-  var H=1700;
-
-
-  var c=
-    document.createElement(
-      'canvas'
+    bg.addColorStop(
+      .48,
+      '#FFF7C9'
     );
 
 
-  c.width=W;
-
-  c.height=H;
-
-
-  var x=
-    c.getContext(
-      '2d'
+    bg.addColorStop(
+      1,
+      '#FFE96A'
     );
 
 
-  x.imageSmoothingEnabled=true;
+    x.fillStyle=bg;
 
-  x.imageSmoothingQuality='high';
-
-
-  /* -------------------------------------------------------
-     BACKGROUND
-  ------------------------------------------------------- */
-
-  var bg=
-    x.createLinearGradient(
+    x.fillRect(
       0,
       0,
       W,
@@ -3630,362 +3817,426 @@ function saveReceiptPNG(){
     );
 
 
-  bg.addColorStop(
-    0,
-    '#FFFDF1'
-  );
+    /* -------------------------------------------------------
+       DECORATIVE LIGHT
+    ------------------------------------------------------- */
+
+    var rg=
+      x.createRadialGradient(
+        1100,
+        80,
+        20,
+        1100,
+        80,
+        520
+      );
 
 
-  bg.addColorStop(
-    .48,
-    '#FFF7C9'
-  );
-
-
-  bg.addColorStop(
-    1,
-    '#FFE96A'
-  );
-
-
-  x.fillStyle=bg;
-
-  x.fillRect(
-    0,
-    0,
-    W,
-    H
-  );
-
-
-  /* -------------------------------------------------------
-     DECORATIVE LIGHT
-  ------------------------------------------------------- */
-
-  var rg=
-    x.createRadialGradient(
-      1080,
-      100,
-      20,
-      1080,
-      100,
-      500
+    rg.addColorStop(
+      0,
+      'rgba(255,255,255,.92)'
     );
 
 
-  rg.addColorStop(
-    0,
-    'rgba(255,255,255,.9)'
-  );
+    rg.addColorStop(
+      1,
+      'rgba(255,255,255,0)'
+    );
 
 
-  rg.addColorStop(
-    1,
-    'rgba(255,255,255,0)'
-  );
+    x.fillStyle=rg;
 
+    x.fillRect(
+      600,
+      0,
+      600,
+      650
+    );
 
-  x.fillStyle=rg;
 
-  x.fillRect(
-    600,
-    0,
-    600,
-    650
-  );
+    /* -------------------------------------------------------
+       BRAND HEADER
+    ------------------------------------------------------- */
 
+    var brandX=55;
 
-  /* -------------------------------------------------------
-     BRAND AREA
-  ------------------------------------------------------- */
+    var brandY=45;
 
-  x.fillStyle='#0A3921';
+    var brandW=1090;
 
-  roundRectPath(
-    x,
-    60,
-    1080,
-    170,
-    38
-  );
+    var brandH=190;
 
-  x.fill();
 
+    x.save();
 
-  /*
-   * Brand mark dibuat sebagai lingkaran
-   * agar tetap bagus meskipun image logo gagal dimuat.
-   */
+    x.shadowColor=
+      'rgba(10,57,33,.18)';
 
-  x.fillStyle='#FFD21F';
+    x.shadowBlur=28;
 
-  x.beginPath();
+    x.shadowOffsetY=10;
 
-  x.arc(
-    160,
-    145,
-    58,
-    0,
-    Math.PI*2
-  );
+    x.fillStyle='#0A3921';
 
-  x.fill();
+    roundRectPath(
+      x,
+      brandX,
+      brandY,
+      brandW,
+      brandH,
+      38
+    );
 
+    x.fill();
 
-  x.fillStyle='#0A3921';
+    x.restore();
 
-  x.font='800 40px Arial';
 
-  x.textAlign='center';
+    x.fillStyle='#0A3921';
 
-  x.fillText(
-    'M',
-    160,
-    159
-  );
+    roundRectPath(
+      x,
+      brandX,
+      brandY,
+      brandW,
+      brandH,
+      38
+    );
 
+    x.fill();
 
-  x.textAlign='left';
 
+    /*
+     * LOGO ASLI
+     *
+     * Tidak lagi membuat lingkaran "M".
+     */
 
-  x.fillStyle='#FFD21F';
+    var logo=
+      new Image();
 
-  x.font='800 31px Arial';
+    logo.decoding='async';
 
-  x.fillText(
-    "MA'GAMBRENG",
-    250,
-    125
-  );
 
+    function continueDrawing(){
 
-  x.fillStyle='#FFFFFF';
+      /* -----------------------------------------------------
+         BRAND TEXT
+      ----------------------------------------------------- */
 
-  x.font='600 21px Arial';
+      x.fillStyle='#FFD21F';
 
-  x.fillText(
-    'DROP ES KRISTAL',
-    250,
-    160
-  );
+      x.textAlign='left';
 
+      x.font='800 35px Arial';
 
-  x.fillStyle='rgba(255,255,255,.65)';
+      x.fillText(
+        "MA'GAMBRENG",
+        245,
+        105
+      );
 
-  x.font='500 16px Arial';
 
-  x.fillText(
-    'TANDA TERIMA PENGIRIMAN',
-    250,
-    192
-  );
+      x.fillStyle='#FFFFFF';
 
+      x.font='700 24px Arial';
 
-  /* -------------------------------------------------------
-     SUCCESS LABEL
-  ------------------------------------------------------- */
+      x.fillText(
+        'DROP ES KRISTAL',
+        245,
+        145
+      );
 
-  x.fillStyle='#806C00';
 
-  x.font='800 18px Arial';
+      x.fillStyle='rgba(255,255,255,.68)';
 
-  x.fillText(
-    'TRANSAKSI BERHASIL',
-    70,
-    300
-  );
+      x.font='500 17px Arial';
 
+      x.fillText(
+        'TANDA TERIMA PENGIRIMAN',
+        245,
+        180
+      );
 
-  x.fillStyle='#0A3921';
 
-  x.font='800 58px Arial';
+      /* -----------------------------------------------------
+         SUCCESS LABEL
+      ----------------------------------------------------- */
 
-  x.fillText(
-    'Tanda Terima',
-    70,
-    365
-  );
+      x.fillStyle='#806C00';
 
+      x.font='800 18px Arial';
 
-  x.fillText(
-    'Pengiriman Es',
-    70,
-    430
-  );
+      x.fillText(
+        'TRANSAKSI BERHASIL',
+        70,
+        300
+      );
 
 
-  /* -------------------------------------------------------
-     MAIN RECEIPT CARD
-  ------------------------------------------------------- */
+      x.fillStyle='#0A3921';
 
-  var bx=55;
+      x.font='800 65px Arial';
 
-  var by=485;
+      x.fillText(
+        'Tanda Terima',
+        70,
+        372
+      );
 
-  var bw=1090;
 
-  var bh=780;
+      x.fillText(
+        'Pengiriman Es',
+        70,
+        444
+      );
 
 
-  /*
-   * Shadow
-   */
+      /* -----------------------------------------------------
+         MAIN RECEIPT CARD
+      ----------------------------------------------------- */
 
-  x.save();
+      var bx=55;
 
-  x.shadowColor='rgba(45,38,0,.24)';
+      var by=490;
 
-  x.shadowBlur=38;
+      var bw=1090;
 
-  x.shadowOffsetY=18;
+      var bh=790;
 
-  x.fillStyle='#FFFFFF';
 
-  roundRectPath(
-    x,
-    by,
-    bw,
-    bh,
-    38
-  );
+      x.save();
 
-  x.fill();
+      x.shadowColor=
+        'rgba(45,38,0,.25)';
 
-  x.restore();
+      x.shadowBlur=42;
 
+      x.shadowOffsetY=18;
 
-  x.fillStyle='#FFFFFF';
+      x.fillStyle='#FFFFFF';
 
-  roundRectPath(
-    x,
-    by,
-    bw,
-    bh,
-    38
-  );
+      roundRectPath(
+        x,
+        bx,
+        by,
+        bw,
+        bh,
+        40
+      );
 
-  x.fill();
+      x.fill();
 
+      x.restore();
 
-  x.strokeStyle='#E2D47D';
 
-  x.lineWidth=2;
+      x.fillStyle='#FFFFFF';
 
-  roundRectPath(
-    x,
-    by,
-    bw,
-    bh,
-    38
-  );
+      roundRectPath(
+        x,
+        bx,
+        by,
+        bw,
+        bh,
+        40
+      );
 
-  x.stroke();
+      x.fill();
 
 
-  /* -------------------------------------------------------
-     CARD TOP
-  ------------------------------------------------------- */
+      x.strokeStyle='#E2D47D';
 
-  x.fillStyle='#8A825E';
+      x.lineWidth=2;
 
-  x.font='800 15px Arial';
+      roundRectPath(
+        x,
+        bx,
+        by,
+        bw,
+        bh,
+        40
+      );
 
-  x.fillText(
-    'GERAI PENERIMA',
-    100,
-    555
-  );
+      x.stroke();
 
 
-  x.fillStyle='#0A3921';
+      /* -----------------------------------------------------
+         CARD HEADER
+      ----------------------------------------------------- */
 
-  x.font='800 38px Arial';
+      x.fillStyle='#8A825E';
 
-  canvasTextWrap(
-    x,
-    data.store||'-',
-    100,
-    602,
-    900,
-    46
-  );
+      x.font='800 16px Arial';
 
+      x.fillText(
+        'GERAI PENERIMA',
+        100,
+        560
+      );
 
-  /* divider */
 
-  x.strokeStyle='#D9CE87';
+      x.fillStyle='#0A3921';
 
-  x.lineWidth=2;
+      x.font='800 42px Arial';
 
-  x.setLineDash([
-    8,
-    8
-  ]);
+      var storeBottom=
+        canvasTextWrap(
+          x,
+          data.store||'-',
+          100,
+          610,
+          930,
+          48
+        );
 
-  x.beginPath();
 
-  x.moveTo(
-    100,
-    690
-  );
+      var dividerY=
+        Math.max(
+          700,
+          storeBottom+28
+        );
 
-  x.lineTo(
-    1100,
-    690
-  );
 
-  x.stroke();
+      x.strokeStyle='#D9CE87';
 
-  x.setLineDash([]);
+      x.lineWidth=2;
 
+      x.setLineDash([
+        9,
+        9
+      ]);
 
-  /* -------------------------------------------------------
-     DATA GRID
-  ------------------------------------------------------- */
+      x.beginPath();
 
-  var rows=[
+      x.moveTo(
+        100,
+        dividerY
+      );
 
-    [
-      'DEPO ES',
-      data.depo||'-'
-    ],
+      x.lineTo(
+        1100,
+        dividerY
+      );
 
-    [
-      'JUMLAH DROP',
-      (data.qty||0)
-        .toLocaleString('id-ID')+
-        ' BAL'
-    ],
+      x.stroke();
 
-    [
-      'PEMBAYARAN',
-      payLabel(data.pay)
-    ],
+      x.setLineDash([]);
 
-    [
-      'WAKTU',
-      data.time||'-'
-    ]
 
-  ];
+      /* -----------------------------------------------------
+         DATA GRID
+      ----------------------------------------------------- */
 
+      var rows=[
 
-  rows.forEach(
-    function(row,i){
+        [
+          'DEPO ES',
+          data.depo||'-'
+        ],
 
-      var col=i%2;
+        [
+          'JUMLAH DROP',
+          (data.qty||0)
+            .toLocaleString('id-ID')+
+            ' BAL'
+        ],
 
-      var rr=Math.floor(i/2);
+        [
+          'PEMBAYARAN',
+          payLabel(data.pay)
+        ],
 
+        [
+          'WAKTU',
+          data.time||'-'
+        ]
 
-      var xx=
-        100+
-        col*500;
+      ];
 
 
-      var yy=
-        755+
-        rr*145;
+      var startY=
+        dividerY+67;
+
+
+      rows.forEach(
+        function(row,i){
+
+          var col=i%2;
+
+          var rr=Math.floor(i/2);
+
+
+          var xx=
+            100+
+            col*500;
+
+
+          var yy=
+            startY+
+            rr*145;
+
+
+          x.fillStyle='#8A825E';
+
+          x.font='800 14px Arial';
+
+          x.fillText(
+            row[0],
+            xx,
+            yy
+          );
+
+
+          x.fillStyle='#171700';
+
+          x.font='700 26px Arial';
+
+
+          canvasTextWrap(
+            x,
+            String(row[1]),
+            xx,
+            yy+40,
+            430,
+            32
+          );
+
+        }
+      );
+
+
+      /* -----------------------------------------------------
+         REFERENCE
+      ----------------------------------------------------- */
+
+      var refY=
+        startY+300;
+
+
+      x.strokeStyle='#D9CE87';
+
+      x.lineWidth=2;
+
+      x.setLineDash([
+        9,
+        9
+      ]);
+
+      x.beginPath();
+
+      x.moveTo(
+        100,
+        refY
+      );
+
+      x.lineTo(
+        1100,
+        refY
+      );
+
+      x.stroke();
+
+      x.setLineDash([]);
 
 
       x.fillStyle='#8A825E';
@@ -3993,229 +4244,258 @@ function saveReceiptPNG(){
       x.font='800 14px Arial';
 
       x.fillText(
-        row[0],
-        xx,
-        yy
+        'NO. REFERENSI',
+        100,
+        refY+47
       );
 
 
-      x.fillStyle='#171700';
+      x.fillStyle='#4D472D';
 
-      x.font='700 25px Arial';
+      x.font='700 18px monospace';
+
+      x.fillText(
+        data.ref||'-',
+        100,
+        refY+82
+      );
 
 
-      canvasTextWrap(
+      /* -----------------------------------------------------
+         INFO STRIP
+      ----------------------------------------------------- */
+
+      x.fillStyle='#FFF9D9';
+
+      roundRectPath(
         x,
-        String(row[1]),
-        xx,
-        yy+40,
-        430,
-        31
+        100,
+        refY+108,
+        1000,
+        70,
+        17
+      );
+
+      x.fill();
+
+
+      x.fillStyle='#756A35';
+
+      x.font='500 16px Arial';
+
+      x.fillText(
+        'Simpan gambar ini sebagai bukti pengiriman es kristal ke gerai.',
+        125,
+        refY+151
+      );
+
+
+      /* -----------------------------------------------------
+         FOOTER
+      ----------------------------------------------------- */
+
+      x.fillStyle='#0A3921';
+
+      x.font='800 25px Arial';
+
+      x.fillText(
+        "TEH SOLO MA'GAMBRENG",
+        70,
+        1450
+      );
+
+
+      x.fillStyle='#806C00';
+
+      x.font='600 17px Arial';
+
+      x.fillText(
+        'DROP ES KRISTAL  •  TANDA TERIMA DIGITAL',
+        70,
+        1485
+      );
+
+
+      /* -----------------------------------------------------
+         DECORATIVE FOOTER LINES
+      ----------------------------------------------------- */
+
+      x.fillStyle='#0A3921';
+
+      roundRectPath(
+        x,
+        70,
+        1360,
+        220,
+        8,
+        4
+      );
+
+      x.fill();
+
+
+      x.fillStyle='#FFD21F';
+
+      roundRectPath(
+        x,
+        310,
+        1360,
+        180,
+        8,
+        4
+      );
+
+      x.fill();
+
+
+      /* -----------------------------------------------------
+         EXPORT PNG
+      ----------------------------------------------------- */
+
+      c.toBlob(
+        function(blob){
+
+          if(!blob){
+
+            reject(
+              new Error(
+                'PNG gagal dibuat'
+              )
+            );
+
+            return;
+
+          }
+
+
+          var a=
+            document.createElement(
+              'a'
+            );
+
+
+          var url=
+            URL.createObjectURL(
+              blob
+            );
+
+
+          a.href=url;
+
+
+          a.download=
+            'tanda-terima-drop-es-'+
+            (
+              data.ref||
+              'qrdrop'
+            )
+            .replace(
+              /[^a-z0-9_-]/gi,
+              '-'
+            )+
+            '.png';
+
+
+          document.body.appendChild(a);
+
+
+          a.click();
+
+
+          setTimeout(
+            function(){
+
+              URL.revokeObjectURL(url);
+
+              a.remove();
+
+            },
+            1200
+          );
+
+
+          resolve();
+
+        },
+        'image/png'
       );
 
     }
-  );
 
 
-  /* -------------------------------------------------------
-     REFERENCE
-  ------------------------------------------------------- */
+    /*
+     * Karena logo berasal dari origin yang sama,
+     * canvas dapat menggambarnya secara langsung.
+     *
+     * Jika gagal dimuat, export tetap dibuat
+     * tanpa merusak transaksi.
+     */
 
-  x.strokeStyle='#D9CE87';
+    logo.onload=function(){
 
-  x.lineWidth=2;
+      try{
 
-  x.setLineDash([
-    8,
-    8
-  ]);
-
-  x.beginPath();
-
-  x.moveTo(
-    100,
-    1060
-  );
-
-  x.lineTo(
-    1100,
-    1060
-  );
-
-  x.stroke();
-
-  x.setLineDash([]);
-
-
-  x.fillStyle='#8A825E';
-
-  x.font='800 14px Arial';
-
-  x.fillText(
-    'NO. REFERENSI',
-    100,
-    1105
-  );
-
-
-  x.fillStyle='#4D472D';
-
-  x.font='700 17px monospace';
-
-  x.fillText(
-    data.ref||'-',
-    100,
-    1140
-  );
-
-
-  /* -------------------------------------------------------
-     INFO STRIP
-  ------------------------------------------------------- */
-
-  x.fillStyle='#FFF9D9';
-
-  roundRectPath(
-    x,
-    1170,
-    1000,
-    64,
-    16
-  );
-
-  x.fill();
-
-
-  x.fillStyle='#756A35';
-
-  x.font='500 15px Arial';
-
-  x.fillText(
-    'Simpan gambar ini sebagai bukti pengiriman es kristal ke gerai.',
-    125,
-    1209
-  );
-
-
-  /* -------------------------------------------------------
-     FOOTER BRANDING
-  ------------------------------------------------------- */
-
-  x.fillStyle='#0A3921';
-
-  x.font='800 21px Arial';
-
-  x.fillText(
-    "TEH SOLO MA'GAMBRENG",
-    70,
-    1370
-  );
-
-
-  x.fillStyle='#806C00';
-
-  x.font='600 15px Arial';
-
-  x.fillText(
-    'DROP ES KRISTAL • TANDA TERIMA DIGITAL',
-    70,
-    1402
-  );
-
-
-  /* decorative line */
-
-  x.fillStyle='#0A3921';
-
-  roundRectPath(
-    x,
-    70,
-    220,
-    8,
-    4
-  );
-
-  x.fill();
-
-
-  x.fillStyle='#FFD21F';
-
-  roundRectPath(
-    x,
-    300,
-    180,
-    8,
-    4
-  );
-
-  x.fill();
-
-
-  /* -------------------------------------------------------
-     SAVE PNG
-  ------------------------------------------------------- */
-
-  c.toBlob(
-    function(blob){
-
-      if(!blob){
-
-        throw new Error(
-          'PNG gagal dibuat'
+        x.drawImage(
+          logo,
+          90,
+          70,
+          120,
+          120
         );
 
-      }
+      }catch(e){}
+
+      continueDrawing();
+
+    };
 
 
-      var a=
-        document.createElement(
-          'a'
-        );
+    logo.onerror=function(){
 
+      /*
+       * Fallback kecil hanya jika file logo
+       * benar-benar gagal dimuat.
+       */
 
-      var url=
-        URL.createObjectURL(
-          blob
-        );
+      x.fillStyle='#FFD21F';
 
+      x.beginPath();
 
-      a.href=url;
-
-
-      a.download=
-        'tanda-terima-drop-es-'+
-        (
-          data.ref||
-          'qrdrop'
-        )
-        .replace(
-          /[^a-z0-9_-]/gi,
-          '-'
-        )+
-        '.png';
-
-
-      document.body.appendChild(a);
-
-
-      a.click();
-
-
-      setTimeout(
-        function(){
-
-          URL.revokeObjectURL(url);
-
-          a.remove();
-
-        },
-        1200
+      x.arc(
+        150,
+        140,
+        55,
+        0,
+        Math.PI*2
       );
 
+      x.fill();
 
-    },
-    'image/png'
-  );
+
+      x.fillStyle='#0A3921';
+
+      x.font='800 40px Arial';
+
+      x.textAlign='center';
+
+      x.fillText(
+        'M',
+        150,
+        154
+      );
+
+      x.textAlign='left';
+
+
+      continueDrawing();
+
+    };
+
+
+    logo.src=
+      '/gerai/icon-512.png';
+
+  });
 
 }
 
@@ -4228,7 +4508,8 @@ $('saveReceiptBtn').addEventListener(
   'click',
   function(){
 
-    var b=$('saveReceiptBtn');
+    var b=
+      $('saveReceiptBtn');
 
 
     if(!state.receiptData)
@@ -4245,34 +4526,34 @@ $('saveReceiptBtn').addEventListener(
     setTimeout(
       function(){
 
-        try{
+        saveReceiptPNG()
 
-          saveReceiptPNG();
+          .catch(function(e){
 
-        }catch(e){
+            console.error(e);
 
-          console.error(e);
+            alert(
+              'Tanda terima gagal disimpan sebagai PNG. Silakan coba lagi.'
+            );
 
-          alert(
-            'Tanda terima gagal disimpan sebagai PNG. Silakan coba lagi.'
-          );
+          })
 
-        }finally{
+          .finally(function(){
 
-          setTimeout(
-            function(){
+            setTimeout(
+              function(){
 
-              b.disabled=false;
+                b.disabled=false;
 
 
-              b.innerHTML=
-                '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Simpan Tanda Terima';
+                b.innerHTML=
+                  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Simpan Tanda Terima';
 
-            },
-            450
-          );
+              },
+              450
+            );
 
-        }
+          });
 
       },
       100
@@ -4329,4 +4610,4 @@ boot();
 </script>
 
 </body>
-</html
+</html>
