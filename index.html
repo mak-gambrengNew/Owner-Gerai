@@ -1784,7 +1784,7 @@ main.lg .lg-card.shake{animation:lgShake .42s cubic-bezier(.36,.07,.19,.97)}
 #app .sheet .crud-form-head{margin:6px 0 20px;padding:0}
 #app .sheet .crud-form-head .eyebrow{display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:#9B7A2E}
 
-/* judul seksi di dalam daftar (mis. SPG / Checker pada My Team) */
+/* judul seksi di dalam daftar (mis. SPG / Checker pada Tim Saya) */
 #app .sheet .crud-sheet-head.pg-sec{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px}
 #app .sheet .pg-sec b{font:800 15px/1.2 var(--font-display,'Manrope',system-ui,sans-serif);color:var(--pg-ink2)}
 #app .sheet .pg-sec small{margin-top:2px;font-size:12.5px}
@@ -2161,7 +2161,7 @@ async function selectRows(table, queryFn){
   if(error) throw error;
   return data||[];
 }
-const safeLoad=(p,fb=[])=>Promise.resolve(p).catch(e=>{console.error('Data pendukung gagal dimuat:',e);return fb});
+const safeLoad=(p,fb=[])=>Promise.resolve(p).catch(e=>{console.error('Sebagian data belum bisa dimuat:',e);return fb});
 function mapGerai(stores,sessions){
   const bySession=new Map(asArray(sessions).map(x=>[x.store_id,x]));
   return asArray(stores).map(s=>({
@@ -2408,7 +2408,7 @@ function crudRows(k){
  return data.map(r=>{
    let title='',meta='',right='';
    if(k==='gerai'){title=r.nama;meta=`${r.alamat||'Alamat belum diisi'}`;right=`${r.buka?'<span class="crud-chip ok">Sedang buka</span>':''}<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>`}
-   if(k==='spg'||k==='checker'){title=r.nama;meta=`${r.login_code||'ID login belum ada'} · ${r.last_login_at?'Login terakhir '+teamDate(r.last_login_at):'Belum pernah login'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>${r.login_code?'':'<span class="crud-chip warn">Belum lengkap</span>'}`}
+   if(k==='spg'||k==='checker'){title=r.nama;meta=`${r.login_code||'ID masuk belum ada'} · ${r.last_login_at?'Terakhir masuk '+teamDate(r.last_login_at):'Belum pernah masuk'}`;right=`<span class="crud-chip ${r.status==='Aktif'?'ok':'muted'}">${esc(r.status)}</span>${r.login_code?'':'<span class="crud-chip warn">Belum lengkap</span>'}`}
    if(k==='menu'){title=r.nama;meta=`${r.kategori||'Umum'}${r.hpp!==''&&r.hpp!=null?` · HPP ${rp(Number(r.hpp)||0)}`:''}`;right=`<b class="crud-price">${rp(Number(r.harga)||0)}</b>`}
    if(k==='logistik'){title=r.nama;meta=`${r.stok??0} ${r.satuan||'unit'} · minimum ${r.minimum??0} · ${r.logistics_type==='active'?'Aktif':'Pasif'}`;right=`<span class="crud-chip ${(Number(r.stok)||0)<(Number(r.minimum)||0)?'warn':'ok'}">${(Number(r.stok)||0)<(Number(r.minimum)||0)?'Stok rendah':'Aman'}</span>`}
    if(k==='esKristal'){title=r.nama;meta=`${r.perusahaan||'Supplier'}${r.catatan?' · '+r.catatan:''}`;right=r.telepon?`<a class="crud-wa" href="${waHref(r.telepon)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">WhatsApp</a>`:'<span class="crud-chip muted">Nomor belum diisi</span>'}
@@ -2424,19 +2424,19 @@ function teamDate(v){
  return d.toLocaleString('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' WIB';
 }
 function teamIdentity(r){
- if(!r.login_code)return {missing:true,text:'Identitas login belum ada di server'};
- if(r.identity_status==='active')return {missing:false,text:'Aktif - dapat dipakai login'};
- return {missing:false,text:'Nonaktif - tidak dapat dipakai login'};
+ if(!r.login_code)return {missing:true,text:'Akun belum terdaftar'};
+ if(r.identity_status==='active')return {missing:false,text:'Aktif · bisa dipakai untuk masuk'};
+ return {missing:false,text:'Nonaktif · tidak bisa dipakai untuk masuk'};
 }
 async function verifyMemberOnServer(role,id,expectIdentity,expectName){
  // Bukti tersimpan: baca ulang dari server (profil + identitas/kode akses), bukan dari state lokal.
- if(!id)throw new Error('Pendaftaran belum dapat dipastikan. Periksa My Team, lalu coba lagi bila data belum muncul.');
+ if(!id)throw new Error('Pendaftaran belum dapat dipastikan. Periksa Tim Saya, lalu coba lagi bila data belum muncul.');
  const rows=asArray(await rpc('owner_list_members',{p_role:role}));
  const row=rows.find(x=>x.profile_id===id);
- if(!row)throw new Error('Data belum muncul di server.');
- if(!row.login_code)throw new Error('Identitas login belum lengkap di server.');
- if(expectIdentity&&row.identity_status!==expectIdentity)throw new Error('Status kode akses di server belum sesuai.');
- if(expectName&&String(row.full_name||'')!==expectName)throw new Error('Nama di server belum sesuai.');
+ if(!row)throw new Error('Data belum tersimpan. Coba lagi.');
+ if(!row.login_code)throw new Error('Data akun belum lengkap. Coba lagi.');
+ if(expectIdentity&&row.identity_status!==expectIdentity)throw new Error('Status kode akses belum tersimpan dengan benar. Coba lagi.');
+ if(expectName&&String(row.full_name||'')!==expectName)throw new Error('Nama belum tersimpan dengan benar. Coba lagi.');
  return row;
 }
 async function teamReload(){
@@ -2448,7 +2448,7 @@ async function teamReload(){
 function teamRender(){
  const sp=ownerCrud.spg||[],ck=ownerCrud.checker||[];
  const sec=(k,label)=>`<div class="crud-sheet-head" style="margin-top:14px"><div><b>${crudIcon(k)} ${label}</b><small>${(ownerCrud[k]||[]).length} terdaftar</small></div><button class="crud-add" data-crud-action="add" data-k="${k}">＋ Tambah</button></div>${crudRows(k)}`;
- sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3><small>${sp.length+ck.length} anggota terdaftar di server</small></div><button type="button" class="crud-add" id="team-refresh">↻ Muat ulang</button></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari anggota tim..." autocomplete="off"><span>${sp.length+ck.length} data</span></div><div class="crud-list" id="crud-list">${sec('spg','SPG')}${sec('checker','Checker')}</div>`);
+ sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 Tim Saya</h3><small>${sp.length+ck.length} anggota terdaftar</small></div><button type="button" class="crud-add" id="team-refresh">↻ Muat ulang</button></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari anggota tim..." autocomplete="off"><span>${sp.length+ck.length} data</span></div><div class="crud-list" id="crud-list">${sec('spg','SPG')}${sec('checker','Checker')}</div>`);
  const search=$('#crud-search'); if(search){search.oninput=()=>{const q=search.value.toLowerCase();document.querySelectorAll('#crud-list .crud-row').forEach(row=>row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none')}}
  const rf=$('#team-refresh'); if(rf)rf.onclick=()=>teamSheet();
  bindCrudActionEvents();
@@ -2457,12 +2457,12 @@ let __teamSeq=0;
 async function teamSheet(){
  window.__listCtx='team';
  const seq=++__teamSeq;
- sheet(`<div class="crud-sheet-head" id="team-loading"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data tim</b><small>Hanya data yang ada di server yang ditampilkan.</small></div>`);
+ sheet(`<div class="crud-sheet-head" id="team-loading"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 Tim Saya</h3><small>Memuat data...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data tim</b><small>Hanya data terbaru yang ditampilkan.</small></div>`);
  try{ await teamReload(); }
  catch(e){
   console.error('TEAM_LOAD',e);
   if(seq!==__teamSeq||!$('#team-loading'))return;
-  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 My Team</h3></div></div><div class="crud-empty"><span>!</span><b>Data tim belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="team-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">TIM OPERASIONAL</span><h3>🧑‍🤝‍🧑 Tim Saya</h3></div></div><div class="crud-empty"><span>!</span><b>Data tim belum dapat dimuat</b><small>Periksa koneksi internet lalu coba lagi.</small></div><button type="button" class="btn" id="team-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
   const rf=$('#team-refresh'); if(rf)rf.onclick=()=>teamSheet();
   return;
  }
@@ -2472,7 +2472,7 @@ async function teamSheet(){
 function geraiRender(){
  const list=ownerCrud.gerai||[];
  const aktif=list.filter(x=>x.status==='Aktif').length, buka=list.filter(x=>x.buka).length;
- sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>${list.length} gerai terdaftar di server · ${aktif} aktif · ${buka} sedang buka</small></div><div style="display:flex;gap:8px"><button type="button" class="crud-add" id="gerai-refresh">↻ Muat ulang</button><button type="button" class="crud-add" data-crud-action="add" data-k="gerai">＋ Tambah</button></div></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari gerai..." autocomplete="off"><span>${list.length} data</span></div><div class="crud-list" id="crud-list">${crudRows('gerai')}</div>`);
+ sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>${list.length} gerai terdaftar · ${aktif} aktif · ${buka} sedang buka</small></div><div style="display:flex;gap:8px"><button type="button" class="crud-add" id="gerai-refresh">↻ Muat ulang</button><button type="button" class="crud-add" data-crud-action="add" data-k="gerai">＋ Tambah</button></div></div><div class="crud-toolbar"><input class="fld crud-search" id="crud-search" placeholder="Cari gerai..." autocomplete="off"><span>${list.length} data</span></div><div class="crud-list" id="crud-list">${crudRows('gerai')}</div>`);
  const search=$('#crud-search'); if(search){search.oninput=()=>{const q=search.value.toLowerCase();document.querySelectorAll('#crud-list .crud-row').forEach(row=>row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none')}}
  const rf=$('#gerai-refresh'); if(rf)rf.onclick=()=>geraiSheet();
  bindCrudActionEvents();
@@ -2481,12 +2481,12 @@ let __geraiSeq=0;
 async function geraiSheet(){
  window.__listCtx='gerai';
  const seq=++__geraiSeq;
- sheet(`<div class="crud-sheet-head" id="gerai-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data gerai</b><small>Hanya gerai yang terdaftar di server yang ditampilkan.</small></div>`);
+ sheet(`<div class="crud-sheet-head" id="gerai-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3><small>Memuat data...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data gerai</b><small>Hanya gerai yang sudah terdaftar yang ditampilkan.</small></div>`);
  try{ await geraiReload(); }
  catch(e){
   console.error('GERAI_LOAD',e);
   if(seq!==__geraiSeq||!$('#gerai-loading'))return;
-  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3></div></div><div class="crud-empty"><span>!</span><b>Data gerai belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="gerai-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🏪 Gerai</h3></div></div><div class="crud-empty"><span>!</span><b>Data gerai belum dapat dimuat</b><small>Periksa koneksi internet lalu coba lagi.</small></div><button type="button" class="btn" id="gerai-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
   const rf=$('#gerai-refresh'); if(rf)rf.onclick=()=>geraiSheet();
   return;
  }
@@ -2497,12 +2497,12 @@ let __menuSeq=0;
 async function menuSheet(){
  window.__listCtx='menu';
  const seq=++__menuSeq;
- sheet(`<div class="crud-sheet-head" id="menu-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3><small>Memuat dari server...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data menu</b><small>Hanya menu yang terdaftar di server yang ditampilkan.</small></div>`);
+ sheet(`<div class="crud-sheet-head" id="menu-loading"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3><small>Memuat data...</small></div></div><div class="crud-empty"><span>⏳</span><b>Mengambil data menu</b><small>Hanya menu yang sudah terdaftar yang ditampilkan.</small></div>`);
  try{ await menuReload(); }
  catch(e){
   console.error('MENU_LOAD',e);
   if(seq!==__menuSeq||!$('#menu-loading'))return;
-  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3></div></div><div class="crud-empty"><span>!</span><b>Data menu belum dapat dimuat dari server</b><small>Periksa koneksi internet lalu coba lagi. Tidak ada data yang ditampilkan dari penyimpanan lokal.</small></div><button type="button" class="btn" id="menu-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
+  sheet(`<div class="crud-sheet-head"><div><span class="eyebrow">DATA USAHA</span><h3>🍹 Menu</h3></div></div><div class="crud-empty"><span>!</span><b>Data menu belum dapat dimuat</b><small>Periksa koneksi internet lalu coba lagi.</small></div><button type="button" class="btn" id="menu-refresh" style="width:100%;margin-top:12px">Coba lagi</button>`);
   const rf=$('#menu-refresh'); if(rf)rf.onclick=()=>menuSheet();
   return;
  }
@@ -2574,7 +2574,7 @@ function bindCrudActionEvents(){document.querySelectorAll('[data-crud-action]').
 function detailItems(k,r){
  const item=(a,b,full=false)=>`<div class="crud-detail-item${full?' full':''}"><span>${a}</span><b>${esc(b||'-')}</b></div>`;
  if(k==='gerai')return item('Nama gerai',r.nama)+item('Status',r.status)+item('Alamat',r.alamat,true);
- if(k==='spg'||k==='checker'){const idn=teamIdentity(r);return item(k==='spg'?'Nama SPG':'Nama checker',r.nama)+item('Status',r.status)+item('ID login',r.login_code||'Belum ada')+item('Status kode akses',idn.text)+item('Login terakhir',r.last_login_at?teamDate(r.last_login_at):'Belum pernah login',true)+item('Kode akses','Tersimpan terenkripsi di server dan tidak dapat ditampilkan ulang.',true)}
+ if(k==='spg'||k==='checker'){const idn=teamIdentity(r);return item(k==='spg'?'Nama SPG':'Nama checker',r.nama)+item('Status',r.status)+item('ID login',r.login_code||'Belum ada')+item('Status kode akses',idn.text)+item('Terakhir masuk',r.last_login_at?teamDate(r.last_login_at):'Belum pernah masuk',true)+item('Kode akses','Tersimpan dengan aman dan tidak dapat ditampilkan lagi.',true)}
  if(k==='menu')return item('Nama menu',r.nama)+item('Status',r.status)+item('Kategori',r.kategori)+item('Harga jual',rp(Number(r.harga)||0))+item('HPP',r.hpp!==''&&r.hpp!=null?rp(Number(r.hpp)||0):'-',true)+item('Logistik aktif',r.komposisi?.length?r.komposisi.map(c=>{const l=(ownerCrud.logistik||[]).find(x=>x.id===c.inventory_item_id);return `${l?.nama||'Item'} ×${c.quantity_per_sale}${l?.satuan?' '+l.satuan:''}`}).join(', '):'Belum ada logistik aktif',true);
  if(k==='logistik')return item('Nama item',r.nama)+item('Status',r.status)+item('Satuan',r.satuan)+item('Stok',`${r.stok??0} ${r.satuan||''}`)+item('Minimum stok',`${r.minimum??0} ${r.satuan||''}`)+item('Tipe logistik',r.logistics_type==='active'?'Aktif — berkurang saat penjualan':'Pasif — berkurang melalui restok/pengeluaran')+item('Supplier',r.supplier,true);
  return item('Nama kontak',r.nama)+item('Status',r.status)+item('Perusahaan',r.perusahaan)+item('WhatsApp',r.telepon)+item('Catatan',r.catatan,true);
@@ -2602,7 +2602,7 @@ function crudForm(k,id){
  }
  if(k==='logistik') body+=crudField('Nama item','nama','text','Contoh: Cup',r?.nama)+crudField('Satuan','satuan','text','pcs / box / kg',r?.satuan)+(id?`<div class="crud-helper">Stok saat ini: <b>${esc(String(r?.stok??0))} ${esc(r?.satuan||'')}</b>. Stok hanya berubah lewat restok/penjualan.</div>`:crudField('Jumlah awal','stok','number','0',useDraft?r.stok:'','stok'))+crudField('Minimum stok','minimum','number','0',r?.minimum)+crudField('Supplier','supplier','text','Nama supplier',r?.supplier)+`<label class="crud-field"><span>Tipe logistik</span><select class="fld" id="cf-logistics_type"><option value="passive" ${(r?.logistics_type||'passive')==='passive'?'selected':''}>Pasif</option><option value="active" ${r?.logistics_type==='active'?'selected':''}>Aktif — berkurang saat penjualan</option></select></label><label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
  if(k==='esKristal') body+=crudField('Nama kontak','nama','text','Kontak utama',r?.nama)+crudField('Nama perusahaan','perusahaan','text','Supplier es kristal',r?.perusahaan)+crudField('Nomor WhatsApp','telepon','tel','628xxxxxxxxxx',r?.telepon)+crudField('Catatan','catatan','text','Jadwal / keterangan',r?.catatan)+`<label class="crud-field"><span>Status</span>${crudStatus(r?.status||'Aktif')}</label>`;
- sheet(`<div class="crud-form-head"><span class="eyebrow">${id?'EDIT DATA':'DATA BARU'}</span><h3>${id?'Edit':'Tambah'} ${title}</h3></div><div class="crud-form">${body}</div><div class="pg-dock"><button class="btn crud-save" data-crud-action="save" data-k="${k}" data-id="${id||''}">${id?'Simpan perubahan':'Tambah data'}</button></div>`,{back:()=>id?crudDetail(k,id):crudBackToList(k)});
+ sheet(`<div class="crud-form-head"><span class="eyebrow">${id?'UBAH DATA':'DATA BARU'}</span><h3>${id?'Ubah':'Tambah'} ${title}</h3></div><div class="crud-form">${body}</div><div class="pg-dock"><button class="btn crud-save" data-crud-action="save" data-k="${k}" data-id="${id||''}">${id?'Simpan perubahan':'Tambah data'}</button></div>`,{back:()=>id?crudDetail(k,id):crudBackToList(k)});
  bindCrudActionEvents();
  bindCompositionEvents();
 }
@@ -2639,11 +2639,11 @@ function crudReview(k,id){
 const ERR_TEXT={
  owner_access_denied:'Akses ditolak. Silakan masuk kembali sebagai Owner.',
  store_name_required:'Nama gerai wajib diisi.',
- invalid_store_status:'Status gerai tidak valid.',
+ invalid_store_status:'Status gerai belum sesuai.',
  menu_name_required:'Nama menu wajib diisi.',
- invalid_menu_price:'Harga menu tidak valid.',
- invalid_menu_hpp:'HPP menu tidak valid.',
- invalid_menu_status:'Status menu tidak valid.',
+ invalid_menu_price:'Harga menu belum sesuai.',
+ invalid_menu_hpp:'HPP menu belum sesuai.',
+ invalid_menu_status:'Status menu belum sesuai.',
  invalid_consumption_quantity:'Jumlah pemakaian bahan harus lebih dari 0.',
  inventory_item_not_found:'Ada bahan pada komposisi yang tidak ditemukan atau sudah nonaktif.',
  inventory_name_required:'Nama item wajib diisi.',
@@ -2651,15 +2651,15 @@ const ERR_TEXT={
  inventory_name_duplicate_inactive:'Item logistik dengan nama tersebut sudah pernah terdaftar dan sedang nonaktif. Periksa daftar logistik lalu aktifkan kembali item tersebut.',
  menu_name_duplicate:'Menu dengan nama dan kategori tersebut sudah terdaftar.',
  invalid_minimum_stock:'Minimum stok tidak boleh negatif.',
- invalid_logistics_type:'Tipe logistik tidak valid.',
+ invalid_logistics_type:'Tipe logistik belum sesuai.',
  invalid_initial_quantity:'Jumlah awal logistik tidak boleh negatif.',
- invalid_inventory_status:'Status item tidak valid.',
+ invalid_inventory_status:'Status item belum sesuai.',
  member_name_required:'Nama wajib diisi.',
- invalid_member_status:'Status tidak valid.',
- invalid_member_role:'Peran tidak valid.',
+ invalid_member_status:'Status belum sesuai.',
+ invalid_member_role:'Peran belum sesuai.',
  contact_label_required:'Nama perusahaan wajib diisi.',
- invalid_contact_status:'Status kontak tidak valid.',
- invalid_phone_number:'Nomor WhatsApp tidak valid.',
+ invalid_contact_status:'Status kontak belum sesuai.',
+ invalid_phone_number:'Nomor WhatsApp belum sesuai.',
  store_slug_already_exists:'Nama gerai ini sudah dipakai. Gunakan nama lain.',
  store_name_invalid_for_slug:'Nama gerai harus memuat huruf atau angka.',
  store_not_found:'Data tidak ditemukan. Muat ulang halaman lalu coba lagi.',
@@ -2667,7 +2667,7 @@ const ERR_TEXT={
  member_not_found:'Data tidak ditemukan. Muat ulang halaman lalu coba lagi.',
  contact_not_found:'Data tidak ditemukan. Muat ulang halaman lalu coba lagi.',
  invoice_no_bills:'Pilih minimal satu tagihan untuk dibuatkan invoice.',
- invoice_invalid_price:'Harga per BAL tidak valid.',
+ invoice_invalid_price:'Harga per BAL belum sesuai.',
  invoice_amount_missing:'Harga per BAL belum diisi, nominal tagihan belum bisa dihitung.',
  invoice_bill_not_available:'Sebagian tagihan sudah dibayar atau tidak tersedia. Daftar tagihan dimuat ulang.',
  invoice_immutable:'Invoice yang sudah terbit tidak dapat diubah.'
@@ -2826,7 +2826,7 @@ async function showGeraiLinkPopup(storeId,opts={}){
   }catch(err){ console.error(err); }
    const geraiLink=resolveGeraiLink(row);
    if(!row||!geraiLink){
-    body.innerHTML='<div class="gl-fail">Link operasional Gerai belum dapat dibuat karena slug belum tersedia dari server.<br>Periksa koneksi lalu coba lagi.<br><button class="gl-retry" type="button" data-gl="retry">Coba lagi</button></div>';
+    body.innerHTML='<div class="gl-fail">Link operasional Gerai belum dapat dibuat karena alamat gerai belum tersedia.<br>Periksa koneksi lalu coba lagi.<br><button class="gl-retry" type="button" data-gl="retry">Coba lagi</button></div>';
    return;
   }
    link=geraiLink;
@@ -2861,8 +2861,8 @@ async function verifyOnServer(k,id,expected){
      const found=rows.find(x=>x.id===id);
      if(!found) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
      if(expected){
-      if(String(found.display_name||'')!==String(expected.nama||'').trim()) throw new Error('Nama kontak belum sesuai dengan data di server.');
-      if(expected.status&&found.status!==(expected.status==='Aktif'?'active':'inactive')) throw new Error('Status kontak belum sesuai dengan data di server.');
+      if(String(found.display_name||'')!==String(expected.nama||'').trim()) throw new Error('Nama kontak belum tersimpan dengan benar. Coba lagi.');
+      if(expected.status&&found.status!==(expected.status==='Aktif'?'active':'inactive')) throw new Error('Status kontak belum tersimpan dengan benar. Coba lagi.');
      }
      return found;
    }
@@ -2872,21 +2872,21 @@ async function verifyOnServer(k,id,expected){
   if(!data) throw new Error('Data belum muncul di daftar. Silakan coba lagi.');
    const stat=v=>v==='Aktif'?'active':'inactive';
    if(k==='gerai'&&expected){
-    if(String(data.name||'')!==String(expected.nama||'')) throw new Error('Nama gerai belum sesuai dengan data di server.');
-    if(String(data.address||'')!==String(expected.alamat||'')) throw new Error('Alamat gerai belum sesuai dengan data di server.');
-    if(expected.requireLink&&!resolveGeraiLink(data)) throw new Error('Link operasional belum tersedia dari server. Pastikan gerai memiliki slug yang valid.');
+    if(String(data.name||'')!==String(expected.nama||'')) throw new Error('Nama gerai belum tersimpan dengan benar. Coba lagi.');
+    if(String(data.address||'')!==String(expected.alamat||'')) throw new Error('Alamat gerai belum tersimpan dengan benar. Coba lagi.');
+    if(expected.requireLink&&!resolveGeraiLink(data)) throw new Error('Link operasional belum tersedia. Pastikan alamat gerai sudah terisi.');
    }
    if(k==='menu'&&expected){
-    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama menu belum sesuai dengan data di server.');
-    if(Number(data.price)!==Number(expected.harga||0)) throw new Error('Harga menu belum sesuai dengan data di server.');
-    if(Number(data.hpp)!==Number(expected.hpp||0)) throw new Error('HPP menu belum sesuai dengan data di server.');
-    if(data.status!==stat(expected.status)) throw new Error('Status menu belum sesuai dengan data di server.');
+    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama menu belum tersimpan dengan benar. Coba lagi.');
+    if(Number(data.price)!==Number(expected.harga||0)) throw new Error('Harga menu belum tersimpan dengan benar. Coba lagi.');
+    if(Number(data.hpp)!==Number(expected.hpp||0)) throw new Error('HPP menu belum tersimpan dengan benar. Coba lagi.');
+    if(data.status!==stat(expected.status)) throw new Error('Status menu belum tersimpan dengan benar. Coba lagi.');
    }
    if(k==='logistik'&&expected){
-    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama item belum sesuai dengan data di server.');
-    if(Number(data.minimum_stock)!==Number(expected.minimum||0)) throw new Error('Stok minimum belum sesuai dengan data di server.');
-    if(!expected.__edit&&Number(data.stock)!==Number(expected.stok||0)) throw new Error('Jumlah logistik belum sesuai dengan data di server.');
-    if(expected.status&&data.status!==stat(expected.status)) throw new Error('Status item belum sesuai dengan data di server.');
+    if(String(data.name||'')!==String(expected.nama||'').trim()) throw new Error('Nama item belum tersimpan dengan benar. Coba lagi.');
+    if(Number(data.minimum_stock)!==Number(expected.minimum||0)) throw new Error('Stok minimum belum tersimpan dengan benar. Coba lagi.');
+    if(!expected.__edit&&Number(data.stock)!==Number(expected.stok||0)) throw new Error('Jumlah logistik belum tersimpan dengan benar. Coba lagi.');
+    if(expected.status&&data.status!==stat(expected.status)) throw new Error('Status item belum tersimpan dengan benar. Coba lagi.');
    }
    return data;
 }
@@ -2974,7 +2974,7 @@ async function verifyRemovedOnServer(k,id){
   if(error) throw error;
   still=!!data;
  }
- if(still) throw new Error('Data masih ada di server setelah penghapusan.');
+ if(still) throw new Error('Data belum berhasil dihapus. Coba lagi.');
 }
 let __crudDeleting=false;
 async function crudDelete(k,id){
@@ -2992,7 +2992,7 @@ async function crudDelete(k,id){
    else if(k==='logistik') res=await rpc('owner_remove_inventory_item',{p_inventory_id:id});
    else if(k==='spg'||k==='checker') res=await rpc('owner_remove_member',{p_role:k,p_profile_id:id});
    else if(k==='esKristal') res=await rpc('owner_remove_whatsapp_contact',{p_contact_id:id});
-   if(!res||res.ok!==true) throw new Error('Penghapusan belum terkonfirmasi server.');
+   if(!res||res.ok!==true) throw new Error('Penghapusan belum terkonfirmasi. Coba lagi.');
    removed=true;
    await verifyRemovedOnServer(k,id);
    try{ await loadServerState(); }catch(reloadErr){ console.error(reloadErr); toast('Data sudah terhapus, tetapi daftar belum diperbarui. Buka ulang halaman untuk melihat data terbaru.'); }
@@ -3124,7 +3124,7 @@ function login(){
       <button type="button" class="eye" id="eye" aria-label="Tampilkan kode akses" aria-pressed="false">${ic(eye)}</button>
     </div>
     <div class="lg-err" id="er" role="alert" aria-live="polite"></div>
-    <button class="btn lg-btn" id="go" disabled>Masuk ke Dashboard</button>
+    <button class="btn lg-btn" id="go" disabled>Masuk</button>
     <div class="lg-security">${ic(lock)}<span>Akses aman · khusus Owner.</span></div>
     <p class="lg-note">Akun Owner aktif terhubung ke sistem.</p>
    </section>
@@ -3153,9 +3153,9 @@ function login(){
 
      b.classList.replace('load','ok');b.disabled=false;b.innerHTML=ic('M5 12.5l4.5 4.5L19 7.5')+' Berhasil';
      if(navigator.vibrate)navigator.vibrate(30);
-     setTimeout(()=>{shell();startRealtime();if(dataWarning)toast('Login berhasil. Sebagian data belum termuat.');},220);
+     setTimeout(()=>{shell();startRealtime();if(dataWarning)toast('Berhasil masuk. Sebagian data belum bisa ditampilkan.');},220);
    }catch(e){
-     console.error('OWNER_LOGIN',e);b.classList.remove('load');b.innerHTML='Masuk ke Dashboard';validate();
+     console.error('OWNER_LOGIN',e);b.classList.remove('load');b.innerHTML='Masuk';validate();
      const raw=String(e?.message||e||'Kesalahan tidak diketahui');
      const low=raw.toLowerCase();
      if(low.includes('invalid login')||low.includes('invalid credentials')) fail('Kode akses tidak sesuai dengan akun Owner.');
@@ -3165,7 +3165,7 @@ function login(){
  }
 }
 /* ===== Shell ===== */
-const tabs=[['home','🏠','Dashboard'],['lap','📊','Laporan'],['gud','📦','Logistik'],['owner','✨','Kelola Usaha']];
+const tabs=[['home','🏠','Beranda'],['lap','📊','Laporan'],['gud','📦','Logistik'],['owner','✨','Kelola Usaha']];
 function shell(){
  app.innerHTML=`<div class="scr" id="v"></div><nav class="tabs">${tabs.map(t=>`<button data-t="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav><div class="dim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Detail"></div><div class="toast"></div>`;
  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
@@ -3194,7 +3194,7 @@ function defaultHighlights(){
   {kind:'default',eyebrow:'RINGKASAN HARI INI',title:'Transaksi Hari Ini',value:totalTransactions+' transaksi',meta:'Jumlah transaksi tercatat hari ini',icon:'🧾'},
   {kind:'default',eyebrow:'MENU TERLARIS',title:'Menu Terlaris Hari Ini',value:topMenu[0],meta:topMenu[1]+' terjual hari ini',icon:'🍹'},
   {kind:'default',eyebrow:'PENDAPATAN',title:'Pendapatan Hari Ini',value:rp(total),meta:'Total pendapatan tercatat hari ini',icon:'💰'},
-  {kind:'monitoring',eyebrow:'LIVE MONITORING',title:'Pantau Gerai Real-time',value:'Buka Live Monitoring',meta:'Ketuk untuk membuka dashboard realtime',icon:'📡',url:LIVE_MONITORING_URL}
+  {kind:'monitoring',eyebrow:'PANTAUAN LANGSUNG',title:'Pantau Gerai Secara Langsung',value:'Buka Pantauan Langsung',meta:'Ketuk untuk membuka pantauan langsung',icon:'📡',url:LIVE_MONITORING_URL}
  ]
 }
 function ownerGreeting(){
@@ -3290,7 +3290,7 @@ function home(){
  </header>
 <section class="highlight-host">${renderHighlight()}</section>
 <section class="lux-section"><div class="lux-section-head"><div><span class="eyebrow">COMMAND</span><h2>Aksi utama</h2></div><span class="lux-count">8 tindakan</span></div><div class="lux-actions">
-<button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>My Team</b><small>${(state.spg.length+state.checker.length)} anggota</small></button>
+<button data-o="team"><span class="lux-action-icon">🧑‍🤝‍🧑</span><b>Tim Saya</b><small>${(state.spg.length+state.checker.length)} anggota</small></button>
 <button data-o="gerai"><span class="lux-action-icon">🏪</span><b>Gerai</b><small>${gerai.length} gerai</small></button>
 <button data-o="nota"><span class="lux-action-icon">🧾</span><b>Nota</b><small>Buat &amp; riwayat</small></button>
 <button data-o="tagihan"><span class="lux-action-icon">💰</span><b>Tagihan</b><small>${(state.bills||[]).filter(b=>b.status==='open').length} belum dibayar</small></button>
@@ -3319,7 +3319,7 @@ function lap(){
     <button data-o="report-penjualan"><span>🧾</span><b>Laporan Penjualan</b><small>${state.salesLatest?'Total porsi terjual per gerai &amp; per menu · terakhir '+esc(srDate(state.salesLatest)):'Belum ada laporan masuk · muncul otomatis setelah semua gerai tutup'}</small></button>
     <button data-o="report-gerai"><span>🏪</span><b>Laporan Performa Gerai</b><small>Aktivitas dan hasil penjualan per gerai.</small></button>
     <button data-o="report-menu"><span>🍹</span><b>Laporan Performa Menu</b><small>Pergerakan dan penjualan setiap menu.</small></button>
-    <button data-o="report-checker"><span>✅</span><b>Laporan Pengecekkan Oleh Checker</b><small>Hasil audit dan pemeriksaan gerai.</small></button>
+    <button data-o="report-checker"><span>✅</span><b>Laporan Pemeriksaan oleh Checker</b><small>Hasil pemeriksaan dan penutupan gerai.</small></button>
     <button data-o="report-keuangan"><span>💰</span><b>Laporan Keuangan</b><small>Pendapatan dan aktivitas keuangan yang tercatat.</small></button>
     <button data-o="report-logistik"><span>📦</span><b>Laporan Logistik</b><small>Stok, pergerakan, dan permintaan restok.</small></button>
     <button data-o="report-es"><span>🧊</span><b>Laporan Pemakaian Es Kristal</b><small>Penerimaan, stok, pemakaian, dan pergerakan es.</small></button>
@@ -3330,11 +3330,11 @@ function lap(){
 
 const REPORT_DEFS={
  penjualan:['Laporan Penjualan','Penjualan','Tanggal/rentang, status final/provisional, total penjualan, jumlah transaksi, per gerai, per menu, metode pembayaran, detail transaksi, timestamp, dan pemeriksaan konsistensi.'],
- gerai:['Laporan Performa Gerai','Performa Gerai','Analisis penjualan harian setiap gerai berdasarkan snapshot final yang telah divalidasi Checker.'],
- menu:['Laporan Performa Menu','Performa Menu','Analisis jumlah menu terjual dari hari ke hari berdasarkan snapshot final yang telah divalidasi Checker.'],
- checker:['Laporan Pengecekkan Oleh Checker','Pengecekkan Checker','Khusus hasil pemeriksaan Checker, hasil audit, item pemeriksaan, dan status penutupan gerai.'],
+ gerai:['Laporan Performa Gerai','Performa Gerai','Analisis penjualan harian setiap gerai berdasarkan data final yang sudah diperiksa Checker.'],
+ menu:['Laporan Performa Menu','Performa Menu','Analisis jumlah menu terjual dari hari ke hari berdasarkan data final yang sudah diperiksa Checker.'],
+ checker:['Laporan Pemeriksaan oleh Checker','Pemeriksaan Checker','Khusus hasil pemeriksaan Checker, item yang diperiksa, dan status penutupan gerai.'],
  keuangan:['Laporan Keuangan','Keuangan','Fokus pada pendapatan yang tercatat dan perbandingan harian, mingguan, serta bulanan. Pengeluaran hanya ditampilkan jika memiliki catatan sumber.'],
- logistik:['Laporan Logistik','Logistik','Khusus stok, pergerakan inventory, permintaan restok, dan aktivitas logistik.'],
+ logistik:['Laporan Logistik','Logistik','Khusus stok, pergerakan stok, permintaan restok, dan aktivitas logistik.'],
  es:['Laporan Pemakaian Es Kristal','Pemakaian Es Kristal','Khusus pesanan, penerimaan, stok, pemakaian, dan pergerakan es kristal.']
 };
 async function showReport(key,start=todayJakarta(),end=todayJakarta()){
@@ -3352,11 +3352,11 @@ function perfDate(d,long=false){try{return new Intl.DateTimeFormat('id-ID',{time
 function perfRangeButtons(start,end){const n=Math.max(1,Math.round((new Date(end)-new Date(start))/86400000)+1);return[7,14,30,90].map(x=>`<button type="button" data-perf-range="${x}" class="${n===x?'on':''}">${x} hari</button>`).join('')}
 function perfToolbar(key,start,end){return`<section class="perf-toolbar"><div class="perf-toolbar-top"><div class="perf-toolbar-title"><b>${key==='gerai'?'Performa Gerai':'Performa Menu'}</b><small>${key==='gerai'?'Bandingkan penjualan harian setiap gerai.':'Lihat pergerakan penjualan setiap menu.'}</small></div><button class="btn ghost" type="button" data-perf-refresh>↻</button></div><div class="perf-filter">${perfRangeButtons(start,end)}</div><div class="perf-custom"><label>Mulai<input id="perf-start" type="date" value="${esc(start)}" max="${esc(todayJakarta())}"></label><label>Sampai<input id="perf-end" type="date" value="${esc(end)}" max="${esc(todayJakarta())}"></label></div></section>`}
 function perfBars(days,vals,label='Penjualan'){if(!days.length)return'';const max=Math.max(1,...vals.map(Number));return`<div class="perf-chart">${days.map((d,i)=>{const q=Number(vals[i])||0,h=q?Math.max(6,Math.round(q/max*100)):3;return`<div class="perf-bar ${q?'':'zero'}" title="${esc(perfDate(d,true))}: ${esc(perfFmt(q))}"><i style="height:${h}%"></i></div>`}).join('')}</div><div class="perf-axis"><span>${esc(perfDate(days[0]))}</span><span>${esc(perfDate(days[days.length-1]))}</span></div>`}
-function perfCards(data,key){const daily=asArray(data?.daily),days=daily.map(x=>x.date),rows=key==='gerai'?asArray(data?.stores):asArray(data?.menus);if(!rows.length){const isGerai=key==='gerai';return`<div class="perf-empty"><div class="perf-empty-icon">${isGerai?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v18H7z"/><path d="M9.5 7h5M9.5 11h5M9.5 15h3"/><path d="M5 5h2M17 5h2"/></svg>'}</div><span class="perf-empty-eyebrow">${isGerai?'PERFORMA GERAI':'PERFORMA MENU'}</span><strong>${isGerai?'Belum ada data performa gerai':'Belum ada data performa menu'}</strong><span>${isGerai?'Belum ada penjualan gerai yang selesai, dikunci, dan divalidasi Checker pada periode ini.':'Belum ada penjualan menu yang selesai, dikunci, dan divalidasi Checker pada periode ini.'}</span><div class="perf-empty-flow"><div class="perf-empty-step"><b>01</b>Penjualan</div><span class="perf-empty-arrow">›</span><div class="perf-empty-step"><b>02</b>Validasi Checker</div><span class="perf-empty-arrow">›</span><div class="perf-empty-step"><b>03</b>Masuk performa</div></div><span class="perf-empty-note">Data akan tampil otomatis setelah laporan harian difinalisasi.</span></div>`}return`<div class="perf-list">${rows.map(r=>{const map=new Map(asArray(r.daily).map(x=>[x.date,x])),vals=days.map(d=>Number(map.get(d)?.sales||0)),total=Number(r.total_sales||0),active=vals.filter(x=>x>0).length,avg=days.length?total/days.length:0,sub=key==='gerai'?`${perfFmt(r.total_transactions||0)} transaksi · ${active} hari berjualan`:`${perfFmt(r.total_quantity||0)} porsi terjual · ${active} hari terjual`;return`<article class="perf-card"><div class="perf-card-head"><div><b>${esc(r.store_name||r.menu_name||'Tanpa nama')}</b><small>${esc(sub)}</small></div><div class="perf-total"><b>${esc(rp(total))}</b><small>${key==='gerai'?'total penjualan':'total omzet'}</small></div></div>${perfBars(days,vals,'Penjualan')}<div class="perf-card-foot"><span>Rata-rata/hari <b>${esc(rp(Math.round(avg)))}</b></span><span>Hari terbaik <b>${esc(rp(Math.max(0,...vals)))}</b></span></div></article>`}).join('')}</div>`}
+function perfCards(data,key){const daily=asArray(data?.daily),days=daily.map(x=>x.date),rows=key==='gerai'?asArray(data?.stores):asArray(data?.menus);if(!rows.length){const isGerai=key==='gerai';return`<div class="perf-empty"><div class="perf-empty-icon">${isGerai?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v18H7z"/><path d="M9.5 7h5M9.5 11h5M9.5 15h3"/><path d="M5 5h2M17 5h2"/></svg>'}</div><span class="perf-empty-eyebrow">${isGerai?'PERFORMA GERAI':'PERFORMA MENU'}</span><strong>${isGerai?'Belum ada data performa gerai':'Belum ada data performa menu'}</strong><span>${isGerai?'Belum ada penjualan gerai yang selesai, dikunci, dan divalidasi Checker pada periode ini.':'Belum ada penjualan menu yang selesai, dikunci, dan divalidasi Checker pada periode ini.'}</span><div class="perf-empty-flow"><div class="perf-empty-step"><b>01</b>Penjualan</div><span class="perf-empty-arrow">›</span><div class="perf-empty-step"><b>02</b>Validasi Checker</div><span class="perf-empty-arrow">›</span><div class="perf-empty-step"><b>03</b>Masuk performa</div></div><span class="perf-empty-note">Data akan tampil otomatis setelah laporan harian selesai.</span></div>`}return`<div class="perf-list">${rows.map(r=>{const map=new Map(asArray(r.daily).map(x=>[x.date,x])),vals=days.map(d=>Number(map.get(d)?.sales||0)),total=Number(r.total_sales||0),active=vals.filter(x=>x>0).length,avg=days.length?total/days.length:0,sub=key==='gerai'?`${perfFmt(r.total_transactions||0)} transaksi · ${active} hari berjualan`:`${perfFmt(r.total_quantity||0)} porsi terjual · ${active} hari terjual`;return`<article class="perf-card"><div class="perf-card-head"><div><b>${esc(r.store_name||r.menu_name||'Tanpa nama')}</b><small>${esc(sub)}</small></div><div class="perf-total"><b>${esc(rp(total))}</b><small>${key==='gerai'?'total penjualan':'total omzet'}</small></div></div>${perfBars(days,vals,'Penjualan')}<div class="perf-card-foot"><span>Rata-rata/hari <b>${esc(rp(Math.round(avg)))}</b></span><span>Hari terbaik <b>${esc(rp(Math.max(0,...vals)))}</b></span></div></article>`}).join('')}</div>`}
 async function showPerformanceReport(key,start=todayJakarta(),end=todayJakarta()){
  if(start>end)[start,end]=[end,start];PERF.key=key;PERF.start=start;PERF.end=end;
  const title=key==='gerai'?'Performa Gerai':'Performa Menu';
- sheet(`${perfToolbar(key,start,end)}<div class="perf-page"><div id="perf-root"><div class="perf-loading"></div></div><p class="perf-note">Sumber data: snapshot penjualan harian final. Data hanya masuk setelah penutupan hari dikunci dan divalidasi Checker.</p></div>`,{title});
+ sheet(`${perfToolbar(key,start,end)}<div class="perf-page"><div id="perf-root"><div class="perf-loading"></div></div><p class="perf-note">Sumber data: rekap penjualan harian final. Data baru masuk setelah penutupan hari selesai dan diperiksa Checker.</p></div>`,{title});
  const host=$('.sheet');if(!host)return;const root=host.querySelector('#perf-root');
  const load=async()=>{const seq=++PERF.seq,a=host.querySelector('#perf-start')?.value||PERF.start,b=host.querySelector('#perf-end')?.value||PERF.end;if(!a||!b)return;if(a>b){toast('Tanggal mulai tidak boleh melewati tanggal akhir');return}PERF.start=a;PERF.end=b;if(root)root.innerHTML='<div class="perf-loading"></div>';try{const businessId=state.header?.business_id||'e8f4c3bd-9769-4722-97a5-50908bc1acba';const data=await rpc('owner_get_performance_report',{p_business_id:businessId,p_start_date:a,p_end_date:b});if(seq!==PERF.seq)return;const rows=key==='gerai'?asArray(data?.stores):asArray(data?.menus),period=data?.period||{},days=asArray(data?.daily),total=key==='gerai'?Number(period.total_sales||0):rows.reduce((s,r)=>s+Number(r.total_sales||0),0);root.innerHTML=`<div class="perf-status"><i></i><span>${esc(perfDate(a,true))} — ${esc(perfDate(b,true))} · ${days.length} hari data final</span></div><div class="perf-summary"><div class="perf-summary-card"><span>${key==='gerai'?'Total penjualan':'Total omzet'}</span><b>${esc(rp(total))}</b><small>periode final</small></div><div class="perf-summary-card"><span>${key==='gerai'?'Gerai':'Menu'}</span><b>${perfFmt(rows.length)}</b><small>memiliki data final</small></div><div class="perf-summary-card"><span>Hari final</span><b>${perfFmt(days.length)}</b><small>tervalidasi Checker</small></div></div>${perfCards(data,key)}`}catch(e){if(root)root.innerHTML=`<div class="perf-empty"><strong>Data performa belum dapat dimuat</strong><span>${esc(friendlyError(e,'Periksa koneksi lalu coba lagi.'))}</span></div>`}};
  host.querySelectorAll('[data-perf-range]').forEach(b=>b.onclick=()=>{const n=Number(b.dataset.perfRange)||7,ed=todayJakarta(),d=new Date(ed+'T12:00:00+07:00');d.setDate(d.getDate()-n+1);const st=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(d);showPerformanceReport(key,st,ed)});
@@ -3544,7 +3544,7 @@ function changeOwnerAccess(){
    ${crudField('Kode akses baru','owner-new-code','password','Minimal 6 karakter','')}
    ${crudField('Ulangi kode akses baru','owner-new-code-2','password','Masukkan kembali','')}
    <button class="btn" id="owner-change-code">Simpan Kode Akses</button>
- </div><div class="hint">Kode akses tidak disimpan di localStorage atau tabel biasa. Perubahan menggunakan Supabase Auth pada sesi Owner yang sedang aktif.</div>`,()=>openSettings(()=>closeSheet()));
+ </div><div class="hint">Kode akses disimpan dengan aman. Perubahan berlaku untuk akun Owner yang sedang masuk.</div>`,()=>openSettings(()=>closeSheet()));
  const btn=$('#owner-change-code');
  if(btn)btn.onclick=async()=>{
    const a=$('#owner-new-code')?.value.trim()||'',b=$('#owner-new-code-2')?.value.trim()||'';
@@ -3567,7 +3567,7 @@ function adm(){
  <button class="set" data-o="kode">Ubah Kode Akses Owner <span>›</span></button>
  <button class="set" data-o="audit">Riwayat Aktivitas <span>›</span></button>
  <button class="set" data-o="arsip">Arsip Riwayat Terhapus <span>›</span></button>
- <button class="set" data-o="edit">Pusat Edit Data <span>🔒</span></button>
+ <button class="set" data-o="edit">Pusat Ubah Data <span>🔒</span></button>
  </div></div>
  <div class="sec"><h2>Notifikasi</h2><div class="card">
  <button class="set" data-o="notif-settings">Pengaturan Notifikasi <span>›</span></button>
@@ -3712,7 +3712,7 @@ function tgInvoiceForm(){
     }catch(e){
       console.error('OWNER_INVOICE',e);
       const gone=/invoice_bill_not_available/.test(String(e?.message||e));
-      toast(friendlyError(e,'Invoice belum bisa dibuat. Pastikan migrasi database invoice sudah diterapkan, lalu coba lagi.'));
+      toast(friendlyError(e,'Invoice belum bisa dibuat. Coba lagi beberapa saat lagi atau hubungi pengelola aplikasi.'));
       if(gone){TG.sel=new Set();await tgReload();tagihanSheet()}
       else{go.textContent='Terbitkan Invoice';calc()}
     }finally{TG.busy=false}
@@ -3747,7 +3747,7 @@ function invoiceWaText(inv,items){
     '',
     'TOTAL JUMLAH TAGIHAN = '+rp(inv.total_amount),
     '',
-    '- tagihan ini otomatis berdasarkan perhitungan sistem penerimaan es kristal panel app Ma Gambreng'
+    '- tagihan ini otomatis berdasarkan catatan penerimaan es kristal di aplikasi Ma-Gambreng'
   ].join('\n');
 }
 function invLoadLogo(){return new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src='./gerai/icon-192.png'})}
@@ -3796,7 +3796,7 @@ async function invoicePng(inv,items){
   t(items.length+' tagihan terpilih',P+24,totalTop+68,{size:16,color:'#587267'});
   t(rp(inv.total_amount),W-P-24,totalTop+72,{size:42,weight:800,color:'#0F3D35',align:'right'});
   if(inv.notes)t('Catatan: '+inv.notes,P,totalTop+totalH+48,{size:17,color:'#4A5A54',maxW:W-2*P});
-  t('Rangkuman tagihan diterbitkan melalui sistem Owner Ma-Gambreng.',W/2,H-30,{size:14,color:'#718079',align:'center',maxW:W-2*P});
+  t('Rangkuman tagihan diterbitkan melalui aplikasi Owner Ma-Gambreng.',W/2,H-30,{size:14,color:'#718079',align:'center',maxW:W-2*P});
   return cv;
 }
 async function invoiceFile(inv,items){
@@ -3839,7 +3839,7 @@ function invoiceView(id){
 }
 
 /* ================= Pengumuman (marquee Gerai & Checker) ================= */
-const ANN_AUD={gerai:{t:'Untuk Gerai',ic:'🏪',d:'Tampil di PWA Gerai (SPG)'},checker:{t:'Untuk Checker',ic:'🧑‍💼',d:'Tampil di Panel Checker'},semua:{t:'Untuk Semua',ic:'📢',d:'Tampil di Gerai dan Checker'}};
+const ANN_AUD={gerai:{t:'Untuk Gerai',ic:'🏪',d:'Tampil di aplikasi Gerai (SPG)'},checker:{t:'Untuk Checker',ic:'🧑‍💼',d:'Tampil di Panel Checker'},semua:{t:'Untuk Semua',ic:'📢',d:'Tampil di Gerai dan Checker'}};
 const ANN_MAX=280;
 async function annFetch(){const r=await rpc('owner_list_announcements');return Array.isArray(r)?r:[]}
 function annLeft(a){const ms=new Date(a.expires_at)-Date.now();if(ms<=0)return 'berakhir';const m=Math.floor(ms/60000),h=Math.floor(m/60);return 'sisa '+(h?h+' j ':'')+(m%60)+' mnt'}
@@ -3847,7 +3847,7 @@ function annErr(e){const m=String(e?.message||e||'');
  if(/announcement_too_long/.test(m))return 'Pengumuman maksimal '+ANN_MAX+' karakter.';
  if(/announcement_message_required/.test(m))return 'Isi pengumuman wajib diisi.';
  if(/announcement_not_found/.test(m))return 'Pengumuman sudah berakhir atau dihapus.';
- if(/owner_access_denied/.test(m))return 'Sesi Owner tidak valid. Masuk kembali.';
+ if(/owner_access_denied/.test(m))return 'Sesi Owner sudah tidak berlaku. Silakan masuk kembali.';
  return friendlyError(e,'Pengumuman belum berhasil diproses. Coba lagi.')}
 async function annMenu(){
  let n='';try{n=(await annFetch()).length}catch(e){}
@@ -3881,7 +3881,7 @@ function annCompose(aud){
 async function annActive(){
  let rows;
  try{rows=await annFetch()}catch(e){console.error(e);return toast(annErr(e))}
- sheet(`${pgHead('PENGUMUMAN','Pengumuman Aktif',rows.length?rows.length+' sedang tayang':'Tidak ada yang tayang')}${rows.length?rows.map(a=>`<div class="ann-row" data-id="${esc(a.id)}"><div class="ann-meta"><span class="chip ${a.audience==='semua'?'ok':''}">${ANN_AUD[a.audience].t}</span><span>${esc(fmtWaktu(a.created_at))}</span><span>· ${annLeft(a)}</span></div><p>${esc(a.message)}</p><div class="ann-act"><button data-e="${esc(a.id)}">Edit</button><button class="del" data-d="${esc(a.id)}">Hapus</button></div></div>`).join(''):'<div class="empty">Belum ada pengumuman aktif.<br>Pengumuman hilang otomatis 24 jam setelah dikirim.</div>'}`,annMenu);
+ sheet(`${pgHead('PENGUMUMAN','Pengumuman Aktif',rows.length?rows.length+' sedang tayang':'Tidak ada yang tayang')}${rows.length?rows.map(a=>`<div class="ann-row" data-id="${esc(a.id)}"><div class="ann-meta"><span class="chip ${a.audience==='semua'?'ok':''}">${ANN_AUD[a.audience].t}</span><span>${esc(fmtWaktu(a.created_at))}</span><span>· ${annLeft(a)}</span></div><p>${esc(a.message)}</p><div class="ann-act"><button data-e="${esc(a.id)}">Ubah</button><button class="del" data-d="${esc(a.id)}">Hapus</button></div></div>`).join(''):'<div class="empty">Belum ada pengumuman aktif.<br>Pengumuman hilang otomatis 24 jam setelah dikirim.</div>'}`,annMenu);
  document.querySelectorAll('.sheet [data-e]').forEach(b=>b.onclick=()=>annEdit(rows.find(x=>x.id===b.dataset.e)));
  document.querySelectorAll('.sheet [data-d]').forEach(b=>{let t;b.onclick=async()=>{
   if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Yakin hapus?';t=setTimeout(()=>{b.classList.remove('sure');b.textContent='Hapus'},3500);return}
@@ -3893,7 +3893,7 @@ async function annActive(){
 function annEdit(a){
  if(!a)return annActive();
  let aud=a.audience;
- sheet(`${pgHead('PENGUMUMAN','Edit Pengumuman','Masa tayang tidak diperpanjang.')}<div class="ann-seg">${['gerai','checker','semua'].map(k=>`<button data-a="${k}" class="${k===aud?'on':''}">${ANN_AUD[k].t.replace('Untuk ','')}</button>`).join('')}</div>${annForm(aud,a.message)}<div class="pg-dock"><button class="btn" id="ann-save">Simpan perubahan</button></div>`,annActive);
+ sheet(`${pgHead('PENGUMUMAN','Ubah Pengumuman','Masa tayang tidak diperpanjang.')}<div class="ann-seg">${['gerai','checker','semua'].map(k=>`<button data-a="${k}" class="${k===aud?'on':''}">${ANN_AUD[k].t.replace('Untuk ','')}</button>`).join('')}</div>${annForm(aud,a.message)}<div class="pg-dock"><button class="btn" id="ann-save">Simpan perubahan</button></div>`,annActive);
  annWire();
  document.querySelectorAll('.sheet [data-a]').forEach(b=>b.onclick=()=>{aud=b.dataset.a;document.querySelectorAll('.sheet [data-a]').forEach(x=>x.classList.toggle('on',x===b))});
  $('#ann-save').onclick=async ev=>{
@@ -3971,8 +3971,8 @@ async function gnExport(no,share,btn){
   const els=[...document.querySelectorAll('#gn-sheets .gn-nota')],files=[];
   for(let i=0;i<els.length;i++){const bl=await gnBlob(els[i]);files.push(new File([bl],no+(els.length>1?'-'+(i+1):'')+'.jpg',{type:'image/jpeg'}))}
   if(share&&navigator.canShare&&navigator.canShare({files}))await navigator.share({files,title:'Nota '+no});
-  else{files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()},i*400));toast('Nota disimpan sebagai JPG')}
- }catch(err){if(err&&err.name!=='AbortError'){console.error(err);toast('JPG belum dapat dibuat. Coba Cetak / PDF.')}}
+  else{files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()},i*400));toast('Nota disimpan sebagai gambar')}
+ }catch(err){if(err&&err.name!=='AbortError'){console.error(err);toast('Gambar belum dapat dibuat. Coba Cetak / PDF.')}}
  btn.disabled=false;btn.textContent=t;
 }
 function gnPrint(d){
@@ -4119,11 +4119,11 @@ async function act(o){
   if(o==='report'){tab='lap';draw();return}
   if(o==='pdf'){downloadReportFlow();return}
   if(o==='kode'){
-    sheet(pgHead('KEAMANAN','Ubah kode akses','')+'<div class="hint">Kode akses mengikuti kata sandi akun Owner yang tersimpan di sistem. Perubahan kode dilakukan melalui pengelolaan akun.</div>');
+    sheet(pgHead('KEAMANAN','Ubah kode akses','')+'<div class="hint">Kode akses mengikuti kata sandi akun Owner yang tersimpan. Perubahan kode dilakukan melalui pengelolaan akun.</div>');
     return;
   }
   if(o==='edit'){
-    sheet(pgHead('KEAMANAN','Pusat Edit Data','')+'<div class="hint">Gunakan menu Kelola Usaha untuk mengubah data utama. Perubahan langsung disimpan ke sistem.</div>');
+    sheet(pgHead('KEAMANAN','Pusat Ubah Data','')+'<div class="hint">Gunakan menu Kelola Usaha untuk mengubah data utama. Perubahan langsung tersimpan.</div>');
     return;
   }
   if(o.startsWith('crud-')){crudSheet(o.replace('crud-',''));return}
@@ -4203,5 +4203,21 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
 }
 </script>
+<style id="layout-audit-style">
+/* ===== Audit tata letak: Owner di layar sempit (teks tidak terpotong, area sentuh >= 44px) ===== */
+html body .owner-notify{position:relative}
+html body .owner-notify{width:44px;height:44px;min-width:44px}
+html body .lux-actions>button{padding-left:2px;padding-right:2px}
+html body .lux-actions b{font-size:11.5px;line-height:1.2;overflow-wrap:normal;word-break:normal;hyphens:none}
+html body .lux-actions button small{font-size:11px;line-height:1.25;overflow-wrap:normal;word-break:normal}
+html body .tabs button{font-size:11px}
+html body .owner-identity span,html body .hl-lux .highlight-eyebrow,html body .hl-lux .highlight-index,html body .eyebrow,html body .lux-count{font-size:11px}
+html body .highlight-copy p{font-size:11.5px}
+html body .owner-clock-block span,html body .owner-clock-block small{font-size:11px}
+html body .owner-date-block span,html body .lux-section-head .eyebrow,html body .lux-section-head .lux-count,html body .lux-actions button small{font-size:11px!important}
+html body .highlight-copy p{font-size:11.5px!important}
+html body .owner-identity span,html body .owner-date-block span,html body .owner-clock-block span{letter-spacing:.04em!important}
+html body .tabs button{padding-left:2px;padding-right:2px;letter-spacing:0;white-space:nowrap}
+</style>
 </body>
 </html>

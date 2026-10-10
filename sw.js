@@ -11,7 +11,7 @@
  * 5. Service worker baru langsung mengambil alih halaman yang tersedia.
  */
 
-const SW_VERSION = 'pwa-update-2026-10-07-dash-emboss';
+const SW_VERSION = 'pwa-update-2026-10-09-checker-isolation';
 const CACHE_NAME = `${SW_VERSION}-cache`;
 
 self.addEventListener('install', event => {
@@ -37,7 +37,10 @@ function shouldHandle(request, url) {
   if (url.origin !== self.location.origin) return false;
 
   // Area /gerai/ adalah PWA terpisah dengan service worker sendiri.
-  if (url.pathname.startsWith('/gerai/')) return false;
+  if (url.pathname === '/gerai' || url.pathname.startsWith('/gerai/')) return false;
+
+  // Area /checker/ adalah PWA terpisah dengan service worker sendiri.
+  if (url.pathname === '/checker' || url.pathname.startsWith('/checker/')) return false;
 
   // Jangan pernah mencegat service worker itu sendiri.
   if (url.pathname.endsWith('/sw.js')) return false;
