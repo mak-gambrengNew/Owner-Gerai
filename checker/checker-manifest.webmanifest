@@ -1,0 +1,19 @@
+{
+  "id": "/checker/",
+  "name": "Panel Checker — Teh Solo Ma-Gambreng",
+  "short_name": "Checker",
+  "start_url": "/checker/",
+  "scope": "/checker/",
+  "display": "standalone",
+  "background_color": "#fbf8fa",
+  "theme_color": "#c84b92",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/checker/checker_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
