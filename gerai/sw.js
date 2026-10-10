@@ -1,4 +1,4 @@
-const CACHE='gerai-spg-prod-v12';
+const CACHE='gerai-spg-prod-v13';
 const BASE='/gerai/';
 const CDN='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js';
 const SHELL=[BASE+'index.html',BASE+'manifest.webmanifest',BASE+'icon-192.png',BASE+'icon-512.png'];
